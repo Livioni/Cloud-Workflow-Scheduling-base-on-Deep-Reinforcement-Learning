@@ -114,6 +114,15 @@ def plot_DAG(edges,postion):
     return plt.clf
 
 def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0, t_unit = 10, resource_unit = 100):
+    '''
+    随机生成一个DAG任务并随机分配它的持续时间和（CPU，Memory）的需求
+    :param mode: DAG按默认参数生成
+    :param n: DAG中任务数
+    :para max_out: DAG节点最大子节点数
+    :return: edges      DAG边信息
+             duration   DAG节点持续时间
+             demand     DAG节点资源需求数量
+    '''
     t = t_unit  #s   time unit
     r = resource_unit #resource unit
     edges,in_degree,out_degree,position = DAGs_generate(mode,n,max_out,alpha,beta)
