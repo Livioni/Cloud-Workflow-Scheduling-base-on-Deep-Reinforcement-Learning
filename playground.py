@@ -1,9 +1,11 @@
+from networkx.classes.function import to_undirected
 from DAGs_Generator import DAGs_generate
 from DAGs_Generator import plot_DAG
 import gym
- 
+import numpy as np
+
+
 env = gym.make('MyEnv-v0')
-env.reset()
-for _ in range(1000):
-    env.render()
-    env.step(env.action_space.sample()) # take a random action
+state = env.reset()
+print(state)
+

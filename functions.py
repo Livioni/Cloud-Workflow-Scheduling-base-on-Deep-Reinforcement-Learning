@@ -86,3 +86,22 @@ def find_b_level(edges,done_job):
     b_level_road = nx.dag_longest_path(g1)
     return b_level_road[1:-1]
 
+def find_children_num(ready_list,edges):
+    '''
+    计算ready task的子节点数，作为状态的输入
+    :param ready_list: DAG中准备好的任务列表
+    :para edges: DAG边信息(注意最好传列表的值（edges[:]）进去而不是传列表的地址（edges）！！！！)
+    :return: 子节点的数量，不包括'Exit'
+    '''
+    children = []
+    for job in ready_list:
+        children.extend(search_for_successors(job,edges))
+    length = 0
+    while (length != len(children)):
+        length = len(children)
+        for job in children:
+            if job != 'Exit':
+                children.extend(search_for_successors(job,edges))
+            children = sorted(set(children), key = children.index)
+    return len(set(children))-1     
+
