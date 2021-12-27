@@ -1,21 +1,23 @@
 import gym, os
 from itertools import count
+from numpy import nested_iters
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Categorical
-from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter(comment='Cartpole Reward Record')
+# from torch.utils.tensorboard import SummaryWriter
+# writer = SummaryWriter(comment='Cartpole Reward Record')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-env = gym.make("MyEnv-v0")
+env = gym.make("MyEnv-v0").unwrapped
 
 state_size = env.observation_space.shape[0] #38
 action_size = env.action_space.n #11
 lr = 0.001 #学习率 
-episode_number=1000
-episode_durations = []        #cartpole里面的持续状态数
+n_iters=1
+sum_reward = 0
+episode_durations = []        
 
 class Actor(nn.Module): #策略网络
     def __init__(self, state_size, action_size):
@@ -65,23 +67,22 @@ def trainIters(actor, critic, n_iters):
     for iter in range(n_iters):
         state = env.reset()
         log_probs = []
+        sum_reward = 0 
         values = []
         rewards = []
-        env.reset()
-
         for i in count():
             # env.render()
             state = torch.FloatTensor(state).to(device)
             dist, value = actor(state), critic(state) #dist得出动作概率分布，value得出当前动作价值函数
-
+            print(state)
             action = dist.sample()#采样当前动作 
-            while (env.step(action.cpu().numpy())==False):
-                
-
-            next_state, reward, done, _ = env.step(action.cpu().numpy())
-
+            state,reward,done,info = env.step(action.numpy()-1)
+            while (info == False):
+                action = dist.sample()#采样当前动作 
+                state,reward,done, info = env.step(action.numpy()-1)#输入step的都是
+                # print("take an action:",action.numpy()-1)
+            next_state, reward, done, _ = state, reward, done, info
             log_prob = dist.log_prob(action).unsqueeze(0)
-
             log_probs.append(log_prob)
             values.append(value)
             rewards.append(torch.tensor([reward], dtype=torch.float, device=device))
@@ -113,26 +114,26 @@ def trainIters(actor, critic, n_iters):
         critic_loss.backward()
         optimizerA.step()
         optimizerC.step()
-    torch.save(actor, 'models/CarPole_actor.pkl')
-    torch.save(critic, 'models/CarPole_critic.pkl')
+        #绘制曲线
+        # for data in range(n_iters):
+        #     writer.add_scalar('Reward',sum_reward,data)   
+        # writer.close()
+    torch.save(actor, 'models/actor.pkl')
+    torch.save(critic, 'models/critic.pkl')
     env.close()
 
 
 
 if __name__ == '__main__':
-    if os.path.exists('models/CarPole_actor.pkl'):
-        actor = torch.load('models/CarPole_actor.pkl')
-        print('Actor Model loaded')
-    else:
-        actor = Actor(state_size, action_size).to(device)
-    if os.path.exists('models/CarPole_critic.pkl'):
-        critic = torch.load('models/CarPole_critic.pkl')
-        print('Critic Model loaded')
-    else:
-        critic = Critic(state_size, action_size).to(device)
-    trainIters(actor, critic, n_iters=1000)
+    # if os.path.exists('models/actor.pkl'):
+    #     actor = torch.load('models/actor.pkl')
+    #     print('Actor Model loaded')
+    # else:
+    actor = Actor(state_size, action_size).to(device)
+    # if os.path.exists('models/critic.pkl'):
+    #     critic = torch.load('models/critic.pkl')
+    #     print('Critic Model loaded')
+    # else:
+    critic = Critic(state_size, action_size).to(device)
+    trainIters(actor, critic, n_iters=n_iters)
 
-#绘制曲线
-for data in range(episode_number):
-    writer.add_scalar('Reward',episode_durations[data],data)   
-writer.close()
