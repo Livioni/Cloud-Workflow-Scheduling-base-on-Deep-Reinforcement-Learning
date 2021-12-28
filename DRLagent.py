@@ -1,6 +1,6 @@
 import gym, os
 from itertools import count
-from numpy import nested_iters
+from numpy import dtype, nested_iters
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -15,9 +15,9 @@ env = gym.make("MyEnv-v0").unwrapped
 state_size = env.observation_space.shape[0] #38
 action_size = env.action_space.n #11
 lr = 0.001 #学习率 
-n_iters=1
+n_iters=10
 sum_reward = 0
-episode_durations = []        
+      
 
 class Actor(nn.Module): #策略网络
     def __init__(self, state_size, action_size):
@@ -70,28 +70,41 @@ def trainIters(actor, critic, n_iters):
         sum_reward = 0 
         values = []
         rewards = []
+        probability = {}
+        probability_list = []
         for i in count():
             # env.render()
             state = torch.FloatTensor(state).to(device)
             dist, value = actor(state), critic(state) #dist得出动作概率分布，value得出当前动作价值函数
             print(state)
-            action = dist.sample()#采样当前动作 
+            for i in range(11):
+                probability[i] = dist.probs.detach().numpy()[i]
+            action = dist.sample()#采样当前动作
             state,reward,done,info = env.step(action.numpy()-1)
-            while (info == False):
-                action = dist.sample()#采样当前动作 
+            while (info == False):                                              #重采样
+                probability[action.item()] = 0
+                probability_list = [probs for probs in probability.values()]
+                probs = torch.FloatTensor(probability_list)
+                dist_copy = Categorical(probs)
+                for i in range(len(dist_copy.probs)):
+                    probability_list[i] = dist_copy.probs[i].item()
+                probs = torch.FloatTensor(probability_list)
+                print(probability_list)
+                dist_1 = Categorical(probs)
+                action = dist_1.sample()#采样当前动作 
                 state,reward,done, info = env.step(action.numpy()-1)#输入step的都是
-                # print("take an action:",action.numpy()-1)
             next_state, reward, done, _ = state, reward, done, info
+            print("action is :", action.numpy()-1)
             log_prob = dist.log_prob(action).unsqueeze(0)
             log_probs.append(log_prob)
             values.append(value)
             rewards.append(torch.tensor([reward], dtype=torch.float, device=device))
 
             state = next_state
-
+            sum_reward += reward
             if done:
-                episode_durations.append(i + 1)
-                print('Iteration: {}, Score: {}'.format(iter, i + 1))
+                print('Iteration: {}, reward: {}'.format(iter+1, sum_reward))
+                # writer.add_scalar('Sum_reward', sum_reward, global_step=n_iters+1)
                 break
 
 
@@ -115,25 +128,24 @@ def trainIters(actor, critic, n_iters):
         optimizerA.step()
         optimizerC.step()
         #绘制曲线
-        # for data in range(n_iters):
-        #     writer.add_scalar('Reward',sum_reward,data)   
-        # writer.close()
+
     torch.save(actor, 'models/actor.pkl')
     torch.save(critic, 'models/critic.pkl')
     env.close()
+    # writer.close()
 
 
 
 if __name__ == '__main__':
-    # if os.path.exists('models/actor.pkl'):
-    #     actor = torch.load('models/actor.pkl')
-    #     print('Actor Model loaded')
-    # else:
-    actor = Actor(state_size, action_size).to(device)
-    # if os.path.exists('models/critic.pkl'):
-    #     critic = torch.load('models/critic.pkl')
-    #     print('Critic Model loaded')
-    # else:
-    critic = Critic(state_size, action_size).to(device)
-    trainIters(actor, critic, n_iters=n_iters)
-
+    if os.path.exists('models/actor.pkl'):
+        actor = torch.load('models/actor.pkl')
+        print('Actor Model loaded')
+    else:
+        actor = Actor(state_size, action_size).to(device)
+    if os.path.exists('models/critic.pkl'):
+        critic = torch.load('models/critic.pkl')
+        print('Critic Model loaded')
+    else:
+        critic = Critic(state_size, action_size).to(device)
+    trainIters(actor, critic, n_iters=n_iters)  
+    

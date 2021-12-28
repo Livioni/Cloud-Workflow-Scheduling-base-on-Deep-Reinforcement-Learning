@@ -316,7 +316,6 @@ class MyEnv(gym.Env):
         :para action {-1,0,1,2,3,4,5,6,7,8,9}
         :return: True 可以被执行 False 不能被执行
         '''
-
         if action<len(self.ready_list):
             task_cpu_demand = self.cpu_demand[action]
             task_memory_demand = self.memory_demand[action]
@@ -333,7 +332,9 @@ class MyEnv(gym.Env):
         :para None
         :return: True 完成一幕了 False 还未完成一幕
         '''
-        return True if len(self.done_job) == len(self.duration)  else False
+        if len(self.done_job) == len(self.duration):
+            return True   
+        else: False
 
 
     def seed(self, seed=None):
@@ -410,6 +411,8 @@ class MyEnv(gym.Env):
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
                         self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]                                                                 #reward等于负的时间前进步
                 done = self.check_episode_finish()                                                                      #判断是否完成
+                # print("已完成的任务：",self.done_job)
+                # print("挂起的任务：",self.tasks_remaing_time)
                 return np.array(self.state, dtype=np.float32), reward, done, True
             else:                                                                                                       #如果没有，则返回false重新采样动作
                 return np.array(self.state, dtype=np.float32), 0, 0, False
