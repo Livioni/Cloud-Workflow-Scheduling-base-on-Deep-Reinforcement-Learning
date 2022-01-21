@@ -1,11 +1,13 @@
-import gym, os
+from time import time
+import gym, os,math
+import numpy as np
 from itertools import count
-from numpy import dtype, nested_iters
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Categorical
+import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 
@@ -14,10 +16,27 @@ env = gym.make("MyEnv-v0").unwrapped
 
 state_size = env.observation_space.shape[0] #38
 action_size = env.action_space.n #11
-lr = 0.001 #学习率 
-n_iters=100
+lr = 0.0001 #学习率 
+n_iters=1000
 sum_reward = 0
+time_durations = []        #cartpole里面的持续状态数
       
+def plot_durations():
+    plt.figure(2)
+    plt.clf()
+    durations_t = torch.FloatTensor(time_durations)
+    plt.title('Training...')
+    plt.xlabel('Episode')
+    plt.ylabel('Reward')
+    # plt.plot(i,sum_reward,'or')
+    plt.plot(durations_t.numpy())
+    # Take 100 episode averages and plot them too
+    if len(durations_t) >= 100:
+        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+        means = torch.cat((torch.zeros(99), means))
+        plt.plot(means.numpy())
+    plt.pause(0.001)  # pause a bit so that plots are updated
+
 
 class Actor(nn.Module): #策略网络
     def __init__(self, state_size, action_size):
@@ -58,6 +77,20 @@ def compute_returns(next_value, rewards, gamma=0.99):#计算回报
     for step in reversed(range(len(rewards))):#还是REINFORCE方法
         R = rewards[step] + gamma * R  #gamma是折扣率
         returns.insert(0, R)
+
+    ##手动标准化
+    value = 0
+    for ele in returns:
+        value += ele
+    reward_mean = value/len(returns)
+    fangcha = 0
+    for ele in returns:
+        fangcha += (ele-value).pow(2)
+    fangcha /= len(returns)
+    reward_std = math.sqrt(fangcha)
+    for t in range(len(returns)):
+        returns[t] = (returns[t] - reward_mean) / reward_std 
+
     return returns
 
 
@@ -68,6 +101,7 @@ def trainIters(actor, critic, n_iters):
         state = env.reset()
         log_probs = []
         sum_reward = 0 
+        time = 0
         values = []
         rewards = []
         probability = {}
@@ -96,13 +130,15 @@ def trainIters(actor, critic, n_iters):
             log_prob = dist.log_prob(action).unsqueeze(0)
             log_probs.append(log_prob)
             values.append(value)
-            rewards.append(torch.tensor([reward], dtype=torch.float, device=device))
-
+            rewards.append(torch.tensor([reward], dtype=torch.float, device=device))         
             state = next_state
             sum_reward += reward
             if done:
+                time = state[0]
+                time_durations.append(time)
                 print('Iteration: {}, reward: {}'.format(iter+1, sum_reward))
                 writer.add_scalar('Sum_reward', sum_reward, global_step=iter+1)
+                plot_durations()
                 break
 
 
@@ -118,6 +154,7 @@ def trainIters(actor, critic, n_iters):
 
         actor_loss = -(log_probs * advantage.detach()).mean()#这个使用REINFORCE
         writer.add_scalar('Loss/actor_loss', actor_loss, global_step=iter+1)
+
         critic_loss = advantage.pow(2).mean()
         writer.add_scalar('Loss/critic_loss', critic_loss, global_step=iter+1)
 
@@ -138,15 +175,15 @@ def trainIters(actor, critic, n_iters):
 
 
 if __name__ == '__main__':
-    # if os.path.exists('models/actor.pkl'):
-    #     actor = torch.load('models/actor.pkl')
-    #     print('Actor Model loaded')
-    # else:
-    actor = Actor(state_size, action_size).to(device)
-    # if os.path.exists('models/critic.pkl'):
-    #     critic = torch.load('models/critic.pkl')
-    #     print('Critic Model loaded')
-    # else:
-    critic = Critic(state_size, action_size).to(device)
+    if os.path.exists('models/actor.pkl'):
+        actor = torch.load('models/actor.pkl')
+        print('Actor Model loaded')
+    else:
+        actor = Actor(state_size, action_size).to(device)
+    if os.path.exists('models/critic.pkl'):
+        critic = torch.load('models/critic.pkl')
+        print('Critic Model loaded')
+    else:
+        critic = Critic(state_size, action_size).to(device)
     trainIters(actor, critic, n_iters=n_iters)  
     

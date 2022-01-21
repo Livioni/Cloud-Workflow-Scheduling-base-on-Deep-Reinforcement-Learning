@@ -115,6 +115,7 @@ def plot_DAG(edges,postion):
     g1.add_edges_from(edges)
     nx.draw_networkx(g1, arrows=True, pos=postion)
     plt.savefig("DAG.png", format="PNG")
+    plt.close()
     return plt.clf
 
 def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0, t_unit = 10, resource_unit = 100):
