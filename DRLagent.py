@@ -6,8 +6,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Categorical
-# from torch.utils.tensorboard import SummaryWriter
-# writer = SummaryWriter(comment='Cartpole Reward Record')
+from torch.utils.tensorboard import SummaryWriter
+writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 env = gym.make("MyEnv-v0").unwrapped
@@ -15,7 +15,7 @@ env = gym.make("MyEnv-v0").unwrapped
 state_size = env.observation_space.shape[0] #38
 action_size = env.action_space.n #11
 lr = 0.001 #学习率 
-n_iters=10
+n_iters=100
 sum_reward = 0
       
 
@@ -85,16 +85,14 @@ def trainIters(actor, critic, n_iters):
                 probability[action.item()] = 0
                 probability_list = [probs for probs in probability.values()]
                 probs = torch.FloatTensor(probability_list)
-                dist_copy = Categorical(probs)
+                dist_copy = Categorical(probs) 
                 for i in range(len(dist_copy.probs)):
                     probability_list[i] = dist_copy.probs[i].item()
                 probs = torch.FloatTensor(probability_list)
-                print(probability_list)
                 dist_1 = Categorical(probs)
                 action = dist_1.sample()#采样当前动作 
                 state,reward,done, info = env.step(action.numpy()-1)#输入step的都是
             next_state, reward, done, _ = state, reward, done, info
-            print("action is :", action.numpy()-1)
             log_prob = dist.log_prob(action).unsqueeze(0)
             log_probs.append(log_prob)
             values.append(value)
@@ -104,7 +102,7 @@ def trainIters(actor, critic, n_iters):
             sum_reward += reward
             if done:
                 print('Iteration: {}, reward: {}'.format(iter+1, sum_reward))
-                # writer.add_scalar('Sum_reward', sum_reward, global_step=n_iters+1)
+                writer.add_scalar('Sum_reward', sum_reward, global_step=iter+1)
                 break
 
 
@@ -119,7 +117,10 @@ def trainIters(actor, critic, n_iters):
         advantage = returns - values
 
         actor_loss = -(log_probs * advantage.detach()).mean()#这个使用REINFORCE
+        writer.add_scalar('Loss/actor_loss', actor_loss, global_step=iter+1)
         critic_loss = advantage.pow(2).mean()
+        writer.add_scalar('Loss/critic_loss', critic_loss, global_step=iter+1)
+
 
         optimizerA.zero_grad()
         optimizerC.zero_grad()
@@ -132,20 +133,20 @@ def trainIters(actor, critic, n_iters):
     torch.save(actor, 'models/actor.pkl')
     torch.save(critic, 'models/critic.pkl')
     env.close()
-    # writer.close()
+    writer.close()
 
 
 
 if __name__ == '__main__':
-    if os.path.exists('models/actor.pkl'):
-        actor = torch.load('models/actor.pkl')
-        print('Actor Model loaded')
-    else:
-        actor = Actor(state_size, action_size).to(device)
-    if os.path.exists('models/critic.pkl'):
-        critic = torch.load('models/critic.pkl')
-        print('Critic Model loaded')
-    else:
-        critic = Critic(state_size, action_size).to(device)
+    # if os.path.exists('models/actor.pkl'):
+    #     actor = torch.load('models/actor.pkl')
+    #     print('Actor Model loaded')
+    # else:
+    actor = Actor(state_size, action_size).to(device)
+    # if os.path.exists('models/critic.pkl'):
+    #     critic = torch.load('models/critic.pkl')
+    #     print('Critic Model loaded')
+    # else:
+    critic = Critic(state_size, action_size).to(device)
     trainIters(actor, critic, n_iters=n_iters)  
     

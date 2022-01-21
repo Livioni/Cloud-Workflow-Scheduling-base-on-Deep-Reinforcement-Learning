@@ -3,9 +3,7 @@ import gym,random
 from matplotlib import pyplot as plt
 from gym import spaces, logger
 from gym.utils import seeding
-from networkx.classes.function import edges
 from gym.envs.classic_control import rendering
-from networkx.readwrite.adjlist import read_adjlist
 import numpy as np
 import networkx as nx
 
@@ -212,6 +210,9 @@ class MyEnv(gym.Env):
         self.tasks = []                                         #计算资源上挂起的任务
         self.tasks_remaing_time = {}                            #计算资源上挂起的任务剩余执行时间
        
+        #DeepRM Reward#
+        self.DeepRM_reward = 0
+
         self.seed()
         self.viewer = None
         self.state = None
@@ -316,13 +317,28 @@ class MyEnv(gym.Env):
         :para action {-1,0,1,2,3,4,5,6,7,8,9}
         :return: True 可以被执行 False 不能被执行
         '''
-        if action<len(self.ready_list):
-            task_cpu_demand = self.cpu_demand[action]
-            task_memory_demand = self.memory_demand[action]
-            if self.wait_duration[action] != -1.0:
-                return True if (task_cpu_demand <= self.cpu_res) & (task_memory_demand <= self.memory_res) else False #判断资源是否满足要求
-            else: 
-                return False
+        task_cpu_demand = self.cpu_demand[action]
+        task_memory_demand = self.memory_demand[action]
+        if self.wait_duration[action] != -1.0:
+            return True if (task_cpu_demand <= self.cpu_res) & (task_memory_demand <= self.memory_res) else False #判断资源是否满足要求
+        else: 
+            return False
+
+
+    def check_action(self,action):
+        '''
+        判断当前选择的动作是否有效
+        :para action {-1,0,1,2,3,4,5,6,7,8,9}
+        :return: True 有效 False 无效
+        '''
+        if(action < len(self.ready_list)):
+            if(self.ready_list[action] not in self.done_job):
+                if(self.ready_list[action] not in self.tasks):
+                    return self.res_is_available(action)
+                else:
+                    return False 
+            else:
+                return False    
         else:
             return False
 
@@ -341,81 +357,91 @@ class MyEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
+    def pend_task(self,action):
+        job_id = self.ready_list[action]
+        self.tasks.append(job_id)#self.ready_list[action]表示的是任务ID 
+        self.tasks_remaing_time[job_id] = self.wait_duration_dic[job_id] 
+        self.cpu_res -= self.cpu_demand_dic[job_id]                                                                #当前CPU资源容量-这个任务需求的CPU资源
+        self.memory_res -= self.memory_demand_dic[job_id]
+        self.wait_duration[action] = -1.0                                                                       #waiting列表中挂起的任务信息变为-1
+        self.cpu_demand[action] = -1.0                                                                          #waiting列表中挂起的任务信息变为-1
+        self.memory_demand[action] = -1.0 
+
+
     def step(self, action):
         '''
         状态转移过程
         :para action {-1,0,1,2,3,4,5,6,7,8,9}
         :return: 下一个状态，回报，是否完成，调试信息
                  False ，要求重新采样动作
+        ''' 
         '''
-         
-        if (action >= 0 & action<=9):                                                                                   #如果选择schedule task
-            if self.res_is_available(action): 
-                if self.ready_list[action] in self.tasks:
-                    return np.array(self.state, dtype=np.float32), 0, 0, False                                                                                         #先判断是否为有效动作，如果是：
-                self.tasks.append(self.ready_list[action])#self.ready_list[action]表示的是任务ID                          #将当前任务ID添加到挂起的任务列表中
-                self.tasks_remaing_time[self.ready_list[action]] = self.duration[self.ready_list[action]-1]             #将当前任务的剩余时间添加进字典
-                self.cpu_res -= self.cpu_demand[action]                                                                 #当前CPU资源容量-这个任务需求的CPU资源
-                self.memory_res -= self.memory_demand[action]                                                           #当前Memory资源容量-这个任务需求的memory资源
-                self.time = self.time                                                                                   #时间步未动
-                self.wait_duration[action] = -1.0                                                                       #waiting列表中挂起的任务信息变为-1
-                self.cpu_demand[action] = -1.0                                                                          #waiting列表中挂起的任务信息变为-1
-                self.memory_demand[action] = -1.0 
+        self.ready_list是当前可执行的任务，包括了在机器上挂起的
+        '''
+        done = self.check_episode_finish()
+        if done:
+            print("全部任务已完成")
+            return np.array(self.state, dtype=np.float32), 0, done, True
+
+        if (action >= 0 & action<=9): 
+            if (self.check_action(action)):
+                self.pend_task(action)
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
-                    self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]                                          
-                reward = 0.0                                                                                            #时间步没动，收益为0
-                done = self.check_episode_finish()                                                                      #判断这一幕是否完成
+                self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]                                          
+                reward = 0.0                                                                                           #时间步没动，收益为0
+                done = self.check_episode_finish()
                 return np.array(self.state, dtype=np.float32), reward, done, True
-            else:                                                                                                       #如果不是，则返回False，要求重新采样动作
-                return np.array(self.state, dtype=np.float32), 0, 0, False
-        else:              
-            if self.tasks:                                                                              #如果选择execute task,看当前计算资源上是否有挂起的任务
-                print("挂起的任务的ID",self.tasks)
-                print("挂起的任务的ID和时间",self.tasks_remaing_time)
-                self.tasks_remaing_time_list = sorted(self.tasks_remaing_time.items(),key = lambda x:x[1])              #将字典的value从小到大排序，排序当前挂起任务的执行占用时间 
-                time_shift = self.tasks_remaing_time_list[0][1]
-                self.time += time_shift                                                                                 #环境时钟增加当前挂起任务中耗时最短的任务的时间
-                self.done_job.append(self.tasks_remaing_time_list[0][0]) 
-                print("done_job:",self.done_job)                                               #将执行完成的任务加入done_job列表
-                self.cpu_res += self.demand[self.tasks_remaing_time_list[0][0]-1][0]#任务ID在列表中索引要-1               #释放CPU资源
-                self.memory_res += self.demand[self.tasks_remaing_time_list[0][0]-1][1]#任务ID在列表中索引要-1         #释放Memory资源
-                reward = -self.tasks_remaing_time_list[0][1]                                                            #在删除前先计算reward
-                self.tasks.remove(self.tasks_remaing_time_list[0][0])                                                   #从计算资源挂起任务中删除此项任务                                                                
-                del self.tasks_remaing_time[self.tasks_remaing_time_list[0][0]]   
-                print("执行完后更新挂起的任务:",self.tasks)                                      #删除该任务ID及其占用时间
-                self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])                   #更新ready任务列表
-                print("ready_list:",self.ready_list)
-                done = self.check_episode_finish()                                                                      #判断是否完成
+            else:
+                return np.array(self.state, dtype=np.float32), 0, 0, False 
+        else:
+            if self.tasks:
+                print("当前还挂起的任务：",self.tasks)
+                print("当前挂起任务的执行时间：",self.tasks_remaing_time)
+                self.tasks_remaing_time_list = sorted(self.tasks_remaing_time.items(),key = lambda x:x[1])  #排序当前挂起任务的执行时间
+                job_id = self.tasks_remaing_time_list[0][0]                                                 
+                time_shift = self.tasks_remaing_time_list[0][1]                                             #记录最小执行时间的长度
+                self.time += time_shift                                                                     #改变时间戳
+                self.done_job.append(job_id)                                                                #更新已完成的任务
+                print(" 已完成的任务：",self.done_job)
+                done = self.check_episode_finish()
                 if done:
                     return np.array(self.state, dtype=np.float32), 0, done, True
-                #刷新以下数据
+                self.cpu_res += self.cpu_demand_dic[job_id]                                                 #释放CPU资源
+                self.memory_res += self.memory_demand_dic[job_id]                                           #释放Memory资源
+                self.tasks.remove(job_id)                                                                   #删除pending的task
+                del self.tasks_remaing_time[job_id]                                                         #删除任务剩余时间信息
                 for i in self.tasks_remaing_time.keys():
                     self.tasks_remaing_time[i] -= time_shift
-                self.wait_duration = [-1] * self.M                                                                      #随机生成的DAG时间占用信息
-                self.cpu_demand = [-1] * self.M                                                                         #随机生成的DAG资源占用信息
+                reward = -time_shift/self.average_time_duration                                                             
+                self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])       #更新ready_list
+                self.wait_duration = [-1] * self.M                                                                      
+                self.cpu_demand = [-1] * self.M                                                                         
                 self.memory_demand = [-1] * self.M  
-                self.backlot_time = 0                                                                                   #backlot的总时间占用信息
-                self.backlot_cpu_res = 0                                                                                #backlot的总CPU占用信息 
-                self.backlot_memory_res = 0                                                                             #backlot的总memory占用信息                                                                    
-                for i in range(len(self.ready_list)):                                   
+                self.backlot_time = 0                                                                                  
+                self.backlot_cpu_res = 0                                                                                
+                self.backlot_memory_res = 0 
+                for i in range(len(self.ready_list)):
+                    job_id = self.ready_list[i]
+                    if self.ready_list[i] in self.tasks:
+                        continue                                   
                     if i < self.M: 
-                        self.wait_duration[i] = self.duration[self.ready_list[i]-1]                                       
-                        self.cpu_demand[i] = self.demand[self.ready_list[i]-1][0]
-                        self.memory_demand[i] = self.demand[self.ready_list[i]-1][1]
+                        self.wait_duration[i] = self.wait_duration_dic[job_id]                                       
+                        self.cpu_demand[i] = self.cpu_demand_dic[job_id]
+                        self.memory_demand[i] = self.memory_demand_dic[job_id]
                     else:
-                        self.backlot_time += self.duration[self.ready_list[i]-1]
-                        self.backlot_cpu_res += self.demand[self.ready_list[i]-1][0]
-                        self.backlot_memory_res += self.demand[self.ready_list[i]-1][1] 
-                self.b_level = self.find_b_level(self.edges[:],self.done_job)                                           #更新b_level    
-                self.children_num = self.find_children_num(self.ready_list,self.edges[:])                               #更新children_num
+                        self.backlot_time += self.wait_duration_dic[job_id]
+                        self.backlot_cpu_res += self.cpu_demand_dic[job_id]
+                        self.backlot_memory_res += self.memory_demand_dic[job_id]
+                # print("当前挂起的任务还有：",self.tasks)
+                # print("当前挂起任务的执行时间：",self.tasks_remaing_time)
+                self.b_level = self.find_b_level(self.edges[:],self.done_job)
+                self.children_num = self.find_children_num(self.ready_list,self.edges[:]) 
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
-                        self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]                                                                 #reward等于负的时间前进步
-                done = self.check_episode_finish()                                                                      #判断是否完成
-                # print("已完成的任务：",self.done_job)
-                # print("挂起的任务：",self.tasks_remaing_time)
+                        self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]
                 return np.array(self.state, dtype=np.float32), reward, done, True
-            else:                                                                                                       #如果没有，则返回false重新采样动作
+            else:
                 return np.array(self.state, dtype=np.float32), 0, 0, False
+
 
 
     def reset(self):
@@ -424,33 +450,50 @@ class MyEnv(gym.Env):
         :para None
         :return: 初始状态，每一次reset就是重新一幕
         '''
-        ###初始化一些状态 
+        ###随机生成一个workflow
         self.edges,self.duration,self.demand,self.position = workflows_generator('default')
-        print("任务占用时间Ti:",self.duration)
-        print("任务资源占用(res_cpu,res_memory):",self.demand)
-        self.time = 0
-        self.cpu_res = 100
-        self.memory_res = 100
+        print("任务占用时间Ti:",self.duration)                    #生成的原始数据
+        print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
+        ###初始化一些状态
+        self.time,self.cpu_res,self.memory_res = 0,100,100      
         self.done_job = []
-        self.ready_list =[]
-        self.wait_duration = [-1] * self.M                      #随机生成的DAG时间占用信息
-        self.cpu_demand = [-1] * self.M                         #随机生成的DAG资源占用信息
-        self.memory_demand = [-1] * self.M  
+        self.ready_list = []     
+        self.wait_duration_dic = {}                             #随机生成的DAG时间占用信息
+        self.cpu_demand_dic = {}                                #随机生成的DAG CPU资源占用信息
+        self.memory_demand_dic = {}                             #随机生成的DAG Memo资源占用信息
         self.backlot_time = 0                                   #backlot的总时间占用信息
         self.backlot_cpu_res = 0                                #backlot的总CPU占用信息 
         self.backlot_memory_res = 0                             #backlot的总memory占用信息 
         self.tasks_remaing_time = {}
+        self.tasks = []
         self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])
+        # print("ready list:",self.ready_list)
+        for i in range(len(self.duration)):
+            self.wait_duration_dic[i+1] = self.duration[i]
+            self.cpu_demand_dic[i+1] = self.demand[i][0]
+            self.memory_demand_dic[i+1] = self.demand[i][1]
+        # print("wait_duration_dic:",self.wait_duration_dic)
+        # print("cpu_demand_dic:", self.cpu_demand_dic)
+        # print("memory_demand_dic:",self.memory_demand_dic)
         for i in range(len(self.ready_list)):
+            job_id = self.ready_list[i]
             if i < self.M: 
-                self.wait_duration[i] = self.duration[self.ready_list[i]-1]
-                self.cpu_demand[i] = self.demand[self.ready_list[i]-1][0]
-                self.memory_demand[i] = self.demand[self.ready_list[i]-1][1]
+                self.wait_duration[i] = self.wait_duration_dic[job_id]
+                self.cpu_demand[i] = self.cpu_demand_dic[job_id]
+                self.memory_demand[i] = self.memory_demand_dic[job_id]
             else:
-                self.backlot_time += self.duration[self.ready_list[i]-1]
-                self.backlot_cpu_res += self.demand[self.ready_list[i]-1][0]
-                self.backlot_memory_res += self.demand[self.ready_list[i]-1][1]
+                self.backlot_time += self.wait_duration_dic[job_id]
+                self.backlot_cpu_res += self.cpu_demand_dic[job_id]
+                self.backlot_memory_res += self.memory_demand_dic[job_id]
 
+        #DeepRM Reward#
+        self.DeepRM_reward = 0
+        for i in self.wait_duration_dic.values():
+            self.DeepRM_reward += 1/i
+
+        self.average_time_duration = 0
+        for i in self.wait_duration_dic.values():
+             self.average_time_duration += i
 
         self.b_level = self.find_b_level(self.edges[:],self.done_job) 
         self.children_num = self.find_children_num(self.ready_list,self.edges[:])
