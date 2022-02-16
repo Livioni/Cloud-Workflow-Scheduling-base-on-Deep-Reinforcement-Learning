@@ -1,13 +1,16 @@
-from time import time
 import gym, os,math
 import numpy as np
 from itertools import count
+from sklearn.metrics import average_precision_score
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Categorical
 import matplotlib.pyplot as plt
+import pandas as pd 
+from scipy.signal import savgol_filter
+
 from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 
@@ -19,16 +22,18 @@ action_size = env.action_space.n #11
 lr = 0.0001 #学习率 
 n_iters=1000
 sum_reward = 0
-time_durations = []        #cartpole里面的持续状态数
+total_makespan = 0 
+average_makespan = 0
+time_durations = []       
       
 def plot_durations():
-    plt.figure(2)
+    plt.figure(1)
     plt.clf()
     durations_t = torch.FloatTensor(time_durations)
     plt.title('Training...')
     plt.xlabel('Episode')
-    plt.ylabel('Reward')
-    # plt.plot(i,sum_reward,'or')
+    plt.ylabel('Makespan(s)')
+
     plt.plot(durations_t.numpy())
     # Take 100 episode averages and plot them too
     if len(durations_t) >= 100:
@@ -110,7 +115,6 @@ def trainIters(actor, critic, n_iters):
             # env.render()
             state = torch.FloatTensor(state).to(device)
             dist, value = actor(state), critic(state) #dist得出动作概率分布，value得出当前动作价值函数
-            print(state)
             for i in range(11):
                 probability[i] = dist.probs.detach().numpy()[i]
             action = dist.sample()#采样当前动作
@@ -166,6 +170,10 @@ def trainIters(actor, critic, n_iters):
         optimizerA.step()
         optimizerC.step()
         #绘制曲线
+   
+    for times in time_durations:
+        total_makespan +=  times
+    average_makespan = total_makespan/n_iters
 
     torch.save(actor, 'models/actor.pkl')
     torch.save(critic, 'models/critic.pkl')
@@ -173,6 +181,22 @@ def trainIters(actor, critic, n_iters):
     writer.close()
 
 
+
+def show_makespan():
+    plt.figure(2)
+    plt.grid()
+    plt.clf()
+    durations_t = torch.FloatTensor(time_durations)
+    plt.title('Makespan of each episode')
+    plt.xlabel('Episode')
+    plt.ylabel('Makespan(s)')
+    plt.plot(durations_t.numpy())
+    #平滑处理
+    x = np.linspace(1,n_iters,n_iters)
+    y = savgol_filter(durations_t.numpy(), 49, 3, mode= 'nearest')
+    plt.plot(x, y, 'k', label = 'savgol')
+    plt.savefig("Makespan.png", format="PNG")
+    plt.show()
 
 if __name__ == '__main__':
     if os.path.exists('models/actor.pkl'):
@@ -186,4 +210,7 @@ if __name__ == '__main__':
     else:
         critic = Critic(state_size, action_size).to(device)
     trainIters(actor, critic, n_iters=n_iters)  
+    print(average_makespan)
+    show_makespan()
     
+

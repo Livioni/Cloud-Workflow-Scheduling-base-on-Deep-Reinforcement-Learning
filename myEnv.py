@@ -30,38 +30,38 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_alpha,1)[0]
     else: 
         args.n = n
-        args.max_out = max_out
-        args.alpha = alpha
-        args.beta = beta
+        args.max_out = random.sample(set_max_out,1)[0]
+        args.alpha = random.sample(set_alpha,1)[0]
+        args.beta = random.sample(set_alpha,1)[0]
 
-    length = math.floor(math.sqrt(args.n)/args.alpha)
-    mean_value = args.n/length
-    random_num = np.random.normal(loc = mean_value, scale = args.beta,  size = (length,1))    
+    length = math.floor(math.sqrt(args.n)/args.alpha)                                           #根据公式计算出来的DAG深度
+    mean_value = args.n/length                                                                  #计算平均长度
+    random_num = np.random.normal(loc = mean_value, scale = args.beta,  size = (length,1))      #计算每一层的数量，满足正态分布
     ###############################################division#############################################
     position = {'Start':(0,4),'Exit':(10,4)}
     generate_num = 0
     dag_num = 1
     dag_list = [] 
-    for i in range(len(random_num)):
+    for i in range(len(random_num)):                                                            #对于每一层
         dag_list.append([]) 
-        for j in range(math.ceil(random_num[i])):
+        for j in range(math.ceil(random_num[i])):                                               #向上取整
             dag_list[i].append(j)
-        generate_num += math.ceil(random_num[i])
+        generate_num += len(dag_list[i])
 
-    if generate_num != args.n:
-        if generate_num<args.n:
+    if generate_num != args.n:                                                                  #不等的话做微调
+        if generate_num < args.n:                                                                 
             for i in range(args.n-generate_num):
                 index = random.randrange(0,length,1)
                 dag_list[index].append(len(dag_list[index]))
-        if generate_num>args.n:
+        if generate_num > args.n:
             i = 0
             while i < generate_num-args.n:
-                index = random.randrange(0,length,1)
-                if len(dag_list[index])==1:
-                    i = i-1 if i!=0 else 0
+                index = random.randrange(0,length,1)                                            #随机找一层
+                if len(dag_list[index]) < 1:
+                    continue
                 else:
                     del dag_list[index][-1]
-                i += 1
+                    i += 1
 
     dag_list_update = []
     pos = 1
