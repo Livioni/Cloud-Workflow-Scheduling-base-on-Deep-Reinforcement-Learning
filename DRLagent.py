@@ -22,12 +22,10 @@ action_size = env.action_space.n #11
 lr = 0.0001 #学习率 
 n_iters=1000
 sum_reward = 0
-total_makespan = 0 
-average_makespan = 0
 time_durations = []       
       
 def plot_durations():
-    plt.figure(1)
+    plt.figure(2)
     plt.clf()
     durations_t = torch.FloatTensor(time_durations)
     plt.title('Training...')
@@ -111,6 +109,8 @@ def trainIters(actor, critic, n_iters):
         rewards = []
         probability = {}
         probability_list = []
+        total_makespan = 0 
+        average_makespan = 0
         for i in count():
             # env.render()
             state = torch.FloatTensor(state).to(device)
@@ -140,9 +140,10 @@ def trainIters(actor, critic, n_iters):
             if done:
                 time = state[0]
                 time_durations.append(time)
-                print('Iteration: {}, reward: {}'.format(iter+1, sum_reward))
+                writer.add_scalar('Makespan', time, global_step=iter+1)
                 writer.add_scalar('Sum_reward', sum_reward, global_step=iter+1)
-                plot_durations()
+                print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
+                # plot_durations()
                 break
 
 
@@ -156,7 +157,7 @@ def trainIters(actor, critic, n_iters):
 
         advantage = returns - values
 
-        actor_loss = -(log_probs * advantage.detach()).mean()#这个使用REINFORCE
+        actor_loss = (log_probs * advantage.detach()).mean()#这个使用REINFORCE  加上负号表示梯度上升
         writer.add_scalar('Loss/actor_loss', actor_loss, global_step=iter+1)
 
         critic_loss = advantage.pow(2).mean()
@@ -173,17 +174,17 @@ def trainIters(actor, critic, n_iters):
    
     for times in time_durations:
         total_makespan +=  times
-    average_makespan = total_makespan/n_iters
 
+    average_makespan = total_makespan/n_iters
+    print(average_makespan)
     torch.save(actor, 'models/actor.pkl')
     torch.save(critic, 'models/critic.pkl')
     env.close()
     writer.close()
 
 
-
 def show_makespan():
-    plt.figure(2)
+    plt.figure(3)
     plt.grid()
     plt.clf()
     durations_t = torch.FloatTensor(time_durations)
@@ -193,7 +194,7 @@ def show_makespan():
     plt.plot(durations_t.numpy())
     #平滑处理
     x = np.linspace(1,n_iters,n_iters)
-    y = savgol_filter(durations_t.numpy(), 49, 3, mode= 'nearest')
+    y = savgol_filter(durations_t.numpy(), 99, 3, mode= 'nearest')
     plt.plot(x, y, 'k', label = 'savgol')
     plt.savefig("Makespan.png", format="PNG")
     plt.show()
@@ -210,7 +211,6 @@ if __name__ == '__main__':
     else:
         critic = Critic(state_size, action_size).to(device)
     trainIters(actor, critic, n_iters=n_iters)  
-    print(average_makespan)
     show_makespan()
     
 

@@ -29,7 +29,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.alpha = random.sample(set_alpha,1)[0]
         args.beta = random.sample(set_alpha,1)[0]
     else: 
-        args.n = n
+        args.n = 50
         args.max_out = random.sample(set_max_out,1)[0]
         args.alpha = random.sample(set_alpha,1)[0]
         args.beta = random.sample(set_alpha,1)[0]
@@ -111,6 +111,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
     return edges,into_degree,out_degree,position
 
 def plot_DAG(edges,postion):
+    plt.figure(1)
     g1 = nx.DiGraph()
     g1.add_edges_from(edges)
     nx.draw_networkx(g1, arrows=True, pos=postion)
@@ -136,7 +137,7 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     demand = []
     #初始化持续时间
     for i in range(len(in_degree)):
-        if random.random()<0.8:
+        if random.random()<1:
             duration.append(random.uniform(t,3*t))
         else:
             duration.append(random.uniform(10*t,15*t))
@@ -210,10 +211,7 @@ class MyEnv(gym.Env):
         ##状态转移信息和中间变量
         self.tasks = []                                         #计算资源上挂起的任务
         self.tasks_remaing_time = {}                            #计算资源上挂起的任务剩余执行时间
-       
-        #DeepRM Reward#
         self.DeepRM_reward = 0
-
         self.seed()
         self.viewer = None
         self.state = None
@@ -381,7 +379,7 @@ class MyEnv(gym.Env):
         '''
         done = self.check_episode_finish()
         if done:
-            print("全部任务已完成")
+            # print("全部任务已完成")
             return np.array(self.state, dtype=np.float32), 0, done, True
 
         if (action >= 0 & action<=9): 
@@ -396,14 +394,14 @@ class MyEnv(gym.Env):
                 return np.array(self.state, dtype=np.float32), 0, 0, False 
         else:
             if self.tasks:
-                print("当前还挂起的任务：",self.tasks)
-                print("当前挂起任务的执行时间：",self.tasks_remaing_time)
+                # print("当前还挂起的任务：",self.tasks)
+                # print("当前挂起任务的执行时间：",self.tasks_remaing_time)
                 self.tasks_remaing_time_list = sorted(self.tasks_remaing_time.items(),key = lambda x:x[1])  #排序当前挂起任务的执行时间
                 job_id = self.tasks_remaing_time_list[0][0]                                                 
                 time_shift = self.tasks_remaing_time_list[0][1]                                             #记录最小执行时间的长度
                 self.time += time_shift                                                                     #改变时间戳
                 self.done_job.append(job_id)                                                                #更新已完成的任务
-                print(" 已完成的任务：",self.done_job)
+                # print(" 已完成的任务：",self.done_job)
                 done = self.check_episode_finish()
                 if done:
                     return np.array(self.state, dtype=np.float32), 0, done, True
@@ -413,7 +411,11 @@ class MyEnv(gym.Env):
                 del self.tasks_remaing_time[job_id]                                                         #删除任务剩余时间信息
                 for i in self.tasks_remaing_time.keys():
                     self.tasks_remaing_time[i] -= time_shift
-                reward = -time_shift/self.average_time_duration                                                             
+                #DeepRM Reward#
+                for i in range(len(self.tasks)):
+                    self.DeepRM_reward += 1/self.wait_duration_dic[self.tasks_remaing_time_list[i][0]]
+                reward = -time_shift/self.average_time_duration         
+                # reward = -self.DeepRM_reward                                                    
                 self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])       #更新ready_list
                 self.wait_duration = [-1] * self.M                                                                      
                 self.cpu_demand = [-1] * self.M                                                                         
@@ -453,8 +455,8 @@ class MyEnv(gym.Env):
         '''
         ###随机生成一个workflow
         self.edges,self.duration,self.demand,self.position = workflows_generator('default')
-        print("任务占用时间Ti:",self.duration)                    #生成的原始数据
-        print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
+        # print("任务占用时间Ti:",self.duration)                    #生成的原始数据
+        # print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
         ###初始化一些状态
         self.time,self.cpu_res,self.memory_res = 0,100,100      
         self.done_job = []
@@ -467,6 +469,7 @@ class MyEnv(gym.Env):
         self.backlot_memory_res = 0                             #backlot的总memory占用信息 
         self.tasks_remaing_time = {}
         self.tasks = []
+        self.DeepRM_reward = 0
         self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])
         # print("ready list:",self.ready_list)
         for i in range(len(self.duration)):
@@ -487,15 +490,10 @@ class MyEnv(gym.Env):
                 self.backlot_cpu_res += self.cpu_demand_dic[job_id]
                 self.backlot_memory_res += self.memory_demand_dic[job_id]
 
-        #DeepRM Reward#
-        self.DeepRM_reward = 0
-        for i in self.wait_duration_dic.values():
-            self.DeepRM_reward += 1/i
-
         self.average_time_duration = 0
         for i in self.wait_duration_dic.values():
-             self.average_time_duration += i
-
+            self.average_time_duration += i
+        self.average_time_duration /= args.n 
         self.b_level = self.find_b_level(self.edges[:],self.done_job) 
         self.children_num = self.find_children_num(self.ready_list,self.edges[:])
 

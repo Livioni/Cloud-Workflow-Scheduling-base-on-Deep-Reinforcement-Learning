@@ -42,7 +42,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         dag_list.append([]) 
         for j in range(math.ceil(random_num[i])):
             dag_list[i].append(j)
-        generate_num += math.ceil(random_num[i])
+        generate_num += len(dag_list[i])
 
     if generate_num != args.n:
         if generate_num<args.n:
@@ -53,11 +53,11 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
             i = 0
             while i < generate_num-args.n:
                 index = random.randrange(0,length,1)
-                if len(dag_list[index])==1:
-                    i = i-1 if i!=0 else 0
+                if len(dag_list[index])<=1:
+                    continue
                 else:
                     del dag_list[index][-1]
-                i += 1
+                    i += 1
 
     dag_list_update = []
     pos = 1
