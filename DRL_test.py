@@ -1,13 +1,11 @@
 from time import time
-import gym, os,math
+import gym
 from matplotlib.image import imread
-import numpy as np
 from itertools import count
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
-import matplotlib.pyplot as plt
 import xlwt
 
 env = gym.make("MyEnv-v0").unwrapped

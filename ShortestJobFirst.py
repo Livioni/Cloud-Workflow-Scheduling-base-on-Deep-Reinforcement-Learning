@@ -1,86 +1,103 @@
-from cmath import inf
-from time import time
-from traceback import print_tb
-import gym, os,math
-from matplotlib.image import imread
-import numpy as np
+import gym,xlwt
 from itertools import count
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-from torch.distributions import Categorical
-import matplotlib.pyplot as plt
-import xlwt
 
 env = gym.make("MyEnv-v0").unwrapped
+n_iters=100
+
+def initial_excel():
+    global worksheet,workbook
+    # xlwt 库将数据导入Excel并设置默认字符编码为ascii
+    workbook = xlwt.Workbook(encoding='ascii')
+    #添加一个表 参数为表名
+    worksheet = workbook.add_sheet('makespan')
+    # 生成单元格样式的方法
+    # 设置列宽, 3为列的数目, 12为列的宽度, 256为固定值
+    for i in range(3):
+        worksheet.col(i).width = 256 * 12
+    # 设置单元格行高, 25为行高, 20为固定值
+    worksheet.row(1).height_mismatch = True
+    worksheet.row(1).height = 20 * 25
+    # 保存excel文件
+    workbook.save('makespan_SJF.xls') 
 
 def find_shortest_job(state):
     '''
     寻找shortest的job
     :param state: 当前状态 
-    :return: node的后续节点id列表
+    :return: shortest job在[0:9]中的索引
     '''
     ready_job_list = state[3:13].tolist()
-    min = inf
+    min = 999999
     for ele in ready_job_list:
         if ele != -1:
             min = ele if ele < min else min
     shortest_ind = ready_job_list.index(min)
-    return shortest_ind + 3
+    return shortest_ind 
 
-def sjf():
-    state = env.reset()
-    print(state)
-    shortest_ind = find_shortest_job(state)
-    print(state[shortest_ind])
+def check_res(state):
+    '''
+    判断当前机器是否还可以装载
+    :param state: 当前状态 
+    :return: bool值 是否还可以装载
+    '''
+    job_duration = state[3:13].tolist()
+    job_cpu_demand = state[13:23].tolist()
+    job_memory_demand = state[23:33].tolist()
+    cpu_res = state[1]
+    memory_res = state[2]
+    flag = False
+    for i in range(len(job_duration)):
+        if ((job_cpu_demand[i] == -1.0) and (job_memory_demand[i] == -1.0)):
+            continue
+        else: 
+            flag = True if (job_cpu_demand[i] < cpu_res and job_memory_demand[i] < memory_res) else False
+            if flag == True:
+                break
+    return flag
+
+def check_ready(state,index):
+    '''
+    判断当前机器是否还可以装载任务index
+    :param state: 当前状态 
+    :param index: 查询的任务index 
+    :return: bool值 是否还可以装载
+    '''
+    job_duration = state[3:13].tolist()
+    job_cpu_demand = state[13:23].tolist()
+    job_memory_demand = state[23:33].tolist()
+    cpu_res = state[1]
+    memory_res = state[2]
+    return True if (job_cpu_demand[index] < cpu_res and job_memory_demand[index] < memory_res) else False
 
 
-def test(actor, critic):
-    global worksheet,workbook
-    for o in range(test_order):
+def sjf(n_iters):
+    for iter in range(n_iters):
         state = env.reset()
-        sum_reward = 0 
-        time = 0
-        probability = {}
-        probability_list = []
+        sum_reward = 0      #记录每一幕的reward
+        time = 0            #记录makespan
         for i in count():
-            # env.render()
-            state = torch.FloatTensor(state)
-            dist, value = actor(state), critic(state) #dist得出动作概率分布，value得出当前动作价值函数
-            for i in range(11):
-                probability[i] = dist.probs.detach().numpy()[i]
-            action = dist.sample()#采样当前动作
-            state,reward,done,info = env.step(action.numpy()-1)
-            while (info == False):                                              #重采样
-                probability[action.item()] = 0
-                probability_list = [probs for probs in probability.values()]
-                probs = torch.FloatTensor(probability_list)
-                dist_copy = Categorical(probs) 
-                for i in range(len(dist_copy.probs)):
-                    probability_list[i] = dist_copy.probs[i].item()
-                probs = torch.FloatTensor(probability_list)
-                dist_1 = Categorical(probs)
-                action = dist_1.sample()#采样当前动作 
-                state,reward,done, info = env.step(action.numpy()-1)#输入step的都是
-            next_state, reward, done, _ = state, reward, done, info
-            log_prob = dist.log_prob(action).unsqueeze(0)    
-            state = next_state
+            if (check_res(state)):
+                preaction = find_shortest_job(state)
+                if check_ready(state,preaction):
+                    action = preaction
+                else:
+                    action = -1
+            else:
+                action = -1
+            # print(action)
+            next_state,reward,done,info = env.step(action)
+            # print(next_state)
             sum_reward += reward
+            state = next_state
             if done:
                 time = state[0]
                 time_to_write = round(float(time),3)
-                worksheet.write(o, 0, time_to_write)
-                workbook.save('makespan.xls') 
-                print("Makespan: {} s".format(time))
-                print('Reward: {}'.format(sum_reward))
+                worksheet.write(iter, 0, time_to_write)
+                workbook.save('makespan_SJF.xls') 
+                print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
                 break
-            # img = imread('DAG.png')
-            # plt.imshow(img)
-            # plt.axis('off') # 不显示坐标轴
-            # plt.show()
-
-
+             
 
 if __name__ == '__main__':
-    sjf()  
+    initial_excel()
+    sjf(n_iters)  

@@ -27,12 +27,14 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.n = random.sample(set_dag_size,1)[0]
         args.max_out = random.sample(set_max_out,1)[0]
         args.alpha = random.sample(set_alpha,1)[0]
-        args.beta = random.sample(set_alpha,1)[0]
+        args.beta = random.sample(set_beta,1)[0]
+        args.prob = 0.9
     else: 
-        args.n = 50
+        args.n = 10
         args.max_out = random.sample(set_max_out,1)[0]
         args.alpha = random.sample(set_alpha,1)[0]
-        args.beta = random.sample(set_alpha,1)[0]
+        args.beta = random.sample(set_beta,1)[0]
+        args.prob = 0.8
 
     length = math.floor(math.sqrt(args.n)/args.alpha)                                           #根据公式计算出来的DAG深度
     mean_value = args.n/length                                                                  #计算平均长度
@@ -137,7 +139,7 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     demand = []
     #初始化持续时间
     for i in range(len(in_degree)):
-        if random.random()<1:
+        if random.random()<args.prob:
             duration.append(random.uniform(t,3*t))
         else:
             duration.append(random.uniform(10*t,15*t))
@@ -412,10 +414,15 @@ class MyEnv(gym.Env):
                 for i in self.tasks_remaing_time.keys():
                     self.tasks_remaing_time[i] -= time_shift
                 #DeepRM Reward#
+                self.DeepRM_reward = 0
                 for i in range(len(self.tasks)):
-                    self.DeepRM_reward += 1/self.wait_duration_dic[self.tasks_remaing_time_list[i][0]]
-                reward = -time_shift/self.average_time_duration         
-                # reward = -self.DeepRM_reward                                                    
+                    self.DeepRM_reward += self.wait_duration_dic[self.tasks_remaing_time_list[i][0]]/self.t_unit
+
+                #设计reward    
+                # reward = -time_shift/self.average_time_duration         
+                # reward = -self.DeepRM_reward                      
+                reward = -time_shift/self.t_unit
+
                 self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])       #更新ready_list
                 self.wait_duration = [-1] * self.M                                                                      
                 self.cpu_demand = [-1] * self.M                                                                         
@@ -494,6 +501,8 @@ class MyEnv(gym.Env):
         for i in self.wait_duration_dic.values():
             self.average_time_duration += i
         self.average_time_duration /= args.n 
+
+
         self.b_level = self.find_b_level(self.edges[:],self.done_job) 
         self.children_num = self.find_children_num(self.ready_list,self.edges[:])
 
