@@ -1,6 +1,8 @@
+from time import time_ns
 import gym, os,math
 import numpy as np
 from itertools import count
+from openpyxl import Workbook
 from sklearn.metrics import average_precision_score
 import torch
 import torch.nn as nn
@@ -10,6 +12,7 @@ from torch.distributions import Categorical
 import matplotlib.pyplot as plt
 import pandas as pd 
 from scipy.signal import savgol_filter
+import xlwt
 
 from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter(comment='Workflow scheduler Reward Record')
@@ -20,7 +23,7 @@ env = gym.make("MyEnv-v0").unwrapped
 state_size = env.observation_space.shape[0] #38
 action_size = env.action_space.n #11
 lr = 0.0001 #学习率 
-n_iters=1000
+n_iters=10000
 sum_reward = 0
 time_durations = []       
       
@@ -157,7 +160,7 @@ def trainIters(actor, critic, n_iters):
 
         advantage = returns - values
 
-        actor_loss = (log_probs * advantage.detach()).mean()#这个使用REINFORCE  加上负号表示梯度上升
+        actor_loss = -(log_probs * advantage.detach()).mean()#这个使用REINFORCE  加上负号表示梯度上升
         writer.add_scalar('Loss/actor_loss', actor_loss, global_step=iter+1)
 
         critic_loss = advantage.pow(2).mean()

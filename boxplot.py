@@ -1,10 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import xlrd
+#open data
+makespan_file = xlrd.open_workbook('makespan.xls')
+makespan_sheet = makespan_file.sheets()[0]
+lie = [makespan_sheet.cell_value(i, 0) for i in range(1, makespan_sheet.nrows)]
 
-# Random test data
-np.random.seed(19680801)
-all_data = [np.random.normal(0, std, size=100) for std in range(1, 4)]
-labels = ['x1', 'x2', 'x3']
+all_data = np.array(lie)
+
+labels = ['x1']
 
 fig, (ax1) = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
 
@@ -13,11 +17,12 @@ bplot1 = ax1.boxplot(all_data,
                      vert=True,  # vertical box alignment
                      patch_artist=True,  # fill with color
                      labels=labels)  # will be used to label x-ticks
-ax1.set_title('Rectangular box plot')
+ax1.set_title('Makespan')
 
 
 # fill with colors 
-colors = ['pink', 'lightblue', 'lightgreen']
+# colors = ['pink', 'lightblue', 'lightgreen']
+colors = [(0,80/255,179/255)]
 for patch, color in zip(bplot1['boxes'], colors):
     patch.set_facecolor(color)
 
