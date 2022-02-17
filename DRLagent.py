@@ -148,7 +148,9 @@ def trainIters(actor, critic, n_iters):
                 print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
                 # plot_durations()
                 break
-
+        if (n_iters % 1000 == 0):
+            torch.save(actor, 'models/actor.pkl')
+            torch.save(critic, 'models/critic.pkl')            
 
         next_state = torch.FloatTensor(next_state).to(device)
         next_value = critic(next_state)
