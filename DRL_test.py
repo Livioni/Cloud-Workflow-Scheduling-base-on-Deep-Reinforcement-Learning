@@ -92,7 +92,6 @@ def test(actor, critic):
                 action = dist_1.sample()#采样当前动作 
                 state,reward,done, info = env.step(action.numpy()-1)#输入step的都是
             next_state, reward, done, _ = state, reward, done, info
-            log_prob = dist.log_prob(action).unsqueeze(0)    
             state = next_state
             sum_reward += reward
             if done:
@@ -100,8 +99,8 @@ def test(actor, critic):
                 time_to_write = round(float(time),3)
                 worksheet.write(o, 0, time_to_write)
                 workbook.save('data/makespan_AC.xls') 
-                print("Makespan: {} s".format(time))
-                print('Reward: {}'.format(sum_reward))
+                print("Makespan: {:.3f} s".format(time))
+                print('Reward: {:.3f}'.format(sum_reward))
                 break
             # img = imread('DAG.png')
             # plt.imshow(img)

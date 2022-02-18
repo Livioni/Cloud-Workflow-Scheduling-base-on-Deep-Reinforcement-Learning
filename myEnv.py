@@ -30,10 +30,10 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_beta,1)[0]
         args.prob = 0.9
     else: 
-        args.n = 10
-        args.max_out = random.sample(set_max_out,1)[0]
-        args.alpha = random.sample(set_alpha,1)[0]
-        args.beta = random.sample(set_beta,1)[0]
+        args.n = 20
+        args.max_out = 3
+        args.alpha = alpha
+        args.beta = beta
         args.prob = 0.8
 
     length = math.floor(math.sqrt(args.n)/args.alpha)                                           #根据公式计算出来的DAG深度
@@ -421,7 +421,8 @@ class MyEnv(gym.Env):
                 #设计reward    
                 # reward = -time_shift/self.average_time_duration         
                 # reward = -self.DeepRM_reward                      
-                reward = -time_shift/self.t_unit
+                # reward = -time_shift/self.t_unit
+                reward = -time_shift/100
 
                 self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])       #更新ready_list
                 self.wait_duration = [-1] * self.M                                                                      

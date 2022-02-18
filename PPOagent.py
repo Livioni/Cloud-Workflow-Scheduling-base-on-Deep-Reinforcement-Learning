@@ -1,10 +1,9 @@
 from collections import namedtuple
 from itertools import count
-
+import math
 import os, time
 import numpy as np
 import matplotlib.pyplot as plt
-
 import gym
 import torch
 import torch.nn as nn
@@ -19,16 +18,16 @@ gamma = 0.99                    #折扣率
 render = False                  #是否显示画面       
 
 env = gym.make("MyEnv-v0").unwrapped
-num_state = env.observation_space.shape[0]                  #状态数量4个
-num_action = env.action_space.n                             #动作数量2个
+state_size = env.observation_space.shape[0] #38
+action_size = env.action_space.n #11
 
 Transition = namedtuple('Transition', ['state', 'action',  'a_log_prob', 'reward', 'next_state'])
 
 class Actor(nn.Module):                                     #行动家网络输入为状态，输出为动作概率
     def __init__(self):
         super(Actor, self).__init__()
-        self.state_size = num_state
-        self.action_size = num_state
+        self.state_size = state_size
+        self.action_size = action_size
         self.linear1 = nn.Linear(self.state_size, 128)
         self.linear2 = nn.Linear(128, 256)
         self.linear3 = nn.Linear(256, self.action_size)
@@ -44,8 +43,8 @@ class Actor(nn.Module):                                     #行动家网络输�
 class Critic(nn.Module):                                    #评论家网络，输入为状态，输出为状态值函数
     def __init__(self):
         super(Critic, self).__init__()
-        self.state_size = num_state
-        self.action_size = num_state
+        self.state_size = state_size
+        self.action_size = action_size
         self.linear1 = nn.Linear(self.state_size, 128)
         self.linear2 = nn.Linear(128, 256)
         self.linear3 = nn.Linear(256, 1)
@@ -63,7 +62,7 @@ class PPO():
     ppo_update_time = 10                                    #ppo更新次数
     buffer_capacity = 500                                   #经验池 
     batch_size = 32                                         #batch大小
-    actor_learning_rate = 1e-3                              #PPO对lr不敏感
+    actor_learning_rate = 1e-5                              #PPO对lr不敏感
     critic_learning_rate = 3e-3 
 
     def __init__(self):
@@ -102,7 +101,6 @@ class PPO():
         self.buffer.append(transition)                             #这里的经验池只保留一幕的数据
         self.counter += 1
 
-
     def update(self, i_ep):
         state = torch.tensor([t.state for t in self.buffer], dtype=torch.float)                                    #在经验池抽取所有状态总量1000个
         action = torch.tensor([t.action for t in self.buffer], dtype=torch.long).view(-1, 1)                       #在经验池抽取所有动作
@@ -114,7 +112,22 @@ class PPO():
         for r in reward[::-1]:
             R = r + gamma * R
             Gt.insert(0, R)
+
+        value = 0
+        for ele in Gt:
+            value += ele
+        reward_mean = value/len(Gt)
+        fangcha = 0
+        for ele in Gt:
+            fangcha += (ele-value)*(ele-value)
+        fangcha /= len(Gt)
+        reward_std = math.sqrt(fangcha)
+        for t in range(len(Gt)):
+            Gt[t] = (Gt[t] - reward_mean) / reward_std 
+
         Gt = torch.tensor(Gt, dtype=torch.float)                                                                #这里就是算好的累计收益
+
+
         # print("The agent is updateing....")
         for i in range(self.ppo_update_time):                                                                   #每一幕更新10次
             for index in BatchSampler(SubsetRandomSampler(range(len(self.buffer))), self.batch_size, False):    #在经验池中采样batch size个index
@@ -127,11 +140,10 @@ class PPO():
                 delta = Gt_index - V                                                                            #TD_error
                 advantage = delta.detach()
                 # epoch iteration, PPO core!!!
-                ac = self.actor_net(state[index])
-                action_prob = self.actor_net(state[index]).gather(1, action[index]) # new policy                #这是重新使用网络得到选择该动作的概率
-
-                ratio = (action_prob/old_action_log_prob[index])                                                #重要性采样操作
-                surr1 = ratio * advantage                                                                       #计算重要性采样加权后的td_error
+                action_prob = self.actor_net(state[index]).probs.gather(1, action[index]) # new policy                #这是重新使用网络得到选择该动作的概率
+                # prob = action_prob.probs.detach().numpy().flatten()[action.item()]
+                ratio = (action_prob/old_action_log_prob[index])                                               #重要性采样操作
+                surr1 = (ratio * advantage)                                                                      #计算重要性采样加权后的td_error
                 surr2 = torch.clamp(ratio, 1 - self.clip_param, 1 + self.clip_param) * advantage                #计算截断后的
 
                 # update actor network
@@ -166,10 +178,11 @@ def main():
             state = torch.from_numpy(state).float().unsqueeze(0)        #转化为张量
             with torch.no_grad():                                        
                 action_prob = agent.actor_net(state)                     #构造动作概率
-            for i in range(11):
-                probability[i] = action_prob.probs.detach().numpy()[i]
+            for j in range(11):
+                probability[j] = action_prob.probs.detach().numpy().flatten()[j]
             action = action_prob.sample()#采样当前动作
-            state,reward,done,info = env.step(action.numpy()-1)
+            state,reward,done,info = env.step(action.item()-1)
+            prob = action_prob.probs.numpy().flatten()[action.item()]
             while (info == False):                                              #重采样
                 probability[action.item()] = 0
                 probability_list = [probs for probs in probability.values()]
@@ -180,18 +193,20 @@ def main():
                 probs = torch.FloatTensor(probability_list)
                 dist_1 = Categorical(probs)
                 action = dist_1.sample()#采样当前动作 
-                state,reward,done, info = env.step(action.numpy()-1)#输入step的都是
+                prob = action_prob.probs.numpy().flatten()[action.item()]
+                state,reward,done, info = env.step(action.item()-1)#输入step的都是
             next_state, reward, done, _ = state, reward, done, info
-            trans = Transition(state, action, action_prob, reward, next_state)
+            trans = Transition(state, action, prob, reward, next_state)
             if render: env.render()
             agent.store_transition(trans)
             state = next_state
             sum_reward += reward
             if done :
+                time = state[0]
                 if len(agent.buffer) >= agent.batch_size:agent.update(i_epoch)                  #这里要每一幕至少运行32次才能训练
-                print("Episode:{}   Sum reward:{}".format(i_epoch,sum_reward))
+                print("Episode:{}   Sum reward:{}, Makespan:{:.3f}".format(i_epoch,sum_reward,time))
                 agent.writer.add_scalar('info/Reward', sum_reward, global_step=i_epoch)
-                agent.writer.add_scalar('info/makespan', sum_reward, global_step=i_epoch)
+                agent.writer.add_scalar('info/makespan', time, global_step=i_epoch)
                 break
 
 if __name__ == '__main__':

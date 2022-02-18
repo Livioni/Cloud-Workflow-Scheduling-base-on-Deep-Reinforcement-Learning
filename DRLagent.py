@@ -2,7 +2,6 @@ from time import time_ns
 import gym, os,math
 import numpy as np
 from itertools import count
-from openpyxl import Workbook
 from sklearn.metrics import average_precision_score
 import torch
 import torch.nn as nn
@@ -10,13 +9,10 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Categorical
 import matplotlib.pyplot as plt
-import pandas as pd 
 from scipy.signal import savgol_filter
-import xlwt
-
 from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter('runs/ACagent',comment='Workflow scheduler Reward Record')
 
+writer = SummaryWriter('runs/ACagent',comment='Workflow scheduler Reward Record')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 env = gym.make("MyEnv-v0").unwrapped
 
@@ -27,21 +23,6 @@ n_iters=5000
 sum_reward = 0
 time_durations = []       
       
-def plot_durations():
-    plt.figure(2)
-    plt.clf()
-    durations_t = torch.FloatTensor(time_durations)
-    plt.title('Training...')
-    plt.xlabel('Episode')
-    plt.ylabel('Makespan(s)')
-
-    plt.plot(durations_t.numpy())
-    # Take 100 episode averages and plot them too
-    if len(durations_t) >= 100:
-        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
-        means = torch.cat((torch.zeros(99), means))
-        plt.plot(means.numpy())
-    plt.pause(0.001)  # pause a bit so that plots are updated
 
 
 class Actor(nn.Module): #策略网络
@@ -84,19 +65,10 @@ def compute_returns(next_value, rewards, gamma=0.99):#计算回报
         R = rewards[step] + gamma * R  #gamma是折扣率
         returns.insert(0, R)
 
-    ##手动标准化
-    value = 0
-    for ele in returns:
-        value += ele
-    reward_mean = value/len(returns)
-    fangcha = 0
-    for ele in returns:
-        fangcha += (ele-value).pow(2)
-    fangcha /= len(returns)
-    reward_std = math.sqrt(fangcha)
+    reward_mean = np.mean(returns)
+    reward_std = np.std(returns)
     for t in range(len(returns)):
         returns[t] = (returns[t] - reward_mean) / reward_std 
-
     return returns
 
 
@@ -137,27 +109,26 @@ def trainIters(actor, critic, n_iters):
             log_prob = dist.log_prob(action).unsqueeze(0)
             log_probs.append(log_prob)
             values.append(value)
-            rewards.append(torch.tensor([reward], dtype=torch.float, device=device))         
+            rewards.append(reward)         
             state = next_state
             sum_reward += reward
             if done:
                 time = state[0]
                 time_durations.append(time)
-                writer.add_scalar('Makespan', time, global_step=iter+1)
-                writer.add_scalar('Sum_reward', sum_reward, global_step=iter+1)
+                writer.add_scalar('info/Makespan', time, global_step=iter+1)
+                writer.add_scalar('info/Sum_reward', sum_reward, global_step=iter+1)
                 print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
-                # plot_durations()
                 break
         if (n_iters % 1000 == 0):
             torch.save(actor, 'models/ACagent/actor.pkl')
             torch.save(critic, 'models/ACagent/critic.pkl')            
 
         next_state = torch.FloatTensor(next_state).to(device)
-        next_value = critic(next_state)
+        next_value = critic(next_state).detach().numpy()
         returns = compute_returns(next_value, rewards)
+        returns = torch.tensor(np.array(returns),dtype=torch.float,device=device)
 
         log_probs = torch.cat(log_probs)
-        returns = torch.cat(returns).detach()
         values = torch.cat(values)
 
         advantage = returns - values
