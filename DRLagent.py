@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 from torch.utils.tensorboard import SummaryWriter
 
-writer = SummaryWriter('runs/ACagent',comment='Workflow scheduler Reward Record')
+writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 env = gym.make("MyEnv-v0").unwrapped
 
@@ -30,9 +30,9 @@ class Actor(nn.Module): #策略网络
         super(Actor, self).__init__()
         self.state_size = state_size
         self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 128)
-        self.linear2 = nn.Linear(128, 256)
-        self.linear3 = nn.Linear(256, self.action_size)
+        self.linear1 = nn.Linear(self.state_size, 40)
+        self.linear2 = nn.Linear(40, 40)
+        self.linear3 = nn.Linear(40, self.action_size)
 
     def forward(self, state):
         output = F.relu(self.linear1(state))
@@ -47,9 +47,9 @@ class Critic(nn.Module): #状态值函数网络
         super(Critic, self).__init__()
         self.state_size = state_size
         self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 128)
-        self.linear2 = nn.Linear(128, 256)
-        self.linear3 = nn.Linear(256, 1)
+        self.linear1 = nn.Linear(self.state_size, 40)
+        self.linear2 = nn.Linear(40, 40)
+        self.linear3 = nn.Linear(40, 1)
 
     def forward(self, state):
         output = F.relu(self.linear1(state))

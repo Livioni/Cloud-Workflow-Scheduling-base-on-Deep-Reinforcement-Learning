@@ -3,10 +3,10 @@ import numpy as np
 import xlrd
 import ShortestJobFirst,randomagent
 
-ShortestJobFirst.initial_excel()
-ShortestJobFirst.sjf(100)
-randomagent.initial_excel()
-randomagent.randomagent(100)
+# ShortestJobFirst.initial_excel()
+# ShortestJobFirst.sjf(100)
+# randomagent.initial_excel()
+# randomagent.randomagent(100)
 
 #open data
 makespan_file = xlrd.open_workbook('data/makespan_AC.xls')
