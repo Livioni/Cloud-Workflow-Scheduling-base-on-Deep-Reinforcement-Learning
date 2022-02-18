@@ -29,7 +29,7 @@ def initial_excel():
     worksheet.row(1).height_mismatch = True
     worksheet.row(1).height = 20 * 25
     # 保存excel文件
-    workbook.save('makespan.xls') 
+    workbook.save('data/makespan_AC.xls') 
 
 
 class Actor(nn.Module): #策略网络
@@ -99,7 +99,7 @@ def test(actor, critic):
                 time = state[0]
                 time_to_write = round(float(time),3)
                 worksheet.write(o, 0, time_to_write)
-                workbook.save('makespan.xls') 
+                workbook.save('data/makespan_AC.xls') 
                 print("Makespan: {} s".format(time))
                 print('Reward: {}'.format(sum_reward))
                 break
@@ -111,7 +111,7 @@ def test(actor, critic):
 
 
 if __name__ == '__main__':
-    actor = torch.load('models/actor.pkl')
-    critic = torch.load('models/critic.pkl')
+    actor = torch.load('models/ACagent/actor.pkl')
+    critic = torch.load('models/ACagent/critic.pkl')
     initial_excel()
     test(actor, critic)  

@@ -18,7 +18,7 @@ def initial_excel():
     worksheet.row(1).height_mismatch = True
     worksheet.row(1).height = 20 * 25
     # 保存excel文件
-    workbook.save('makespan_SJF.xls') 
+    workbook.save('data/makespan_SJF.xls') 
 
 def find_shortest_job(state):
     '''
@@ -93,8 +93,8 @@ def sjf(n_iters):
                 time = state[0]
                 time_to_write = round(float(time),3)
                 worksheet.write(iter, 0, time_to_write)
-                workbook.save('makespan_SJF.xls') 
-                print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
+                workbook.save('data/makespan_SJF.xls') 
+                # print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
                 break
              
 

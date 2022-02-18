@@ -15,7 +15,7 @@ from scipy.signal import savgol_filter
 import xlwt
 
 from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter(comment='Workflow scheduler Reward Record')
+writer = SummaryWriter('runs/ACagent',comment='Workflow scheduler Reward Record')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 env = gym.make("MyEnv-v0").unwrapped
@@ -23,7 +23,7 @@ env = gym.make("MyEnv-v0").unwrapped
 state_size = env.observation_space.shape[0] #38
 action_size = env.action_space.n #11
 lr = 0.0001 #学习率 
-n_iters=10000
+n_iters=5000
 sum_reward = 0
 time_durations = []       
       
@@ -118,8 +118,8 @@ def trainIters(actor, critic, n_iters):
             # env.render()
             state = torch.FloatTensor(state).to(device)
             dist, value = actor(state), critic(state) #dist得出动作概率分布，value得出当前动作价值函数
-            for i in range(11):
-                probability[i] = dist.probs.detach().numpy()[i]
+            for j in range(11):
+                probability[j] = dist.probs.detach().numpy()[j]
             action = dist.sample()#采样当前动作
             state,reward,done,info = env.step(action.numpy()-1)
             while (info == False):                                              #重采样
@@ -127,8 +127,8 @@ def trainIters(actor, critic, n_iters):
                 probability_list = [probs for probs in probability.values()]
                 probs = torch.FloatTensor(probability_list)
                 dist_copy = Categorical(probs) 
-                for i in range(len(dist_copy.probs)):
-                    probability_list[i] = dist_copy.probs[i].item()
+                for j in range(len(dist_copy.probs)):
+                    probability_list[j] = dist_copy.probs[j].item()
                 probs = torch.FloatTensor(probability_list)
                 dist_1 = Categorical(probs)
                 action = dist_1.sample()#采样当前动作 
@@ -149,8 +149,8 @@ def trainIters(actor, critic, n_iters):
                 # plot_durations()
                 break
         if (n_iters % 1000 == 0):
-            torch.save(actor, 'models/actor.pkl')
-            torch.save(critic, 'models/critic.pkl')            
+            torch.save(actor, 'models/ACagent/actor.pkl')
+            torch.save(critic, 'models/ACagent/critic.pkl')            
 
         next_state = torch.FloatTensor(next_state).to(device)
         next_value = critic(next_state)
@@ -182,8 +182,8 @@ def trainIters(actor, critic, n_iters):
 
     average_makespan = total_makespan/n_iters
     print(average_makespan)
-    torch.save(actor, 'models/actor.pkl')
-    torch.save(critic, 'models/critic.pkl')
+    torch.save(actor, 'models/ACagent/actor.pkl')
+    torch.save(critic, 'models/ACagent/critic.pkl')
     env.close()
     writer.close()
 
@@ -205,13 +205,13 @@ def show_makespan():
     plt.show()
 
 if __name__ == '__main__':
-    if os.path.exists('models/actor.pkl'):
-        actor = torch.load('models/actor.pkl')
+    if os.path.exists('models/ACagent/actor.pkl'):
+        actor = torch.load('models/ACagent/actor.pkl')
         print('Actor Model loaded')
     else:
         actor = Actor(state_size, action_size).to(device)
-    if os.path.exists('models/critic.pkl'):
-        critic = torch.load('models/critic.pkl')
+    if os.path.exists('models/ACagent/critic.pkl'):
+        critic = torch.load('models/ACagent/critic.pkl')
         print('Critic Model loaded')
     else:
         critic = Critic(state_size, action_size).to(device)
