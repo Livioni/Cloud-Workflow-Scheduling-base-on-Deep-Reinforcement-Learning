@@ -31,19 +31,21 @@ def initial_excel():
     # 保存excel文件
     workbook.save('data/makespan_AC.xls') 
 
-
 class Actor(nn.Module): #策略网络
     def __init__(self, state_size, action_size):
         super(Actor, self).__init__()
         self.state_size = state_size
         self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 40)
-        self.linear2 = nn.Linear(40,40)
-        self.linear3 = nn.Linear(40, self.action_size)
+        self.linear1 = nn.Linear(self.state_size, 100)
+        self.dropout = nn.Dropout(p=0.6)
+        self.linear2 = nn.Linear(100, 100)
+        self.linear3 = nn.Linear(100, self.action_size)
 
     def forward(self, state):
-        output = F.relu(self.linear1(state))
-        output = F.relu(self.linear2(output))
+        output = F.tanh(self.linear1(state))
+        output = self.dropout(output)
+        output = F.tanh(self.linear2(output))
+        output = self.dropout(output)
         output = self.linear3(output)
         distribution = Categorical(F.softmax(output, dim=-1))
         return distribution #输出动作概率分布
@@ -54,13 +56,16 @@ class Critic(nn.Module): #状态值函数网络
         super(Critic, self).__init__()
         self.state_size = state_size
         self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 40)
-        self.linear2 = nn.Linear(40, 40)
-        self.linear3 = nn.Linear(40, 1)
+        self.linear1 = nn.Linear(self.state_size, 100)
+        self.dropout = nn.Dropout(p=0.6)
+        self.linear2 = nn.Linear(100, 100)
+        self.linear3 = nn.Linear(100, 1)
 
     def forward(self, state):
-        output = F.relu(self.linear1(state))
-        output = F.relu(self.linear2(output))
+        output = F.tanh(self.linear1(state))
+        output = self.dropout(output)
+        output = F.tanh(self.linear2(output))
+        output = self.dropout(output)
         value = self.linear3(output)
         return value #输出状态值函数
 
@@ -100,7 +105,7 @@ def test(actor, critic):
                 worksheet.write(o, 0, time_to_write)
                 workbook.save('data/makespan_AC.xls') 
                 print("Makespan: {:.3f} s".format(time))
-                print('Reward: {:.3f}'.format(sum_reward))
+                # print('Reward: {:.3f}'.format(sum_reward))
                 break
             # img = imread('DAG.png')
             # plt.imshow(img)

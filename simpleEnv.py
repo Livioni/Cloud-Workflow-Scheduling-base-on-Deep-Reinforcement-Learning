@@ -30,7 +30,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_beta,1)[0]
         args.prob = 0.9
     else: 
-        args.n = 20
+        args.n = 50
         args.max_out = 3
         args.alpha = alpha
         args.beta = beta
@@ -141,8 +141,10 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     for i in range(len(in_degree)):
         if random.random()<args.prob:
             duration.append(random.uniform(t,3*t))
+            # duration.append(random.sample(range(0,3*t),1))
         else:
             duration.append(random.uniform(10*t,15*t))
+            # duration.append(random.sample(range(10*t,15*t),1))
     #初始化资源需求   
     for i in range(len(in_degree)):
         if random.random()<0.5:
@@ -182,13 +184,13 @@ class MyEnv(gym.Env):
                                     self.t_duration,                #10dim
                                     self.cpu_res_limt,              #10dim
                                     self.memory_res_limt,           #10dim
-                                    self.max_b_level,               #1 dim
-                                    self.max_children,              #1 dim 
-                                    self.backlot_max_time,          #1 dim
-                                    self.backlot_cpu_res_limt,      #1 dim
-                                    self.backlot_memory_res_limt,   #1 dim
+                                    # self.max_b_level,               #1 dim
+                                    # self.max_children,              #1 dim 
+                                    # self.backlot_max_time,          #1 dim
+                                    # self.backlot_cpu_res_limt,      #1 dim
+                                    # self.backlot_memory_res_limt,   #1 dim
                                     )))                             # totally 38 dim
-        low = np.array([0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0],dtype=np.float32)
+        low = np.array([0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],dtype=np.float32)
         self.action_space = spaces.Discrete(11)#{-1,0,1,2,3,4,5,6,7,8,9}
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
         ##状态信息
@@ -388,7 +390,7 @@ class MyEnv(gym.Env):
             if (self.check_action(action)):
                 self.pend_task(action)
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
-                self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]                                          
+                self.memory_demand                                     
                 reward = 0.0                                                                                           #时间步没动，收益为0
                 done = self.check_episode_finish()
                 return np.array(self.state, dtype=np.float32), reward, done, True
@@ -448,7 +450,7 @@ class MyEnv(gym.Env):
                 self.b_level = self.find_b_level(self.edges[:],self.done_job)
                 self.children_num = self.find_children_num(self.ready_list,self.edges[:]) 
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
-                        self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]
+                        self.memory_demand
                 return np.array(self.state, dtype=np.float32), reward, done, True
             else:
                 return np.array(self.state, dtype=np.float32), 0, 0, False
@@ -508,7 +510,7 @@ class MyEnv(gym.Env):
         self.children_num = self.find_children_num(self.ready_list,self.edges[:])
 
         self.state = [self.time,self.cpu_res,self.memory_res] + self.wait_duration + self.cpu_demand + \
-            self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]
+            self.memory_demand 
         self.steps_beyond_done = None
         return np.array(self.state, dtype=np.float32)
 

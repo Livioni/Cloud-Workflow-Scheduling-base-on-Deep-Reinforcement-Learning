@@ -1,10 +1,11 @@
-from time import time_ns
-import gym, os,math
+
+import gym, os,math,random
 import numpy as np
 from itertools import count
 from sklearn.metrics import average_precision_score
 import torch
 import torch.nn as nn
+from torch.nn import init
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.distributions import Categorical
@@ -19,24 +20,34 @@ env = gym.make("MyEnv-v0").unwrapped
 state_size = env.observation_space.shape[0] #38
 action_size = env.action_space.n #11
 lr = 0.0001 #学习率 
-n_iters=5000
+n_iters=10000
 sum_reward = 0
 time_durations = []       
-      
-
+    
+def weights_init(m):
+  classname = m.__class__.__name__
+  if classname.find('Conv2d') != -1:
+    init.xavier_normal_(m.weight.data)
+    init.constant_(m.bias.data, 0.0)
+  elif classname.find('Linear') != -1:
+    init.xavier_normal_(m.weight.data)
+    init.constant_(m.bias.data, 0.0)   
 
 class Actor(nn.Module): #策略网络
     def __init__(self, state_size, action_size):
         super(Actor, self).__init__()
         self.state_size = state_size
         self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 40)
-        self.linear2 = nn.Linear(40, 40)
-        self.linear3 = nn.Linear(40, self.action_size)
+        self.linear1 = nn.Linear(self.state_size, 100)
+        self.dropout = nn.Dropout(p=0.6)
+        self.linear2 = nn.Linear(100, 100)
+        self.linear3 = nn.Linear(100, self.action_size)
 
     def forward(self, state):
         output = F.relu(self.linear1(state))
+        output = self.dropout(output)
         output = F.relu(self.linear2(output))
+        output = self.dropout(output)
         output = self.linear3(output)
         distribution = Categorical(F.softmax(output, dim=-1))
         return distribution #输出动作概率分布
@@ -47,13 +58,16 @@ class Critic(nn.Module): #状态值函数网络
         super(Critic, self).__init__()
         self.state_size = state_size
         self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 40)
-        self.linear2 = nn.Linear(40, 40)
-        self.linear3 = nn.Linear(40, 1)
+        self.linear1 = nn.Linear(self.state_size, 100)
+        self.dropout = nn.Dropout(p=0.6)
+        self.linear2 = nn.Linear(100, 100)
+        self.linear3 = nn.Linear(100, 1)
 
     def forward(self, state):
         output = F.relu(self.linear1(state))
+        output = self.dropout(output)
         output = F.relu(self.linear2(output))
+        output = self.dropout(output)
         value = self.linear3(output)
         return value #输出状态值函数
 
@@ -119,7 +133,8 @@ def trainIters(actor, critic, n_iters):
                 writer.add_scalar('info/Sum_reward', sum_reward, global_step=iter+1)
                 print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
                 break
-        if (n_iters % 1000 == 0):
+
+        if (n_iters % 500 == 0):
             torch.save(actor, 'models/ACagent/actor.pkl')
             torch.save(critic, 'models/ACagent/critic.pkl')            
 
@@ -156,7 +171,7 @@ def trainIters(actor, critic, n_iters):
     torch.save(actor, 'models/ACagent/actor.pkl')
     torch.save(critic, 'models/ACagent/critic.pkl')
     env.close()
-    writer.close()
+    # writer.close()
 
 
 def show_makespan():
@@ -181,11 +196,13 @@ if __name__ == '__main__':
         print('Actor Model loaded')
     else:
         actor = Actor(state_size, action_size).to(device)
+        actor.apply(weights_init)
     if os.path.exists('models/ACagent/critic.pkl'):
         critic = torch.load('models/ACagent/critic.pkl')
         print('Critic Model loaded')
     else:
         critic = Critic(state_size, action_size).to(device)
+        critic.apply(weights_init)
     trainIters(actor, critic, n_iters=n_iters)  
     show_makespan()
     
