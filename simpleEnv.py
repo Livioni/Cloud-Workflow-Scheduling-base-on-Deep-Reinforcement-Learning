@@ -30,7 +30,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_beta,1)[0]
         args.prob = 0.9
     else: 
-        args.n = 50
+        args.n = 40
         args.max_out = 3
         args.alpha = alpha
         args.beta = beta

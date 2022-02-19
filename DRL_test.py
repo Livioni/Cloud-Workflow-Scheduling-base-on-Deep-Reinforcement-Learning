@@ -7,6 +7,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Categorical
 import xlwt
+from DRLagent import Actor, Critic
+
+
 
 env = gym.make("MyEnv-v0").unwrapped
 state_size = env.observation_space.shape[0] #38
@@ -14,6 +17,7 @@ action_size = env.action_space.n #11
 test_order = 100
 sum_reward = 0
 time_durations = []        
+
 
 def initial_excel():
     global worksheet,workbook
@@ -29,45 +33,8 @@ def initial_excel():
     worksheet.row(1).height_mismatch = True
     worksheet.row(1).height = 20 * 25
     # 保存excel文件
-    workbook.save('data/makespan_AC.xls') 
+    workbook.save('data/makespan_AC.xls')
 
-class Actor(nn.Module): #策略网络
-    def __init__(self, state_size, action_size):
-        super(Actor, self).__init__()
-        self.state_size = state_size
-        self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 100)
-        self.dropout = nn.Dropout(p=0.6)
-        self.linear2 = nn.Linear(100, 100)
-        self.linear3 = nn.Linear(100, self.action_size)
-
-    def forward(self, state):
-        output = F.tanh(self.linear1(state))
-        output = self.dropout(output)
-        output = F.tanh(self.linear2(output))
-        output = self.dropout(output)
-        output = self.linear3(output)
-        distribution = Categorical(F.softmax(output, dim=-1))
-        return distribution #输出动作概率分布
-
-
-class Critic(nn.Module): #状态值函数网络
-    def __init__(self, state_size, action_size):
-        super(Critic, self).__init__()
-        self.state_size = state_size
-        self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 100)
-        self.dropout = nn.Dropout(p=0.6)
-        self.linear2 = nn.Linear(100, 100)
-        self.linear3 = nn.Linear(100, 1)
-
-    def forward(self, state):
-        output = F.tanh(self.linear1(state))
-        output = self.dropout(output)
-        output = F.tanh(self.linear2(output))
-        output = self.dropout(output)
-        value = self.linear3(output)
-        return value #输出状态值函数
 
 def test(actor, critic):
     global worksheet,workbook

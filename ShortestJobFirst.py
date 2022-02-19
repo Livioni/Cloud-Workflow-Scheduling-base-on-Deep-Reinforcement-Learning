@@ -71,6 +71,7 @@ def check_ready(state,index):
 
 
 def sjf(n_iters):
+    print("SJF")
     for iter in range(n_iters):
         state = env.reset()
         sum_reward = 0      #记录每一幕的reward

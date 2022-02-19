@@ -23,30 +23,20 @@ lr = 0.0001 #学习率
 n_iters=10000
 sum_reward = 0
 time_durations = []       
-    
-def weights_init(m):
-  classname = m.__class__.__name__
-  if classname.find('Conv2d') != -1:
-    init.xavier_normal_(m.weight.data)
-    init.constant_(m.bias.data, 0.0)
-  elif classname.find('Linear') != -1:
-    init.xavier_normal_(m.weight.data)
-    init.constant_(m.bias.data, 0.0)   
+     
 
 class Actor(nn.Module): #策略网络
     def __init__(self, state_size, action_size):
         super(Actor, self).__init__()
         self.state_size = state_size
         self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 100)
+        self.linear1 = nn.Linear(self.state_size, 40)
         self.dropout = nn.Dropout(p=0.6)
-        self.linear2 = nn.Linear(100, 100)
-        self.linear3 = nn.Linear(100, self.action_size)
+        self.linear2 = nn.Linear(40, 40)
+        self.linear3 = nn.Linear(40, self.action_size)
 
     def forward(self, state):
-        output = F.relu(self.linear1(state))
-        output = self.dropout(output)
-        output = F.relu(self.linear2(output))
+        output = F.sigmoid(self.linear1(state))
         output = self.dropout(output)
         output = self.linear3(output)
         distribution = Categorical(F.softmax(output, dim=-1))
@@ -58,15 +48,15 @@ class Critic(nn.Module): #状态值函数网络
         super(Critic, self).__init__()
         self.state_size = state_size
         self.action_size = action_size
-        self.linear1 = nn.Linear(self.state_size, 100)
+        self.linear1 = nn.Linear(self.state_size, 40)
         self.dropout = nn.Dropout(p=0.6)
-        self.linear2 = nn.Linear(100, 100)
-        self.linear3 = nn.Linear(100, 1)
+        self.linear2 = nn.Linear(40, 40)
+        self.linear3 = nn.Linear(40, 1)
 
     def forward(self, state):
         output = F.relu(self.linear1(state))
-        output = self.dropout(output)
-        output = F.relu(self.linear2(output))
+        # output = self.dropout(output)
+        # output = F.relu(self.linear2(output))
         output = self.dropout(output)
         value = self.linear3(output)
         return value #输出状态值函数
@@ -196,13 +186,13 @@ if __name__ == '__main__':
         print('Actor Model loaded')
     else:
         actor = Actor(state_size, action_size).to(device)
-        actor.apply(weights_init)
+        # actor.apply(weights_init)
     if os.path.exists('models/ACagent/critic.pkl'):
         critic = torch.load('models/ACagent/critic.pkl')
         print('Critic Model loaded')
     else:
         critic = Critic(state_size, action_size).to(device)
-        critic.apply(weights_init)
+        # critic.apply(weights_init)
     trainIters(actor, critic, n_iters=n_iters)  
     show_makespan()
     

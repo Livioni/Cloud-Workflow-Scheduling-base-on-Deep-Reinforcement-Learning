@@ -1,8 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import xlrd
-import ShortestJobFirst,randomagent
+import xlrd,torch
+import ShortestJobFirst,randomagent,DRL_test
+from DRLagent import Actor, Critic
 
+actor = torch.load('models/ACagent/actor.pkl')
+critic = torch.load('models/ACagent/critic.pkl')
+DRL_test.initial_excel()
+DRL_test.test(actor, critic)  
 ShortestJobFirst.initial_excel()
 ShortestJobFirst.sjf(100)
 randomagent.initial_excel()

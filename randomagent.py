@@ -23,6 +23,7 @@ def initial_excel():
 
 
 def randomagent(n_iters):
+    print("random")
     for iter in range(n_iters):
         state = env.reset()
         sum_reward = 0      #记录每一幕的reward
