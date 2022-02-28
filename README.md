@@ -17,7 +17,9 @@
 
 表示的是下面这一张图。
 
-![image-20220228114904174](README.assets/image-20220228114904174.png)
+<img src="README.assets/image-20220228114904174.png" alt="image-20220228114904174" style="zoom:67%;" />
+
+​																													图 1 一个DAG示例
 
 参数设定为：
 
@@ -42,6 +44,8 @@ beta = [0.0,0.5,1.0,2.0]           #控制 DAG 的规则度
 在这里$alpha$控制的是DAG的整体形状，如果$alpha$越小，DAG越长，$alpha$越大，DAG越短。
 
 ![image-20220228152039290](README.assets/image-20220228152039290.png)
+
+​																								图2 不同alpha下DAG的形状（n=30）
 
 $beta$则是控制的DAG的规则度，如果$beta$越大，DAG越参差不齐。
 
@@ -150,5 +154,97 @@ reset函数表示初始化环境，包括随机生成一个DAG并且生成工作
 
 以上两种方法均在同样的gym环境中交互，这意味着SJF方法仅仅知道Ready_task 任务列表10个长度的信息。
 
+### 参数信息
 
+```python
+1.	class Actor(nn.Module): #策略网络  
+2.	    def __init__(self, state_size, action_size):  
+3.	        super(Actor, self).__init__()  
+4.	        self.state_size = state_size  
+5.	        self.action_size = action_size  
+6.	        self.linear1 = nn.Linear(self.state_size, 40)  
+7.	        self.dropout = nn.Dropout(p=0.6)  
+8.	        self.linear2 = nn.Linear(40, 40)  
+9.	        self.linear3 = nn.Linear(40, self.action_size)  
+10.	  
+11.	    def forward(self, state):  
+12.	        output = F.sigmoid(self.linear1(state))  
+13.	        output = self.dropout(output)  
+14.	        output = self.linear3(output)  
+15.	        distribution = Categorical(F.softmax(output, dim=-1))  
+16.	        return distribution #输出动作概率分布  
+
+1.	Class Critic(nn.Module) #状态值函数网络 
+2.	    def __init__(self, state_size, action_size):  
+3.	        super(Critic, self).__init__()  
+4.	        self.state_size = state_size  
+5.	        self.action_size = action_size  
+6.	        self.linear1 = nn.Linear(self.state_size, 40)  
+7.	        self.dropout = nn.Dropout(p=0.6)  
+8.	        self.linear2 = nn.Linear(40, 40)  
+9.	        self.linear3 = nn.Linear(40, 1)  
+10.	  
+11.	    def forward(self, state):  
+12.	        output = F.relu(self.linear1(state))  
+13.	        output = self.dropout(output)  
+14.	        value = self.linear3(output)  
+15.	        return value #输出状态值函数  
+
+```
+
+网络参数在训练时都有改动，基本上是选择这样三层的网络，神经元从40-400都有试过，激活函数用relu的话容易导致输出概率极小趋近于零，尝试使用sigmoid后就没有出现过这个问题。
+
+可变动的一些参数：
+
+| **参数设置**            |                                    |
+| ----------------------- | ---------------------------------- |
+| Episode                 | 1000至10000                        |
+| learning rate           | 0.0001                             |
+| size                    | [20,30,40,50,60,70,80,90]or random |
+| max_out                 | [1,2,3,4,5] or random              |
+| alpha                   | [0.5,1.0,1.5] or random            |
+| beta                    | [0.0,0.5,1.0,2.0] or random        |
+| Reward = -time_shift/10 |                                    |
+| prob = 0.8              |                                    |
+
+在各种实验条件下训练网络，虽然AC网络都在loss上表现收敛，但训练过程中reward和makespan表现太过于随机，整体趋势也时好时坏。于是尝试将状态空间**降维**，删除了第7，8，9，10，11维状态，也就是从原来的38维状态减少至前33维状态，这样的话给智能体感知的DAG整体结构信息就变少了，但这样做有更大几率训练出好一点的模型，下面这个网络在参数learning rate = 0.0001 size = 20 max_out = 3 alpha = 2 beta = 1 prob = 1 的情况下训练1000次偶然得出一个比较好的智能体：
+
+![image-20220228184055021](README.assets/image-20220228184055021.png)
+
+​																														图3 actor loss
+
+![image-20220228184153934](README.assets/image-20220228184153934.png)
+
+​																														图 4 critic loss
+
+![image-20220228184210414](README.assets/image-20220228184210414.png)
+
+​																														图 5 makespan
+
+![image-20220228184228433](README.assets/image-20220228184228433.png)
+
+​																														图 6 reward
+
+因为收益设置为Reward = -time_shift/100，所以makespan和reward训练的趋势差不多是相反的，但把Smoothing拉到最大后并没有明显的下降趋势。
+
+![image-20220228184419066](README.assets/image-20220228184419066.png)
+
+​																										图 7 makespan (smoothing=0.999)
+
+随后将该训练好的网络与SJF和random方法对比，使用相同的env环境，每个方法求解100个DAG任务（因为gym环境的限制，每个方法各按照同样的参数生成100个DAG；如果要对比每种方法求解同样的一个DAG任务，会比较麻烦。），观察makespan数据。
+
+1. max_out = 3 alpha = 2 beta = 1 prob = 1，在n=10,30,50中的表现：
+
+   | 不同方法在不同size下的makespan平均值(单位s) |        |        |        |
+   | ------------------------------------------- | ------ | ------ | ------ |
+   |                                             | A-C    | SJF    | Random |
+   | N=10                                        | 72.88  | 76.53  | 109.53 |
+   | N=20                                        | 186.02 | 207.50 | 277.70 |
+   | N=30                                        | 288.85 | 331.94 | 446.32 |
+
+![image-20220228184456348](README.assets/image-20220228184456348.png)
+
+​																												图8 各方法的实验数据对比
+
+从图中可以看出AC网络训练出来的模型要优于SJF方法，智能体学习到的策略要优于SJF方法 5%-15%，优于Random方法50%-54% 尤其是当DAG规模变大之后，DRL的优势更明显。在之后的实验中，不断修改max_out, alpha, beta, prob等参数，情况大致相同，DRL都要优于其余两种方法。
 
