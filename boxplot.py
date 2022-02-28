@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import xlrd,torch
-import baselines.ShortestJobFirst,baselines.randomagent,DRL_test
+import baselines.ShortestJobFirst,baselines.randomagent,DRL_test,baselines.Tetris
 from DRLagent import Actor, Critic
 
 actor = torch.load('models/ACagent/actor.pkl')
@@ -12,6 +12,8 @@ baselines.ShortestJobFirst.initial_excel()
 baselines.ShortestJobFirst.sjf(100)
 baselines.randomagent.initial_excel()
 baselines.randomagent.randomagent(100)
+baselines.Tetris.initial_excel()
+baselines.Tetris.tetris(100)
 
 #open data
 makespan_file = xlrd.open_workbook('data/makespan_AC.xls')
@@ -26,9 +28,13 @@ random_file = xlrd.open_workbook('data/makespan_random.xls')
 random_sheet = random_file.sheets()[0]
 lie3 = [random_sheet.cell_value(i, 0) for i in range(1, random_sheet.nrows)]
 
-all_data = [np.array(lie1),np.array(lie2),np.array(lie3)]
+tetris_file = xlrd.open_workbook('data/makespan_Tetris.xls')
+tetris_sheet = tetris_file.sheets()[0]
+lie4 = [tetris_sheet.cell_value(i, 0) for i in range(1, tetris_sheet.nrows)]
 
-labels = ['DRL','SJF','random']
+all_data = [np.array(lie1),np.array(lie4),np.array(lie2),np.array(lie3)]
+
+labels = ['DRL','Tetris','SJF','random']
 
 fig, (ax1) = plt.subplots(nrows=1, ncols=1, figsize=(9, 4))
 
@@ -41,7 +47,7 @@ ax1.set_title('Makespan')
 
 # fill with colors 
 # colors = ['pink', 'lightblue', 'lightgreen']
-colors = [(0,80/255,179/255),(34/255, 120/255, 4/255),(254/255, 77/255, 79/255)]
+colors = [(0,80/255,179/255),(34/255, 120/255, 4/255),(254/255, 77/255, 79/255),(254/255, 169/255, 64/255)]
 for patch, color in zip(bplot1['boxes'], colors):
     patch.set_facecolor(color)
 
