@@ -30,8 +30,8 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_beta,1)[0]
         args.prob = 0.9
     else: 
-        args.n = 20
-        args.max_out = 3
+        args.n = 50
+        args.max_out = max_out
         args.alpha = alpha
         args.beta = beta
         args.prob = 1
@@ -141,8 +141,10 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     for i in range(len(in_degree)):
         if random.random()<args.prob:
             duration.append(random.uniform(t,3*t))
+            # duration.append(random.sample(range(0,3*t),1)[0])
         else:
-            duration.append(random.uniform(10*t,15*t))
+            duration.append(random.uniform(5*t,10*t))
+            # duration.append(random.sample(range(5*t,10*t),1)[0])
     #初始化资源需求   
     for i in range(len(in_degree)):
         if random.random()<0.5:
@@ -159,22 +161,22 @@ class MyEnv(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
 
     def __init__(self):
-        self.M = 10                                                                                 #动作列表长度，不包括-1
-        self.t_unit = 10                                                                            #时间单位，用于生成DAG节点的任务需求时间，80%的概率平均分布于t-3t 20的概率平均分布在10t-15t
+        self.M = 10                                                                                      #动作列表长度，不包括-1
+        self.t_unit = 10                                                                                 #时间单位，用于生成DAG节点的任务需求时间，80%的概率平均分布于t-3t 20的概率平均分布在10t-15t
         self.cpu_res_unit = 100                                                                          #CPU资源单位，用于生成DAG节点的CPU占用需求，50%的概率的任务为CPU资源需求密集型，随机占用0.25r-0.5r 50%的概率随机占用0.05r-0.01r
         self.memory_res_unit = 100                                                                       #Memory资源单位，用于生成DAG节点的memoory占用需求，50%的概率的任务为memory资源需求密集型，随机占用0.25r-0.5r 50%的概率随机占用0.05r-0.01r
         #以下是各状态的上限定义，好像gym中都需要
-        self.max_time = np.array([[999999]],dtype=np.float32)                                       #当前执行时间/当前执行时间上限：没有规定上限，理论上是inf
-        self.backlot_max_time = np.array([[999999]],dtype=np.float32)                               #backlot中任务所需要总时间/backlot中任务所需要总时间上限：没有规定上限，理论上是inf     //超过动作列表长度的任务的信息被算进backlot，backlot没有个数上限
+        self.max_time = np.array([[999999]],dtype=np.float32)                                            #当前执行时间/当前执行时间上限：没有规定上限，理论上是inf
+        self.backlot_max_time = np.array([[999999]],dtype=np.float32)                                    #backlot中任务所需要总时间/backlot中任务所需要总时间上限：没有规定上限，理论上是inf     //超过动作列表长度的任务的信息被算进backlot，backlot没有个数上限
         self.max_cpu_res=  np.array([[self.cpu_res_unit]],dtype=np.float32)                              #计算资源中的CPU总容量
         self.max_memory_res=  np.array([[self.memory_res_unit]],dtype=np.float32)                        #计算资源中的Memory总容量
-        self.t_duration = self.t_unit * np.ones((1,self.M),dtype=np.float32)                        #动作列表中每一个任务的执行时间/动作列表中每一个任务的执行时间上限
+        self.t_duration = self.t_unit * np.ones((1,self.M),dtype=np.float32)                             #动作列表中每一个任务的执行时间/动作列表中每一个任务的执行时间上限
         self.cpu_res_limt = self.cpu_res_unit* 0.5 * np.ones((1,self.M),dtype=np.float32)                #动作列表中每一个任务CPU资源需求/动作列表中每一个任务CPU资源需求上限
         self.backlot_cpu_res_limt = np.array([[100 * self.cpu_res_unit * 0.5]],dtype=np.float32)         #backlot中任务所需要总CPU资源
         self.memory_res_limt = self.memory_res_unit* 0.5 * np.ones((1,self.M),dtype=np.float32)          #动作列表中每一个任务memory资源需求/动作列表中每一个任务memory资源需求上限
         self.backlot_memory_res_limt = np.array([[100 * self.memory_res_unit * 0.5]],dtype=np.float32)   #backlot中任务所需要总memory资源
-        self.max_b_level = np.array([[100]],dtype=np.float32)                                       #b-level上限
-        self.max_children = np.array([[100]],dtype=np.float32)                                      #max_children上限
+        self.max_b_level = np.array([[100]],dtype=np.float32)                                            #b-level上限
+        self.max_children = np.array([[100]],dtype=np.float32)                                           #max_children上限
         high = np.ravel(np.hstack((
                                     self.max_time,                  #1 dim
                                     self.max_cpu_res,               #1 dim 
@@ -182,13 +184,13 @@ class MyEnv(gym.Env):
                                     self.t_duration,                #10dim
                                     self.cpu_res_limt,              #10dim
                                     self.memory_res_limt,           #10dim
-                                    self.max_b_level,               #1 dim
-                                    self.max_children,              #1 dim 
-                                    self.backlot_max_time,          #1 dim
-                                    self.backlot_cpu_res_limt,      #1 dim
-                                    self.backlot_memory_res_limt,   #1 dim
+                                    # self.max_b_level,               #1 dim
+                                    # self.max_children,              #1 dim 
+                                    # self.backlot_max_time,          #1 dim
+                                    # self.backlot_cpu_res_limt,      #1 dim
+                                    # self.backlot_memory_res_limt,   #1 dim
                                     )))                             # totally 38 dim
-        low = np.array([0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0],dtype=np.float32)
+        low = np.array([0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1],dtype=np.float32)
         self.action_space = spaces.Discrete(11)#{-1,0,1,2,3,4,5,6,7,8,9}
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
         ##状态信息
@@ -388,8 +390,9 @@ class MyEnv(gym.Env):
             if (self.check_action(action)):
                 self.pend_task(action)
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
-                self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]                                          
-                reward = 0.0                                                                                           #时间步没动，收益为0
+                self.memory_demand                                     
+                reward = 0.0
+                # reward = ((1 - self.cpu_res/self.cpu_res_unit) + (1 - self.memory_res/self.memory_res_unit))                                                                                            #时间步没动，收益为0
                 done = self.check_episode_finish()
                 return np.array(self.state, dtype=np.float32), reward, done, True
             else:
@@ -413,16 +416,13 @@ class MyEnv(gym.Env):
                 del self.tasks_remaing_time[job_id]                                                         #删除任务剩余时间信息
                 for i in self.tasks_remaing_time.keys():
                     self.tasks_remaing_time[i] -= time_shift
-                #DeepRM Reward#
-                self.DeepRM_reward = 0
-                for i in range(len(self.tasks)):
-                    self.DeepRM_reward += self.wait_duration_dic[self.tasks_remaing_time_list[i][0]]/self.t_unit
 
                 #设计reward    
-                # reward = -time_shift/self.average_time_duration         
-                # reward = -self.DeepRM_reward                      
-                # reward = -time_shift/self.t_unit
-                reward = -time_shift/100
+                # reward = -time_shift/self.average_time_duration                              
+                # reward = -time_shift/self.t_unit - (args.n - len(self.done_job))/10 + len(self.tasks)
+                #           个位数                            个位数或者小数                 个位数
+                reward = -time_shift/self.t_unit
+                
 
                 self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])       #更新ready_list
                 self.wait_duration = [-1] * self.M                                                                      
@@ -448,7 +448,7 @@ class MyEnv(gym.Env):
                 self.b_level = self.find_b_level(self.edges[:],self.done_job)
                 self.children_num = self.find_children_num(self.ready_list,self.edges[:]) 
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
-                        self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]
+                        self.memory_demand
                 return np.array(self.state, dtype=np.float32), reward, done, True
             else:
                 return np.array(self.state, dtype=np.float32), 0, 0, False
@@ -508,7 +508,7 @@ class MyEnv(gym.Env):
         self.children_num = self.find_children_num(self.ready_list,self.edges[:])
 
         self.state = [self.time,self.cpu_res,self.memory_res] + self.wait_duration + self.cpu_demand + \
-            self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]
+            self.memory_demand 
         self.steps_beyond_done = None
         return np.array(self.state, dtype=np.float32)
 
