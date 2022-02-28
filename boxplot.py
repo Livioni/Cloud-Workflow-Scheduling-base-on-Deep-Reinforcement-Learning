@@ -1,17 +1,17 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import xlrd,torch
-import ShortestJobFirst,randomagent,DRL_test
+import baselines.ShortestJobFirst,baselines.randomagent,DRL_test
 from DRLagent import Actor, Critic
 
 actor = torch.load('models/ACagent/actor.pkl')
 critic = torch.load('models/ACagent/critic.pkl')
 DRL_test.initial_excel()
 DRL_test.test(actor, critic)  
-ShortestJobFirst.initial_excel()
-ShortestJobFirst.sjf(100)
-randomagent.initial_excel()
-randomagent.randomagent(100)
+baselines.ShortestJobFirst.initial_excel()
+baselines.ShortestJobFirst.sjf(100)
+baselines.randomagent.initial_excel()
+baselines.randomagent.randomagent(100)
 
 #open data
 makespan_file = xlrd.open_workbook('data/makespan_AC.xls')
