@@ -150,7 +150,7 @@ reset函数表示初始化环境，包括随机生成一个DAG并且生成工作
 1. Shortest Job First（SJF）：首先选择耗时最短的任务执行。SJF首先按可执行任务的时间从小到大排序，将任务放入计算资源中直到放不下后，再执行动作$a=-1$
 
 2. Random：在{-1,0,1,2,3,4,5,6,7,8,9}中随机执行动作，若遇到无效动作重新随机。
-3. Tetris:
+3. Tetris: *Multi-Resource Packing for Cluster Schedulers* 中为最小makespan设计的策略。
 
 以上两种方法均在同样的gym环境中交互，这意味着SJF方法仅仅知道Ready_task 任务列表10个长度的信息。
 
@@ -248,3 +248,6 @@ reset函数表示初始化环境，包括随机生成一个DAG并且生成工作
 
 从图中可以看出AC网络训练出来的模型要优于SJF方法，智能体学习到的策略要优于SJF方法 5%-15%，优于Random方法50%-54% 尤其是当DAG规模变大之后，DRL的优势更明显。在之后的实验中，不断修改max_out, alpha, beta, prob等参数，情况大致相同，DRL都要优于其余两种方法。
 
+最新的方法对比图：
+
+![Makespan对比图](README.assets/Makespan%E5%AF%B9%E6%AF%94%E5%9B%BE.png)
