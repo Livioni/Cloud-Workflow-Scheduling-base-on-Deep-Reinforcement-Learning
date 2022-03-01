@@ -14,13 +14,12 @@ class Actor(nn.Module): #策略网络
         self.state_size = state_size
         self.action_size = action_size
         self.linear1 = nn.Linear(self.state_size, 40)
-        self.dropout = nn.Dropout(p=0.6)
         self.linear2 = nn.Linear(40, 40)
         self.linear3 = nn.Linear(40, self.action_size)
 
     def forward(self, state):
         output = torch.sigmoid(self.linear1(state))
-        output = self.dropout(output)
+        output = self.linear2(output)
         output = self.linear3(output)
         distribution = Categorical(F.softmax(output, dim=-1))
         return distribution #输出动作概率分布
@@ -32,15 +31,12 @@ class Critic(nn.Module): #状态值函数网络
         self.state_size = state_size
         self.action_size = action_size
         self.linear1 = nn.Linear(self.state_size, 40)
-        self.dropout = nn.Dropout(p=0.6)
         self.linear2 = nn.Linear(40, 40)
         self.linear3 = nn.Linear(40, 1)
 
     def forward(self, state):
         output = F.relu(self.linear1(state))
-        # output = self.dropout(output)
-        # output = F.relu(self.linear2(output))
-        output = self.dropout(output)
+        output = F.relu(self.linear2(output))
         value = self.linear3(output)
         return value #输出状态值函数
 
@@ -235,7 +231,7 @@ def randomagent(n_iters):
 if __name__ == '__main__':
     n = 4  #有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('Makespans50.xlsx')
+    workbook = xlsxwriter.Workbook('Makespans40.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
@@ -257,7 +253,7 @@ if __name__ == '__main__':
     for i in range(300,400):
         worksheet.write(i+1, 2, 'Random')
     for i in range(100*n):
-        worksheet.write(i+1, 3, 'n=50') 
+        worksheet.write(i+1, 3, 'n=40') 
         
     env = gym.make("MyEnv-v0").unwrapped
     state_size = env.observation_space.shape[0] #38
