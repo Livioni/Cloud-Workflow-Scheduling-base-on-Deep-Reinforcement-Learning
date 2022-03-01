@@ -139,7 +139,7 @@ def test(actor, critic,test_order):
                 probability[i] = dist.probs.detach().numpy()[i]
             action = dist.sample()#采样当前动作
             state,reward,done,info = env.step(action.numpy()-1)
-            while (info == False):                                              #重采样
+            while (info[0] == False):                                              #重采样
                 probability[action.item()] = 0
                 probability_list = [probs for probs in probability.values()]
                 probs = torch.FloatTensor(probability_list)
@@ -216,7 +216,7 @@ def randomagent(n_iters):
 
             action = random.choice(range(10))-1
             state,reward,done,info = env.step(action)
-            while (info == False):
+            while (info[0] == False):
                 action = random.choice(range(10))-1
                 state,reward,done, info = env.step(action)#输入step的都是
             next_state, reward, done, _ = state, reward, done, info

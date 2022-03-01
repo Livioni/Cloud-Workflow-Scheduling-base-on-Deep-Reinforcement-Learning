@@ -32,7 +32,7 @@ def randomagent(n_iters):
 
             action = random.choice(range(10))-1
             state,reward,done,info = env.step(action)
-            while (info == False):
+            while (info[0] == False):
                 action = random.choice(range(10))-1
                 state,reward,done, info = env.step(action)#输入step的都是
             next_state, reward, done, _ = state, reward, done, info
