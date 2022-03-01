@@ -36,7 +36,7 @@ class Actor(nn.Module): #策略网络
         self.linear3 = nn.Linear(40, self.action_size)
 
     def forward(self, state):
-        output = F.sigmoid(self.linear1(state))
+        output = torch.sigmoid(self.linear1(state))
         output = self.dropout(output)
         output = self.linear3(output)
         distribution = Categorical(F.softmax(output, dim=-1))
@@ -98,7 +98,7 @@ def trainIters(actor, critic, n_iters):
                 probability[j] = dist.probs.detach().numpy()[j]
             action = dist.sample()#采样当前动作
             state,reward,done,info = env.step(action.numpy()-1)
-            while (info == False):                                              #重采样
+            while (info[0] == False):                                              #重采样
                 probability[action.item()] = 0
                 probability_list = [probs for probs in probability.values()]
                 probs = torch.FloatTensor(probability_list)

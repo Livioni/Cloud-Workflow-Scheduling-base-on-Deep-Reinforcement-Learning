@@ -35,6 +35,41 @@ def initial_excel():
     # 保存excel文件
     workbook.save('data/makespan_AC.xls')
 
+class Actor(nn.Module): #策略网络
+    def __init__(self, state_size, action_size):
+        super(Actor, self).__init__()
+        self.state_size = state_size
+        self.action_size = action_size
+        self.linear1 = nn.Linear(self.state_size, 40)
+        self.dropout = nn.Dropout(p=0.6)
+        self.linear2 = nn.Linear(40, 40)
+        self.linear3 = nn.Linear(40, self.action_size)
+
+    def forward(self, state):
+        output = torch.sigmoid(self.linear1(state))
+        output = self.dropout(output)
+        output = self.linear3(output)
+        distribution = Categorical(F.softmax(output, dim=-1))
+        return distribution #输出动作概率分布
+
+
+class Critic(nn.Module): #状态值函数网络
+    def __init__(self, state_size, action_size):
+        super(Critic, self).__init__()
+        self.state_size = state_size
+        self.action_size = action_size
+        self.linear1 = nn.Linear(self.state_size, 40)
+        self.dropout = nn.Dropout(p=0.6)
+        self.linear2 = nn.Linear(40, 40)
+        self.linear3 = nn.Linear(40, 1)
+
+    def forward(self, state):
+        output = F.relu(self.linear1(state))
+        # output = self.dropout(output)
+        # output = F.relu(self.linear2(output))
+        output = self.dropout(output)
+        value = self.linear3(output)
+        return value #输出状态值函数
 
 def test(actor, critic):
     global worksheet,workbook
@@ -52,7 +87,7 @@ def test(actor, critic):
                 probability[i] = dist.probs.detach().numpy()[i]
             action = dist.sample()#采样当前动作
             state,reward,done,info = env.step(action.numpy()-1)
-            while (info == False):                                              #重采样
+            while (info[0] == False):                                              #重采样
                 probability[action.item()] = 0
                 probability_list = [probs for probs in probability.values()]
                 probs = torch.FloatTensor(probability_list)
