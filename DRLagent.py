@@ -19,7 +19,7 @@ env = gym.make("MyEnv-v0").unwrapped
 
 state_size = env.observation_space.shape[0] #38
 action_size = env.action_space.n #11
-lr = 0.0001 #学习率 
+lr = 0.001 #学习率 
 n_iters=10000
 sum_reward = 0
 time_durations = []       
@@ -144,7 +144,6 @@ def trainIters(actor, critic, n_iters):
         critic_loss = advantage.pow(2).mean()
         writer.add_scalar('Loss/critic_loss', critic_loss, global_step=iter+1)
 
-
         optimizerA.zero_grad()
         optimizerC.zero_grad()
         actor_loss.backward()
@@ -161,8 +160,7 @@ def trainIters(actor, critic, n_iters):
     torch.save(actor, 'models/ACagent/actor.pkl')
     torch.save(critic, 'models/ACagent/critic.pkl')
     env.close()
-    # writer.close()
-
+    writer.close()
 
 def show_makespan():
     plt.figure(3)

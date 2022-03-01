@@ -95,7 +95,7 @@ def sjf(n_iters):
                 time_to_write = round(float(time),3)
                 worksheet.write(iter, 0, time_to_write)
                 workbook.save('data/makespan_SJF.xls') 
-                # print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
+                print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
                 break
              
 
