@@ -9,7 +9,9 @@ import torch
 import torch.nn as nn
 from torch.distributions import MultivariateNormal
 from torch.distributions import Categorical
+from torch.utils.tensorboard import SummaryWriter
 
+writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
 env_name = "MyEnv-v0"               #定义自己的环境名称 
@@ -17,7 +19,7 @@ max_ep_len = 10000                  # max timesteps in one episode
 max_training_timesteps = int(3e6)   # break training loop if timeteps > max_training_timesteps
 
 print_freq = max_ep_len/100         # print avg reward in the interval (in num timesteps)
-log_freq = max_ep_len/200           # log avg reward in the interval (in num timesteps)
+log_freq = max_ep_len * 2          # log avg reward in the interval (in num timesteps)
 save_model_freq = int(1e3)          # save model frequency (in num timesteps)
 
 #####################################################
@@ -60,7 +62,7 @@ if not os.path.exists(log_dir):
 
 
 #### get number of log files in log directory
-run_num = 0
+run_num = 50
 current_num_files = next(os.walk(log_dir))[2]
 run_num = len(current_num_files)
 
@@ -76,7 +78,7 @@ print("logging at : " + log_f_name)
 
 ################### checkpointing ###################
 
-run_num_pretrained = 0      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 50      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -295,7 +297,6 @@ class PPO:
 
             # final loss of clipped objective PPO
             loss = -torch.min(surr1, surr2) + 0.5*self.MseLoss(state_values, rewards) - 0.01*dist_entropy
-            
             # take gradient step
             self.optimizer.zero_grad()
             loss.mean().backward()
@@ -327,6 +328,8 @@ def train():
 
     print("============================================================================================")
 
+    ppo_agent.load(checkpoint_path)
+    print("PPO has been loaded!")
 
     # logging file
     log_f = open(log_f_name,"w+")
@@ -335,7 +338,7 @@ def train():
 
     # printing and logging variables
     print_running_reward = 0
-    print_running_episodes = 0
+    print_running_episodes = 1
 
     log_running_reward = 0
     log_running_episodes = 0
@@ -400,6 +403,10 @@ def train():
 
             # break; if the episode is over
             if done:
+                time = state[0]
+                time_to_write = round(float(time),3)
+                writer.add_scalar('info/PPO_makespan', time_to_write, global_step=i_episode)
+                writer.add_scalar('info/PPO_Sum_reward', current_ep_reward, global_step=i_episode)
                 break
 
         print_running_reward += current_ep_reward
