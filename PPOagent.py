@@ -78,7 +78,7 @@ print("logging at : " + log_f_name)
 
 ################### checkpointing ###################
 
-run_num_pretrained = 501      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 50      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -196,10 +196,11 @@ class ActorCritic(nn.Module):
         probability = {}
         action_probs = self.actor(state)
         dist = Categorical(action_probs)
+        a = dist.probs.detach()
         for j in range(11):
-                probability[j] = dist.probs.detach().numpy()[j]  #记录当前动作概率分布
+                probability[j] = dist.probs.detach()[j]  #记录当前动作概率分布
         action = dist.sample()
-        state,reward,done,info = env.step(action.numpy()-1)
+        state,reward,done,info = env.step(action.item()-1)
         while (info[0] == False):                                              #重采样
                 probability[action.item()] = 0
                 probability_list = [probs for probs in probability.values()]
@@ -209,8 +210,8 @@ class ActorCritic(nn.Module):
                     probability_list[j] = dist_copy.probs[j].item()
                 probs = torch.FloatTensor(probability_list)
                 dist_1 = Categorical(probs)
-                action = dist_1.sample()#采样当前动作 
-                state,reward,done,info = env.step(action.numpy()-1)#输入step的都是
+                action = dist_1.sample().to(device)#采样当前动作 
+                state,reward,done,info = env.step(action.item()-1)#输入step的都是
         action_logprob = dist.log_prob(action).unsqueeze(0)
         return action.detach(), action_logprob.detach(),state,reward,done,info
     
