@@ -10,7 +10,6 @@ import torch.nn as nn
 from torch.distributions import MultivariateNormal
 from torch.distributions import Categorical
 
-from DRL_test import test
 
 
 def initial_excel():

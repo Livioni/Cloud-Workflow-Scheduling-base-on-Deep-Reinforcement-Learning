@@ -121,9 +121,7 @@ def check_ready(state,index):
 def test(actor, critic,test_order):
     global worksheet,workbook
     print("AC")
-    makespans = []
-    line = 1
-    for o in range(1,test_order+1):
+    for o in range(test_order):
         state = env.reset()
         sum_reward = 0 
         time = 0
@@ -132,7 +130,7 @@ def test(actor, critic,test_order):
         for i in count():
             # env.render()
             state = torch.FloatTensor(state)
-            dist= actor(state) #dist得出动作概率分布，value得出当前动作价值函数
+            dist, value = actor(state), critic(state) #dist得出动作概率分布，value得出当前动作价值函数
             for i in range(11):
                 probability[i] = dist.probs.detach().numpy()[i]
             action = dist.sample()#采样当前动作
@@ -154,22 +152,13 @@ def test(actor, critic,test_order):
             if done:
                 time = state[0]
                 time_to_write = round(float(time),3)
-                makespans.append(time_to_write)
-                # print("Makespan: {:.3f} s".format(time))
-                if o % auto_save == 0:
-                    average_makespan = np.mean(makespans)
-                    worksheet.write(line, 1, average_makespan)
-                    print('AC : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line*auto_save, sum_reward, average_makespan))
-                    line += 1
-                    makespans = []
+                worksheet.write(o+1, 1, time_to_write)
+                print("Makespan: {:.3f} s".format(time))
                 break
-
 
 def tetris(n_iters):
     print("Tetris")
-    makespans = []
-    line = 1
-    for iter in range(1,n_iters+1):
+    for iter in range(n_iters):
         state = env.reset()
         sum_reward = 0      #记录每一幕的reward
         time = 0            #记录makespan
@@ -182,20 +171,13 @@ def tetris(n_iters):
             if done:
                 time = state[0]
                 time_to_write = round(float(time),3)
-                makespans.append(time_to_write)
-                if iter % auto_save == 0:
-                    average_makespan = np.mean(makespans)
-                    worksheet.write(line+101, 1, average_makespan)
-                    print('Tetris : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line*auto_save, sum_reward,average_makespan))
-                    line += 1
-                    makespans = []
+                worksheet.write(iter+101, 1, time_to_write)
+                print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
                 break
 
 def sjf(n_iters):
     print("SJF")
-    makespans = []
-    line = 1    
-    for iter in range(1,n_iters+1):
+    for iter in range(n_iters):
         state = env.reset()
         sum_reward = 0      #记录每一幕的reward
         time = 0            #记录makespan
@@ -216,20 +198,13 @@ def sjf(n_iters):
             if done:
                 time = state[0]
                 time_to_write = round(float(time),3)
-                makespans.append(time_to_write)
-                if iter % auto_save == 0:
-                    average_makespan = np.mean(makespans)
-                    worksheet.write(line+201, 1, average_makespan)
-                    print('SJF : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line*auto_save, sum_reward,average_makespan))
-                    line += 1
-                    makespans = []
+                worksheet.write(iter+201, 1, time_to_write)
+                print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
                 break
-             
+
 def randomagent(n_iters):
     print("random")
-    makespans = []
-    line = 1    
-    for iter in range(1,n_iters+1):
+    for iter in range(n_iters):
         state = env.reset()
         sum_reward = 0      #记录每一幕的reward
         time = 0            #记录makespan
@@ -249,19 +224,14 @@ def randomagent(n_iters):
             if done:
                 time = state[0]
                 time_to_write = round(float(time),3)
-                makespans.append(time_to_write)
-                if iter % auto_save == 0:
-                    average_makespan = np.mean(makespans)
-                    worksheet.write(line+301, 1, average_makespan)
-                    print('Random : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line*auto_save, sum_reward,average_makespan))
-                    line += 1
-                    makespans = []
+                worksheet.write(iter+301, 1, time_to_write)
+                print('Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(iter+1, sum_reward,time))
                 break
 
 if __name__ == '__main__':
     n = 5  #有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('data/Makespans30.xlsx')
+    workbook = xlsxwriter.Workbook('Makespans50.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
@@ -285,13 +255,12 @@ if __name__ == '__main__':
     for i in range(400,500):
         worksheet.write(i+1, 2, 'PPO')
     for i in range(100*n):
-        worksheet.write(i+1, 3, 'n=30') 
-        
+        worksheet.write(i+1, 3, 'n=50') 
+
     env = gym.make("MyEnv-v0").unwrapped
     state_size = env.observation_space.shape[0] #38
     action_size = env.action_space.n #11
-    auto_save = 20
-    test_order = 100*auto_save
+    test_order = 100
     sum_reward = 0
     time_durations = []  
     actor = torch.load('models/ACagent/actor.pkl')
