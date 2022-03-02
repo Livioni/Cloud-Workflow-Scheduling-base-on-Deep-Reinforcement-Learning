@@ -1,3 +1,4 @@
+from enum import auto
 import os,xlwt
 import glob
 import time
@@ -32,7 +33,8 @@ print("=========================================================================
 ####### initialize environment hyperparameters ######
 env_name = "MyEnv-v0"               #定义自己的环境名称 
 max_ep_len = 10000                  # max timesteps in one episode
-total_test_episodes = 100    # total num of testing episodes
+auto_save = 20
+total_test_episodes = 100*auto_save    # total num of testing episodes
 
 
 ################ PPO hyperparameters ################
@@ -58,7 +60,7 @@ action_dim = env.action_space.n
 
 ################### checkpointing ###################
 
-run_num_pretrained = 50      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 501      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -295,7 +297,8 @@ def test():
 
     ppo_agent.load(checkpoint_path)
     print('PPO agent has been loaded!')
-
+    makespans = []
+    line = 0
     # training loop
     for ep in range(1,total_test_episodes+1):
 
@@ -307,18 +310,20 @@ def test():
             state,reward,done, info = ppo_agent.select_action(state)
             # saving reward and is_terminals
             ep_reward += reward
-
             # break; if the episode is over
             if done:
                 time = state[0]
                 time_to_write = round(float(time),3)
-                worksheet.write(ep, 0, time_to_write)
-                workbook.save('data/makespan_PPO.xls') 
+                makespans.append(time_to_write)
+                if ep % auto_save == 0:
+                    average_makespan = np.mean(makespans)
+                    worksheet.write(line, 1, average_makespan)
+                    print('PPO : Episode: {},  Makespan: {:.3f}s'.format((line+1)*auto_save,average_makespan))
+                    line += 1
+                    makespans = []
                 break
-
+        workbook.save('data/makespan_PPO.xls')          
         ppo_agent.buffer.clear()
-
-        print('Episode: {} \t Reward: {} \t Makespan: {}s'.format(ep, round(ep_reward, 2),time_to_write))
         ep_reward = 0
 
     env.close()

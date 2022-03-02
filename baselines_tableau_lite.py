@@ -121,7 +121,7 @@ def check_ready(state,index):
 def test(actor, critic,test_order):
     global worksheet,workbook
     print("AC")
-    for o in range(test_order):
+    for o in range(1,test_order+1):
         state = env.reset()
         sum_reward = 0 
         time = 0
@@ -130,7 +130,7 @@ def test(actor, critic,test_order):
         for i in count():
             # env.render()
             state = torch.FloatTensor(state)
-            dist, value = actor(state), critic(state) #dist得出动作概率分布，value得出当前动作价值函数
+            dist = actor(state) #dist得出动作概率分布，value得出当前动作价值函数
             for i in range(11):
                 probability[i] = dist.probs.detach().numpy()[i]
             action = dist.sample()#采样当前动作
@@ -152,7 +152,7 @@ def test(actor, critic,test_order):
             if done:
                 time = state[0]
                 time_to_write = round(float(time),3)
-                worksheet.write(o+1, 1, time_to_write)
+                worksheet.write(o, 1, time_to_write)
                 print("Makespan: {:.3f} s".format(time))
                 break
 
@@ -231,7 +231,7 @@ def randomagent(n_iters):
 if __name__ == '__main__':
     n = 5  #有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('Makespans50.xlsx')
+    workbook = xlsxwriter.Workbook('Makespans50_lite.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)

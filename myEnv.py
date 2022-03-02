@@ -30,7 +30,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_beta,1)[0]
         args.prob = 0.9
     else: 
-        args.n = 10
+        args.n = 30
         args.max_out = random.sample(set_max_out,1)[0]
         args.alpha = random.sample(set_alpha,1)[0]
         args.beta = random.sample(set_beta,1)[0]
@@ -134,7 +134,7 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     t = t_unit  #s   time unit
     r = resource_unit #resource unit
     edges,in_degree,out_degree,position = DAGs_generate(mode,n,max_out,alpha,beta)
-    plot_DAG(edges,position)
+    # plot_DAG(edges,position)
     duration = []
     demand = []
     #初始化持续时间

@@ -111,7 +111,6 @@ def check_ready(state,index):
     :param index: 查询的任务index 
     :return: bool值 是否还可以装载
     '''
-    job_duration = state[3:13].tolist()
     job_cpu_demand = state[13:23].tolist()
     job_memory_demand = state[23:33].tolist()
     cpu_res = state[1]
@@ -185,7 +184,7 @@ def tetris(n_iters):
                 makespans.append(time_to_write)
                 if iter % auto_save == 0:
                     average_makespan = np.mean(makespans)
-                    worksheet.write(line+101, 1, average_makespan)
+                    worksheet.write(line+100, 1, average_makespan)
                     print('Tetris : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line*auto_save, sum_reward,average_makespan))
                     line += 1
                     makespans = []
@@ -219,7 +218,7 @@ def sjf(n_iters):
                 makespans.append(time_to_write)
                 if iter % auto_save == 0:
                     average_makespan = np.mean(makespans)
-                    worksheet.write(line+201, 1, average_makespan)
+                    worksheet.write(line+200, 1, average_makespan)
                     print('SJF : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line*auto_save, sum_reward,average_makespan))
                     line += 1
                     makespans = []
@@ -252,7 +251,7 @@ def randomagent(n_iters):
                 makespans.append(time_to_write)
                 if iter % auto_save == 0:
                     average_makespan = np.mean(makespans)
-                    worksheet.write(line+301, 1, average_makespan)
+                    worksheet.write(line+300, 1, average_makespan)
                     print('Random : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line*auto_save, sum_reward,average_makespan))
                     line += 1
                     makespans = []

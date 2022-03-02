@@ -78,7 +78,7 @@ print("logging at : " + log_f_name)
 
 ################### checkpointing ###################
 
-run_num_pretrained = 50      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 501      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -327,8 +327,9 @@ def train():
     print("Started training at (GMT) : ", start_time)
 
     print("============================================================================================")
+    
 
-    ppo_agent.load(checkpoint_path)
+    # ppo_agent.load(checkpoint_path)
     print("PPO has been loaded!")
 
     # logging file
