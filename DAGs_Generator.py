@@ -27,7 +27,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_beta,1)[0]
         args.prob = 0.9
     else: 
-        args.n = 10
+        args.n = 30
         args.max_out = random.sample(set_max_out,1)[0]
         args.alpha = random.sample(set_alpha,1)[0]
         args.beta = random.sample(set_beta,1)[0]
@@ -145,9 +145,9 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     #初始化资源需求   
     for i in range(len(in_degree)):
         if random.random()<0.5:
-            demand.append((random.uniform(0.25*r,0.5*r),random.uniform(0.05*r,0.01*r)))
+            demand.append((round(random.uniform(0.25*r,0.5*r),0),round(random.uniform(0.05*r,0.01*r),0)))
         else:
-            demand.append((random.uniform(0.05*r,0.01*r),random.uniform(0.25*r,0.5*r)))
+            demand.append((round(random.uniform(0.05*r,0.01*r),0),round(random.uniform(0.25*r,0.5*r),0)))
 
     return edges,duration,demand,position
 
@@ -155,20 +155,16 @@ edges_lib = []
 duration_lib = []
 demand_lib = []
 #生成100个随机的DAG图
-for ele in range(0,100):
+for ele in range(0,1000):
     edges, duration, demand, _ = workflows_generator('default')
     edges_lib.append(edges)
     duration_lib.append(duration)
     demand_lib.append(demand)
 
-filename='json/DAGs20_edges.json'
-with open(filename,'w') as file_obj:
-    json.dump(edges_lib,file_obj)
-    
-filename='json/DAGs20_durations.json'
-with open(filename,'w') as file_obj:
-    json.dump(duration_lib,file_obj)
+edges_lib_np = np.array(edges_lib)
+duration_lib_np = np.array(duration_lib,dtype=np.float32)
+demand_lib_np = np.array(demand_lib,dtype=np.float32)
 
-filename='json/DAGs20_demands.json'
-with open(filename,'w') as file_obj:    
-    json.dump(demand_lib,file_obj)
+np.save('npy/edges'+str(args.n)+'_lib.npy',edges_lib_np)
+np.save('npy/duration'+str(args.n)+'_lib.npy',duration_lib_np)
+np.save('npy/demand'+str(args.n)+'_lib.npy',demand_lib_np)

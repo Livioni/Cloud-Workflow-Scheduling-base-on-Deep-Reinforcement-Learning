@@ -11,8 +11,6 @@ import torch.nn as nn
 from torch.distributions import MultivariateNormal
 from torch.distributions import Categorical
 
-
-
 def initial_excel():
     global worksheet,workbook
     # xlwt 库将数据导入Excel并设置默认字符编码为ascii
@@ -60,7 +58,7 @@ action_dim = env.action_space.n
 
 ################### checkpointing ###################
 
-run_num_pretrained = 20      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 30      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -180,7 +178,6 @@ class ActorCritic(nn.Module):
         action_logprob = dist.log_prob(action).unsqueeze(0)
         return action.detach(), action_logprob.detach(),state,reward,done,info
     
-
     def evaluate(self, state, action):
         action_probs = self.actor(state)
         dist = Categorical(action_probs)
