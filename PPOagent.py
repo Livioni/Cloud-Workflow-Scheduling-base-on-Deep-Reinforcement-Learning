@@ -15,12 +15,12 @@ writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
 env_name = "MyEnv-v0"               #定义自己的环境名称 
-max_ep_len = 10000                  # max timesteps in one episode
-max_training_timesteps = int(3e6)   # break training loop if timeteps > max_training_timesteps
+max_ep_len = 1000                  # max timesteps in one episode
+max_training_timesteps = int(3e5)   # break training loop if timeteps > max_training_timesteps
 
-print_freq = max_ep_len/100         # print avg reward in the interval (in num timesteps)
+print_freq = max_ep_len/10         # print avg reward in the interval (in num timesteps)
 log_freq = max_ep_len * 2          # log avg reward in the interval (in num timesteps)
-save_model_freq = int(1e3)          # save model frequency (in num timesteps)
+save_model_freq = int(5e3)          # save model frequency (in num timesteps)
 
 #####################################################
 
@@ -62,7 +62,7 @@ if not os.path.exists(log_dir):
 
 
 #### get number of log files in log directory
-run_num = 50
+run_num = 202
 current_num_files = next(os.walk(log_dir))[2]
 run_num = len(current_num_files)
 
@@ -78,7 +78,7 @@ print("logging at : " + log_f_name)
 
 ################### checkpointing ###################
 
-run_num_pretrained = 50      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 20      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -329,9 +329,11 @@ def train():
 
     print("============================================================================================")
     
-
-    # ppo_agent.load(checkpoint_path)
-    print("PPO has been loaded!")
+    if not os.path.exists(checkpoint_path):
+        print('Network Initilized.')
+    else:
+        ppo_agent.load(checkpoint_path)
+        print("PPO has been loaded!")
 
     # logging file
     log_f = open(log_f_name,"w+")
@@ -369,6 +371,7 @@ def train():
 
             # update PPO agent
             if time_step % update_timestep == 0:
+                print('Network updating.')
                 ppo_agent.update()
 
             # log in logging file

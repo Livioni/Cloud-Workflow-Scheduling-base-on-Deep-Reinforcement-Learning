@@ -3,6 +3,7 @@ import numpy as np
 from numpy.random.mtrand import sample
 from matplotlib import pyplot as plt
 import networkx as nx
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', default='default', type=str)#parameters setting
@@ -23,37 +24,39 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.n = random.sample(set_dag_size,1)[0]
         args.max_out = random.sample(set_max_out,1)[0]
         args.alpha = random.sample(set_alpha,1)[0]
-        args.beta = random.sample(set_alpha,1)[0]
+        args.beta = random.sample(set_beta,1)[0]
+        args.prob = 0.9
     else: 
-        args.n = n
-        args.max_out = max_out
-        args.alpha = alpha
-        args.beta = beta
+        args.n = 10
+        args.max_out = random.sample(set_max_out,1)[0]
+        args.alpha = random.sample(set_alpha,1)[0]
+        args.beta = random.sample(set_beta,1)[0]
+        args.prob = 1
 
-    length = math.floor(math.sqrt(args.n)/args.alpha)
-    mean_value = args.n/length
-    random_num = np.random.normal(loc = mean_value, scale = args.beta,  size = (length,1))    
+    length = math.floor(math.sqrt(args.n)/args.alpha)                                           #根据公式计算出来的DAG深度
+    mean_value = args.n/length                                                                  #计算平均长度
+    random_num = np.random.normal(loc = mean_value, scale = args.beta,  size = (length,1))      #计算每一层的数量，满足正态分布
     ###############################################division#############################################
     position = {'Start':(0,4),'Exit':(10,4)}
     generate_num = 0
     dag_num = 1
     dag_list = [] 
-    for i in range(len(random_num)):
+    for i in range(len(random_num)):                                                            #对于每一层
         dag_list.append([]) 
-        for j in range(math.ceil(random_num[i])):
+        for j in range(math.ceil(random_num[i])):                                               #向上取整
             dag_list[i].append(j)
         generate_num += len(dag_list[i])
 
-    if generate_num != args.n:
-        if generate_num<args.n:
+    if generate_num != args.n:                                                                  #不等的话做微调
+        if generate_num < args.n:                                                                 
             for i in range(args.n-generate_num):
                 index = random.randrange(0,length,1)
                 dag_list[index].append(len(dag_list[index]))
-        if generate_num>args.n:
+        if generate_num > args.n:
             i = 0
             while i < generate_num-args.n:
-                index = random.randrange(0,length,1)
-                if len(dag_list[index])<=1:
+                index = random.randrange(0,length,1)                                            #随机找一层
+                if len(dag_list[index]) < 1:
                     continue
                 else:
                     del dag_list[index][-1]
@@ -107,10 +110,12 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
     return edges,into_degree,out_degree,position
 
 def plot_DAG(edges,postion):
+    plt.figure(1)
     g1 = nx.DiGraph()
     g1.add_edges_from(edges)
     nx.draw_networkx(g1, arrows=True, pos=postion)
     plt.savefig("DAG.png", format="PNG")
+    plt.close()
     return plt.clf
 
 def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0, t_unit = 10, resource_unit = 100):
@@ -126,15 +131,17 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     t = t_unit  #s   time unit
     r = resource_unit #resource unit
     edges,in_degree,out_degree,position = DAGs_generate(mode,n,max_out,alpha,beta)
-    plot_DAG(edges,position)
+    # plot_DAG(edges,position)
     duration = []
     demand = []
     #初始化持续时间
     for i in range(len(in_degree)):
-        if random.random()<0.8:
-            duration.append(random.uniform(t,3*t))
+        if random.random()<args.prob:
+            # duration.append(random.uniform(t,3*t))
+            duration.append(random.sample(range(0,3*t),1)[0])
         else:
-            duration.append(random.uniform(10*t,15*t))
+            # duration.append(random.uniform(5*t,10*t))
+            duration.append(random.sample(range(5*t,10*t),1)[0])
     #初始化资源需求   
     for i in range(len(in_degree)):
         if random.random()<0.5:
@@ -142,6 +149,26 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
         else:
             demand.append((random.uniform(0.05*r,0.01*r),random.uniform(0.25*r,0.5*r)))
 
-    return edges,duration,demand
+    return edges,duration,demand,position
 
+edges_lib = []
+duration_lib = []
+demand_lib = []
+#生成100个随机的DAG图
+for ele in range(0,100):
+    edges, duration, demand, _ = workflows_generator('default')
+    edges_lib.append(edges)
+    duration_lib.append(duration)
+    demand_lib.append(demand)
 
+filename='json/DAGs20_edges.json'
+with open(filename,'w') as file_obj:
+    json.dump(edges_lib,file_obj)
+    
+filename='json/DAGs20_durations.json'
+with open(filename,'w') as file_obj:
+    json.dump(duration_lib,file_obj)
+
+filename='json/DAGs20_demands.json'
+with open(filename,'w') as file_obj:    
+    json.dump(demand_lib,file_obj)
