@@ -231,7 +231,7 @@ def randomagent(n_iters):
 if __name__ == '__main__':
     n = 5  #有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('Makespans50_lite.xlsx')
+    workbook = xlsxwriter.Workbook('data/Makespans50_lite.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
