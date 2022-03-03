@@ -151,20 +151,46 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
 
     return edges,duration,demand,position
 
-edges_lib = []
-duration_lib = []
-demand_lib = []
-#生成100个随机的DAG图
-for ele in range(0,1000):
-    edges, duration, demand, _ = workflows_generator('default')
-    edges_lib.append(edges)
-    duration_lib.append(duration)
-    demand_lib.append(demand)
+def generate_train_datasheet(amount):
+    edges_lib = []
+    duration_lib = []
+    demand_lib = []
+    #生成amount个随机的DAG图
+    for ele in range(0,amount):
+        edges, duration, demand, _ = workflows_generator('default')
+        edges_lib.append(edges)
+        duration_lib.append(duration)
+        demand_lib.append(demand)
 
-edges_lib_np = np.array(edges_lib)
-duration_lib_np = np.array(duration_lib,dtype=np.float32)
-demand_lib_np = np.array(demand_lib,dtype=np.float32)
+    edges_lib_np = np.array(edges_lib)
+    duration_lib_np = np.array(duration_lib,dtype=np.float32)
+    demand_lib_np = np.array(demand_lib,dtype=np.float32)
 
-np.save('npy/edges'+str(args.n)+'_lib.npy',edges_lib_np)
-np.save('npy/duration'+str(args.n)+'_lib.npy',duration_lib_np)
-np.save('npy/demand'+str(args.n)+'_lib.npy',demand_lib_np)
+    np.save('npy/train_datasheet/'+str(args.n)+'/edges'+str(args.n)+'_lib.npy',edges_lib_np)
+    np.save('npy/train_datasheet/'+str(args.n)+'/duration'+str(args.n)+'_lib.npy',duration_lib_np)
+    np.save('npy/train_datasheet/'+str(args.n)+'/demand'+str(args.n)+'_lib.npy',demand_lib_np)
+
+
+def generate_test_datasheet(amount):
+    edges_lib = []
+    duration_lib = []
+    demand_lib = []
+    #生成amount个随机的DAG图
+    for ele in range(0,amount):
+        edges, duration, demand, _ = workflows_generator('default')
+        edges_lib.append(edges)
+        duration_lib.append(duration)
+        demand_lib.append(demand)
+
+    edges_lib_np = np.array(edges_lib)
+    duration_lib_np = np.array(duration_lib,dtype=np.float32)
+    demand_lib_np = np.array(demand_lib,dtype=np.float32)
+
+    np.save('npy/test_datasheet/'+str(args.n)+'/edges'+str(args.n)+'_lib.npy',edges_lib_np)
+    np.save('npy/test_datasheet/'+str(args.n)+'/duration'+str(args.n)+'_lib.npy',duration_lib_np)
+    np.save('npy/test_datasheet/'+str(args.n)+'/demand'+str(args.n)+'_lib.npy',demand_lib_np)
+
+if __name__ == '__main__':
+    # generate_train_datasheet(1000)
+    generate_test_datasheet(100)
+    

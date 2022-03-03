@@ -133,24 +133,24 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     '''
     t = t_unit  #s   time unit
     r = resource_unit #resource unit
-    edges,in_degree,out_degree,position = DAGs_generate(mode,n,max_out,alpha,beta)
+    edges,in_degree,_,position = DAGs_generate(mode,n,max_out,alpha,beta)
     # plot_DAG(edges,position)
     duration = []
     demand = []
     #初始化持续时间
     for i in range(len(in_degree)):
         if random.random()<args.prob:
-            duration.append(random.uniform(t,3*t))
-            # duration.append(random.sample(range(0,3*t),1)[0])
+            # duration.append(random.uniform(t,3*t))
+            duration.append(random.sample(range(1,3*t),1)[0])
         else:
-            duration.append(random.uniform(5*t,10*t))
-            # duration.append(random.sample(range(5*t,10*t),1)[0])
+            # duration.append(random.uniform(5*t,10*t))
+            duration.append(random.sample(range(5*t,10*t),1)[0])
     #初始化资源需求   
     for i in range(len(in_degree)):
         if random.random()<0.5:
-            demand.append((random.uniform(0.25*r,0.5*r),random.uniform(0.05*r,0.01*r)))
+            demand.append((round(random.uniform(0.25*r,0.5*r),0),round(random.uniform(0.05*r,0.01*r),0)))
         else:
-            demand.append((random.uniform(0.05*r,0.01*r),random.uniform(0.25*r,0.5*r)))
+            demand.append((round(random.uniform(0.05*r,0.01*r),0),round(random.uniform(0.25*r,0.5*r),0)))
 
     return edges,duration,demand,position
 
@@ -219,7 +219,20 @@ class MyEnv(gym.Env):
         self.seed()
         self.viewer = None
         self.state = None
+        
+        self.edges_lib = []
+        self.duration_lib = []
+        self.demand_lib = []
 
+        print('load lib.')
+        DAGsize = 30
+        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/edges' + str(DAGsize) +'_lib.npy'
+        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/duration' + str(DAGsize) +'_lib.npy'
+        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/demand'+str(DAGsize)+'_lib.npy'
+        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
+        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
+        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        print('load completed.')
 
     def search_for_predecessor(self,node,edges):
         '''
@@ -237,7 +250,6 @@ class MyEnv(gym.Env):
                 map[edges[i][1]] = [edges[i][0]]
         succ = map[node]
         return succ
-
 
     def search_for_successors(self,node,edges):
         '''
@@ -399,14 +411,12 @@ class MyEnv(gym.Env):
                 return np.array(self.state, dtype=np.float32), 0, 0, [False, self.tasks] 
         else:
             if self.tasks:
-                # print("当前还挂起的任务：",self.tasks)
-                # print("当前挂起任务的执行时间：",self.tasks_remaing_time)
+
                 self.tasks_remaing_time_list = sorted(self.tasks_remaing_time.items(),key = lambda x:x[1])  #排序当前挂起任务的执行时间
                 job_id = self.tasks_remaing_time_list[0][0]                                                 
                 time_shift = self.tasks_remaing_time_list[0][1]                                             #记录最小执行时间的长度
                 self.time += time_shift                                                                     #改变时间戳
                 self.done_job.append(job_id)                                                                #更新已完成的任务
-                # print(" 已完成的任务：",self.done_job)
                 done = self.check_episode_finish()
                 if done:
                     return np.array(self.state, dtype=np.float32), 0, done, [True, self.tasks]
@@ -437,8 +447,6 @@ class MyEnv(gym.Env):
                         self.backlot_time += self.wait_duration_dic[job_id]
                         self.backlot_cpu_res += self.cpu_demand_dic[job_id]
                         self.backlot_memory_res += self.memory_demand_dic[job_id]
-                # print("当前挂起的任务还有：",self.tasks)
-                # print("当前挂起任务的执行时间：",self.tasks_remaing_time)
                 self.b_level = self.find_b_level(self.edges[:],self.done_job)
                 self.children_num = self.find_children_num(self.ready_list,self.edges[:]) 
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
@@ -446,18 +454,7 @@ class MyEnv(gym.Env):
                 return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
             else:
                 return np.array(self.state, dtype=np.float32), 0, 0, [False, self.tasks]
-
-    def save_50dag(self):
-        edges = [(1, 3), (2, 3), (3, 5), (4, 11), (4, 13), (5, 9), (6, 8), (7, 16), (8, 16), (8, 15), (9, 16), (9, 15), (10, 16), (10, 15), (11, 14), (12, 15), (13, 16), (17, 24), (18, 24), (19, 24), (19, 23), (20, 22), (20, 24), (21, 23), (21, 24), (22, 25), (23, 29), (23, 31), (24, 30), (25, 33), (26, 32), (26, 33), (27, 33), (28, 33), (29, 32), (29, 33), (30, 32), (30, 33), (31, 33), (31, 32), (32, 34), (32, 35), (33, 34), (34, 41), (35, 41), (36, 41), (37, 41), (38, 41), (39, 41), (40, 41), (41, 42), (42, 47), (43, 50), (44, 46), ('Start', 1), ('Start', 2), ('Start', 4), ('Start', 6), ('Start', 7), ('Start', 10), ('Start', 12), ('Start', 17), ('Start', 18), ('Start', 19), ('Start', 20), ('Start', 21), ('Start', 26), ('Start', 27), ('Start', 28), ('Start', 36), ('Start', 37), ('Start', 38), ('Start', 39), ('Start', 40), ('Start', 43), ('Start', 44), ('Start', 45), ('Start', 48), ('Start', 49), (14, 'Exit'), (15, 'Exit'), (16, 'Exit'), (45, 'Exit'), (46, 'Exit'), (47, 'Exit'), (48, 'Exit'), (49, 'Exit'), (50, 'Exit')]       
-        duration = [20.358396308961733, 22.067907217911092, 17.754237679091347, 20.615827903960874, 11.108342471522475, 28.360987765703182, 27.027983215737336, 12.510292895518278, 15.08195718692922, 18.04858291907044, 10.465057748361426, 21.978882344989835, 19.19599492027384, 10.249260422546458, 27.49138941453423, 19.80640773179836, 29.29675544705301, 27.35020534279648, 18.84192558794532, 20.143369578761778, 12.190528815882598, 13.234386695259097, 12.307559634581738, 21.903343578174272, 28.316744012207167, 20.076252358675184, 27.799552388706942, 12.430029583264833, 15.21769102989123, 27.147320389454816, 28.84881423495435, 10.289599820894335, 12.632821110128438, 18.573024740625865, 18.43744696585427, 13.315260733366918, 27.319530652728005, 15.723256567039435, 13.058172187712394, 16.11771067917175, 26.783813986688145, 28.281370045457514, 25.84972440753974, 16.37206986195357, 11.53940573303627, 25.862079221725516, 12.421899016945071, 16.974721130621607, 27.899423208626867, 23.94427001090075]
-        demand = [(1.3327185569866247, 26.578004698672753), (2.1451046250725723, 34.96995311494437), (38.96538519195313, 1.214281117134822), (41.32430130707104, 2.2386522787974825), (28.161635048523543, 4.392188187795879), (1.4919583053683931, 46.131744883214324), (37.694456781667846, 3.8133279239502422), (3.6368049325377436, 34.71688811267414), (2.7556326104892874, 44.471943054415604), (41.73639848335215, 4.936652730701006), (4.436997442877024, 31.465636395464944), (2.814360099685854, 40.446334042202174), (35.186813645741445, 2.247151441306695), (25.82434507252789, 2.9766864288454853), (27.101238160713798, 1.144648269362878), (28.924007958218144, 4.76502164770424), (4.885493221424168, 35.384058224086274), (28.280955350534043, 2.3949557238027506), (1.788647831259305, 29.007483373421877), (27.58762314814667, 4.8220637886542255), (1.977926680832649, 29.989526921497045), (4.055644120263752, 36.226272991299524), (48.42426904935452, 4.613942532865045), (4.310367250302273, 45.19265878822756), (2.8565533228916937, 32.80694794647271), (45.549515155378316, 2.220203393513902), (36.60799821838276, 2.9771357093982647), (26.645801312631402, 3.275713761622243), (49.65665844011782, 3.8342616067942306), (3.343684884036226, 47.46146644975276), (2.253510924917405, 49.58977962846717), (3.6980672529136167, 48.45704294470164), (2.405504803186821, 38.727302500903534), (1.4910071921243708, 41.520388957677326), (38.07283445347876, 1.8164910473630762), (29.353649374593076, 4.229702278616407), (2.3865861867323592, 41.22121108097354), (47.83631588351712, 1.7182419550989074), (4.128567987723979, 34.03809646761347), (33.55576743467706, 1.0107826458205564), (1.9049057975768569, 37.0202698325086), (1.0708510581687496, 34.81946275349077), (2.1341585691351006, 44.346433430191766), (35.17389850481341, 3.300765362443588), (4.39564619088428, 38.17842642610517), (1.086674737013217, 37.94751503748752), (3.4281272781378886, 41.03412800662693), (26.273228934920912, 3.2383484587780687), (46.612838068039466, 1.8298177205408117), (3.750948259062607, 37.78093008235358)]
-        return edges,duration,demand
-
-    def save_10dag(self):
-        edges = [(1, 3), (2, 5), (3, 6), (4, 6), (5, 7), (6, 8), (7, 9), (8, 9), ('Start', 1), ('Start', 2), ('Start', 4), ('Start', 10), (9, 'Exit'), (10, 'Exit')]
-        duration = [13.265656085784814, 14.242618991341471, 25.092536639844344, 22.46544003817874, 13.59560127208611, 20.18886223883646, 18.75719310899612, 14.88659535296226, 20.41290248401467, 25.38198853788743]
-        demand = [(3.1932270163143093, 35.92867699667779), (1.207617226809523, 42.569973108092384), (1.1916035049600642, 41.160828941582146), (44.02916045090319, 1.789524171929632), (2.865126283395466, 35.30972984455011), (44.42795246179526, 1.1062347484502344), (41.412671473939035, 3.516577189343719), (28.67733191793902, 2.3867043214501056), (32.31632251446957, 3.153867802647648), (46.54552176434768, 3.577898022378668)]
-        return edges,duration,demand     
+ 
 
     def reset(self):
         '''
@@ -465,12 +462,15 @@ class MyEnv(gym.Env):
         :para None
         :return: 初始状态，每一次reset就是重新一幕
         '''
+        seed = random.randrange(100)
+        self.edges,self.duration,self.demand = self.edges_lib[seed],self.duration_lib[seed],self.demand_lib[seed]
         ###随机生成一个workflow
-        self.edges,self.duration,self.demand,self.position = workflows_generator('default')
-        # self.edges,self.duration,self.demand = self.save_50dag()
+        # self.edges,self.duration,self.demand,self.position = workflows_generator('default')
+        # self.edges,self.duration,self.demand = self.save_10dag()
         # print("DAG结构Edges：",self.edges)
         # print("任务占用时间Ti:",self.duration)                    #生成的原始数据
         # print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
+        
         ###初始化一些状态
         self.time,self.cpu_res,self.memory_res = 0,100,100      
         self.done_job = []
@@ -509,7 +509,6 @@ class MyEnv(gym.Env):
             self.average_time_duration += i
         self.average_time_duration /= args.n 
 
-
         self.b_level = self.find_b_level(self.edges[:],self.done_job) 
         self.children_num = self.find_children_num(self.ready_list,self.edges[:])
 
@@ -521,7 +520,6 @@ class MyEnv(gym.Env):
     def render(self, mode="human"):
 
         return plot_DAG(self.edges,self.position)
-
 
     def close(self):
         if self.viewer:

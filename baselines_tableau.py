@@ -295,8 +295,8 @@ if __name__ == '__main__':
     time_durations = []  
     actor = torch.load('models/ACagent/actor.pkl')
     critic = torch.load('models/ACagent/critic.pkl')
-    test(actor, critic, test_order) 
     tetris(test_order)
+    test(actor, critic, test_order) 
     sjf(test_order)
     randomagent(test_order)
     workbook.close()
