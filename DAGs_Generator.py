@@ -27,7 +27,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_beta,1)[0]
         args.prob = 0.9
     else: 
-        args.n = 40
+        args.n = n
         args.max_out = random.sample(set_max_out,1)[0]
         args.alpha = random.sample(set_alpha,1)[0]
         args.beta = random.sample(set_beta,1)[0]
@@ -151,13 +151,13 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
 
     return edges,duration,demand,position
 
-def generate_train_datasheet(amount):
+def generate_train_datasheet(amount,DAGsize):
     edges_lib = []
     duration_lib = []
     demand_lib = []
     #生成amount个随机的DAG图
     for ele in range(0,amount):
-        edges, duration, demand, _ = workflows_generator('default')
+        edges, duration, demand, _ = workflows_generator('default',n=DAGsize)
         edges_lib.append(edges)
         duration_lib.append(duration)
         demand_lib.append(demand)
@@ -170,13 +170,13 @@ def generate_train_datasheet(amount):
     np.save('npy/train_datasheet/'+str(args.n)+'/duration'+str(args.n)+'_lib.npy',duration_lib_np)
     np.save('npy/train_datasheet/'+str(args.n)+'/demand'+str(args.n)+'_lib.npy',demand_lib_np)
 
-def generate_test_datasheet(amount):
+def generate_test_datasheet(amount,DAGsize):
     edges_lib = []
     duration_lib = []
     demand_lib = []
     #生成amount个随机的DAG图
     for ele in range(0,amount):
-        edges, duration, demand, _ = workflows_generator('default')
+        edges, duration, demand, _ = workflows_generator('default',n=DAGsize)
         edges_lib.append(edges)
         duration_lib.append(duration)
         demand_lib.append(demand)
@@ -190,6 +190,11 @@ def generate_test_datasheet(amount):
     np.save('npy/test_datasheet/'+str(args.n)+'/demand'+str(args.n)+'_lib.npy',demand_lib_np)
 
 if __name__ == '__main__':
-    generate_train_datasheet(100)
-    # generate_test_datasheet(100)
-    
+    # generate_train_datasheet(1000,30)
+    generate_test_datasheet(1000,50)
+
+
+    # edges, duration, demand, _ = workflows_generator('default')
+    # print(edges)
+    # print(duration)
+    # print(demand)

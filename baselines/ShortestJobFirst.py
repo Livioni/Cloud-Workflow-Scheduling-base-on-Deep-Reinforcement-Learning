@@ -26,7 +26,7 @@ def find_shortest_job(state):
     :param state: 当前状态 
     :return: shortest job在[0:9]中的索引
     '''
-    ready_job_list = state[3:13].tolist()
+    ready_job_list = state[3:33].tolist()
     min = 999999
     for ele in ready_job_list:
         if ele != -1:
@@ -40,9 +40,9 @@ def check_res(state):
     :param state: 当前状态 
     :return: bool值 是否还可以装载
     '''
-    job_duration = state[3:13].tolist()
-    job_cpu_demand = state[13:23].tolist()
-    job_memory_demand = state[23:33].tolist()
+    job_duration = state[3:23].tolist()
+    job_cpu_demand = state[23:43].tolist()
+    job_memory_demand = state[43:63].tolist()
     cpu_res = state[1]
     memory_res = state[2]
     flag = False
@@ -62,9 +62,9 @@ def check_ready(state,index):
     :param index: 查询的任务index 
     :return: bool值 是否还可以装载
     '''
-    job_duration = state[3:13].tolist()
-    job_cpu_demand = state[13:23].tolist()
-    job_memory_demand = state[23:33].tolist()
+    job_duration = state[3:33].tolist()
+    job_cpu_demand = state[33:63].tolist()
+    job_memory_demand = state[63:93].tolist()
     cpu_res = state[1]
     memory_res = state[2]
     return True if (job_cpu_demand[index] < cpu_res and job_memory_demand[index] < memory_res) else False

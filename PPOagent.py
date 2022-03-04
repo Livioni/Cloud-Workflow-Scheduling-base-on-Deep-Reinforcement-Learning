@@ -41,7 +41,7 @@ lr_critic = 0.001       # learning rate for critic network
 
 print("training environment name : " + env_name)
 
-env = gym.make(env_name)
+env = gym.make(env_name).unwrapped
 
 # state space dimension
 state_dim = env.observation_space.shape[0]
@@ -78,7 +78,7 @@ print("logging at : " + log_f_name)
 
 ################### checkpointing ###################
 
-run_num_pretrained = 501      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 30      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -196,8 +196,7 @@ class ActorCritic(nn.Module):
         probability = {}
         action_probs = self.actor(state)
         dist = Categorical(action_probs)
-        a = dist.probs.detach()
-        for j in range(11):
+        for j in range(action_dim):
                 probability[j] = dist.probs.detach()[j]  #记录当前动作概率分布
         action = dist.sample()
         state,reward,done,info = env.step(action.item()-1)

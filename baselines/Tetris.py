@@ -4,6 +4,7 @@ import numpy as np
 from itertools import count
 
 env = gym.make("MyEnv-v0").unwrapped
+# env = gym.make("testEnv-v0").unwrapped
 n_iters=100
 
 def initial_excel():
@@ -23,8 +24,8 @@ def initial_excel():
     workbook.save('data/makespan_Tetris.xls') 
 
 def check_res(state):
-    job_cpu_demand = state[13:23]
-    job_memory_demand = state[23:33]
+    job_cpu_demand = state[33:63]
+    job_memory_demand = state[63:93]
     cpu_res = state[1]
     memory_res = state[2]
     for i in range(len(job_cpu_demand)):
@@ -36,14 +37,14 @@ def check_res(state):
                 job_memory_demand[i] = -1.0
             else:
                 continue  
-    state[13:23] = job_cpu_demand
-    state[23:33] = job_memory_demand
+    state[33:63] = job_cpu_demand
+    state[63:93] = job_memory_demand
     return np.array(state, dtype=np.float32)
 
 
 def alignment_score(state):
-    job_cpu_demand = state[13:23]
-    job_memory_demand = state[23:33]
+    job_cpu_demand = state[33:63]
+    job_memory_demand = state[63:93]
     cpu_res = state[1]
     memory_res = state[2]
     alignment_score = cpu_res * job_cpu_demand + memory_res * job_memory_demand

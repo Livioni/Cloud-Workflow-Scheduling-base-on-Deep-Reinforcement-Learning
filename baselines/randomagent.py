@@ -3,6 +3,9 @@ from itertools import count
 
 env = gym.make("MyEnv-v0").unwrapped
 n_iters=100
+state_size = env.observation_space.shape[0] 
+action_size = env.action_space.n 
+
 
 def initial_excel():
     global worksheet,workbook
@@ -29,11 +32,10 @@ def randomagent(n_iters):
         sum_reward = 0      #记录每一幕的reward
         time = 0            #记录makespan
         for i in count():
-
-            action = random.choice(range(10))-1
+            action = random.choice(range(action_size))-1
             state,reward,done,info = env.step(action)
             while (info[0] == False):
-                action = random.choice(range(10))-1
+                action = random.choice(range(action_size))-1
                 state,reward,done, info = env.step(action)#输入step的都是
             next_state, reward, done, _ = state, reward, done, info
             # print(action)

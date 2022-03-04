@@ -79,7 +79,7 @@ def test(actor, critic):
             # env.render()
             state = torch.FloatTensor(state)
             dist, value = actor(state), critic(state) #dist得出动作概率分布，value得出当前动作价值函数
-            for i in range(11):
+            for i in range(action_size):
                 probability[i] = dist.probs.detach().numpy()[i]
             action = dist.sample()#采样当前动作
             state,reward,done,info = env.step(action.numpy()-1)
@@ -109,7 +109,6 @@ def test(actor, critic):
             # plt.imshow(img)
             # plt.axis('off') # 不显示坐标轴
             # plt.show()
-
 
 
 if __name__ == '__main__':

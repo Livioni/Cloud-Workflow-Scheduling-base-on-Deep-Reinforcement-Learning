@@ -29,9 +29,9 @@ def initial_excel():
 
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
-env_name = "MyEnv-v0"               #定义自己的环境名称 
+env_name = "testEnv-v0"               #定义自己的环境名称 
 max_ep_len = 10000                  # max timesteps in one episode
-auto_save = 1
+auto_save = 10
 total_test_episodes = 100*auto_save    # total num of testing episodes
 
 
@@ -48,7 +48,7 @@ lr_critic = 0.001       # learning rate for critic network
 
 print("Testing environment name : " + env_name)
 
-env = gym.make(env_name)
+env = gym.make(env_name).unwrapped
 
 # state space dimension
 state_dim = env.observation_space.shape[0]
@@ -58,18 +58,18 @@ action_dim = env.action_space.n
 
 ################### checkpointing ###################
 
-run_num_pretrained = 40      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 30      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
         os.makedirs(directory)
 
-directory = directory + '/' + env_name + '/'
+directory = directory + '/' + 'MyEnv-v0' + '/'
 if not os.path.exists(directory):
         os.makedirs(directory)
 
 
-checkpoint_path = directory + "PPO_{}_{}.pth".format(env_name, run_num_pretrained)
+checkpoint_path = directory + "PPO_MyEnv-v0_{}.pth".format(run_num_pretrained)
 print("save checkpoint path : " + checkpoint_path)
 
 #####################################################
@@ -152,7 +152,6 @@ class ActorCritic(nn.Module):
                         nn.Linear(64, 1)
                     )
 
-
     def forward(self):
         raise NotImplementedError
 
@@ -160,7 +159,7 @@ class ActorCritic(nn.Module):
         probability = {}
         action_probs = self.actor(state)
         dist = Categorical(action_probs)
-        for j in range(11):
+        for j in range(action_dim):
                 probability[j] = dist.probs.detach()[j]  #记录当前动作概率分布
         action = dist.sample()
         state,reward,done,info = env.step(action.item()-1)

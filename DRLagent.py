@@ -88,7 +88,7 @@ def trainIters(actor, critic, n_iters):
             # env.render()
             state = torch.FloatTensor(state).to(device)
             dist, value = actor(state), critic(state) #dist得出动作概率分布，value得出当前动作价值函数
-            for j in range(11):
+            for j in range(action_size):
                 probability[j] = dist.probs.detach().numpy()[j]
             action = dist.sample()#采样当前动作
             state,reward,done,info = env.step(action.numpy()-1)
@@ -173,6 +173,12 @@ def show_makespan():
     plt.show()
 
 if __name__ == '__main__':
+    print("--------------------------------------------------------------------------------------------")
+
+    print("状态空间维数 : ", state_size)
+    print("动作空间维数 : ", action_size)
+
+    print("--------------------------------------------------------------------------------------------")
     if os.path.exists('models/ACagent/actor.pkl'):
         actor = torch.load('models/ACagent/actor.pkl')
         print('Actor Model loaded')

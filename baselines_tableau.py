@@ -41,8 +41,8 @@ class Critic(nn.Module): #状态值函数网络
         return value #输出状态值函数
 
 def check_res_Tetris(state):
-    job_cpu_demand = state[13:23]
-    job_memory_demand = state[23:33]
+    job_cpu_demand = state[33:63]
+    job_memory_demand = state[63:93]
     cpu_res = state[1]
     memory_res = state[2]
     for i in range(len(job_cpu_demand)):
@@ -54,13 +54,13 @@ def check_res_Tetris(state):
                 job_memory_demand[i] = -1.0
             else:
                 continue  
-    state[13:23] = job_cpu_demand
-    state[23:33] = job_memory_demand
+    state[33:63] = job_cpu_demand
+    state[63:93] = job_memory_demand
     return np.array(state, dtype=np.float32)
 
 def alignment_score(state):
-    job_cpu_demand = state[13:23]
-    job_memory_demand = state[23:33]
+    job_cpu_demand = state[33:63]
+    job_memory_demand = state[63:93]
     cpu_res = state[1]
     memory_res = state[2]
     alignment_score = cpu_res * job_cpu_demand + memory_res * job_memory_demand
@@ -75,7 +75,7 @@ def find_shortest_job(state):
     :param state: 当前状态 
     :return: shortest job在[0:9]中的索引
     '''
-    ready_job_list = state[3:13].tolist()
+    ready_job_list = state[3:33].tolist()
     min = 999999
     for ele in ready_job_list:
         if ele != -1:
@@ -89,9 +89,9 @@ def check_res(state):
     :param state: 当前状态 
     :return: bool值 是否还可以装载
     '''
-    job_duration = state[3:13].tolist()
-    job_cpu_demand = state[13:23].tolist()
-    job_memory_demand = state[23:33].tolist()
+    job_duration = state[3:33].tolist()
+    job_cpu_demand = state[33:63].tolist()
+    job_memory_demand = state[63:93].tolist()
     cpu_res = state[1]
     memory_res = state[2]
     flag = False
@@ -111,8 +111,8 @@ def check_ready(state,index):
     :param index: 查询的任务index 
     :return: bool值 是否还可以装载
     '''
-    job_cpu_demand = state[13:23].tolist()
-    job_memory_demand = state[23:33].tolist()
+    job_cpu_demand = state[33:63].tolist()
+    job_memory_demand = state[63:93].tolist()
     cpu_res = state[1]
     memory_res = state[2]
     return True if (job_cpu_demand[index] < cpu_res and job_memory_demand[index] < memory_res) else False
@@ -132,7 +132,7 @@ def test(actor, critic,test_order):
             # env.render()
             state = torch.FloatTensor(state)
             dist= actor(state) #dist得出动作概率分布，value得出当前动作价值函数
-            for i in range(11):
+            for i in range(action_size):
                 probability[i] = dist.probs.detach().numpy()[i]
             action = dist.sample()#采样当前动作
             state,reward,done,info = env.step(action.numpy()-1)
@@ -233,11 +233,10 @@ def randomagent(n_iters):
         sum_reward = 0      #记录每一幕的reward
         time = 0            #记录makespan
         for i in count():
-
-            action = random.choice(range(10))-1
+            action = random.choice(range(action_size))-1
             state,reward,done,info = env.step(action)
             while (info[0] == False):
-                action = random.choice(range(10))-1
+                action = random.choice(range(action_size))-1
                 state,reward,done, info = env.step(action)#输入step的都是
             next_state, reward, done, _ = state, reward, done, info
             # print(action)
@@ -260,7 +259,7 @@ def randomagent(n_iters):
 if __name__ == '__main__':
     n = 5  #有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('data/Makespans30.xlsx')
+    workbook = xlsxwriter.Workbook('data/Makespans50.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
@@ -285,12 +284,12 @@ if __name__ == '__main__':
     for i in range(400,500):
         worksheet.write(i+1, 2, 'PPO')
     for i in range(100*n):
-        worksheet.write(i+1, 3, 'n=30') 
+        worksheet.write(i+1, 3, 'n=50') 
         
-    env = gym.make("MyEnv-v0").unwrapped
+    env = gym.make("testEnv-v0").unwrapped
     state_size = env.observation_space.shape[0] #38
     action_size = env.action_space.n #11
-    auto_save = 50
+    auto_save = 10
     test_order = 100*auto_save
     sum_reward = 0
     time_durations = []  
