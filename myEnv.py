@@ -30,7 +30,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_beta,1)[0]
         args.prob = 0.9
     else: 
-        args.n = 30
+        args.n = 40
         args.max_out = random.sample(set_max_out,1)[0]
         args.alpha = random.sample(set_alpha,1)[0]
         args.beta = random.sample(set_beta,1)[0]
@@ -163,7 +163,7 @@ class MyEnv(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
 
     def __init__(self):
-        self.M = 10                                                                                      #动作列表长度，不包括-1
+        self.M = 30                                                                                      #动作列表长度，不包括-1
         self.t_unit = 10                                                                                 #时间单位，用于生成DAG节点的任务需求时间，80%的概率平均分布于t-3t 20的概率平均分布在10t-15t
         self.cpu_res_unit = 100                                                                          #CPU资源单位，用于生成DAG节点的CPU占用需求，50%的概率的任务为CPU资源需求密集型，随机占用0.25r-0.5r 50%的概率随机占用0.05r-0.01r
         self.memory_res_unit = 100                                                                       #Memory资源单位，用于生成DAG节点的memoory占用需求，50%的概率的任务为memory资源需求密集型，随机占用0.25r-0.5r 50%的概率随机占用0.05r-0.01r
@@ -192,8 +192,12 @@ class MyEnv(gym.Env):
                                     self.backlot_cpu_res_limt,      #1 dim
                                     self.backlot_memory_res_limt,   #1 dim
                                     )))                             # totally 38 dim
-        low = np.array([0,0,0,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0],dtype=np.float32)
-        self.action_space = spaces.Discrete(11)#{-1,0,1,2,3,4,5,6,7,8,9}
+        low = np.array([0,0,0,\
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,\
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,\
+        -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,\
+        0,0,0,0,0],dtype=np.float32)
+        self.action_space = spaces.Discrete(31)#{-1,0,1,2,3,4,5,6,7,8,9}
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
         ##状态信息
         self.time = 0                                           #整体环境时钟，DAG执行已花费时间
@@ -226,16 +230,16 @@ class MyEnv(gym.Env):
         self.duration_lib = []
         self.demand_lib = []
         
-        DAGsize = 40
+        DAGsize = 30
         ##########################################training################################
-        # print('train datasheet lib.')
-        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
-        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
-        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
-        # self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
-        # self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
-        # self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
-        # print('load completed.')
+        print('train datasheet lib.')
+        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
+        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
+        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
+        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
+        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
+        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        print('load completed.')
         ##########################################testing################################
         # print('test datasheet loaded.')
         # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
@@ -341,7 +345,7 @@ class MyEnv(gym.Env):
     def res_is_available(self,action):
         '''
         判断当前选择的动作是否能在计算资源上执行
-        :para action {-1,0,1,2,3,4,5,6,7,8,9}
+        :para action {-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29}
         :return: True 可以被执行 False 不能被执行
         '''
         task_cpu_demand = self.cpu_demand[action]
@@ -355,7 +359,7 @@ class MyEnv(gym.Env):
     def check_action(self,action):
         '''
         判断当前选择的动作是否有效
-        :para action {-1,0,1,2,3,4,5,6,7,8,9}
+        :para action {-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29}
         :return: True 有效 False 无效
         '''
         if(action < len(self.ready_list)):
@@ -398,7 +402,7 @@ class MyEnv(gym.Env):
     def step(self, action):
         '''
         状态转移过程
-        :para action {-1,0,1,2,3,4,5,6,7,8,9}
+        :para action {-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29}
         :return: 下一个状态，回报，是否完成，调试信息
                  False ，要求重新采样动作
         ''' 
@@ -410,7 +414,7 @@ class MyEnv(gym.Env):
             # print("全部任务已完成")
             return np.array(self.state, dtype=np.float32), 0, done, [True, self.tasks]
 
-        if (action >= 0 & action<=9): 
+        if (action >= 0 & action<=29): 
             if (self.check_action(action)):
                 self.pend_task(action)
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
@@ -466,12 +470,6 @@ class MyEnv(gym.Env):
                 return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
             else:
                 return np.array(self.state, dtype=np.float32), 0, 0, [False, self.tasks]
-                
-    def save_50dag(self):
-            edges = [(1, 3), (2, 3), (3, 5), (4, 11), (4, 13), (5, 9), (6, 8), (7, 16), (8, 16), (8, 15), (9, 16), (9, 15), (10, 16), (10, 15), (11, 14), (12, 15), (13, 16), (17, 24), (18, 24), (19, 24), (19, 23), (20, 22), (20, 24), (21, 23), (21, 24), (22, 25), (23, 29), (23, 31), (24, 30), (25, 33), (26, 32), (26, 33), (27, 33), (28, 33), (29, 32), (29, 33), (30, 32), (30, 33), (31, 33), (31, 32), (32, 34), (32, 35), (33, 34), (34, 41), (35, 41), (36, 41), (37, 41), (38, 41), (39, 41), (40, 41), (41, 42), (42, 47), (43, 50), (44, 46), ('Start', 1), ('Start', 2), ('Start', 4), ('Start', 6), ('Start', 7), ('Start', 10), ('Start', 12), ('Start', 17), ('Start', 18), ('Start', 19), ('Start', 20), ('Start', 21), ('Start', 26), ('Start', 27), ('Start', 28), ('Start', 36), ('Start', 37), ('Start', 38), ('Start', 39), ('Start', 40), ('Start', 43), ('Start', 44), ('Start', 45), ('Start', 48), ('Start', 49), (14, 'Exit'), (15, 'Exit'), (16, 'Exit'), (45, 'Exit'), (46, 'Exit'), (47, 'Exit'), (48, 'Exit'), (49, 'Exit'), (50, 'Exit')]       
-            duration = [20.358396308961733, 22.067907217911092, 17.754237679091347, 20.615827903960874, 11.108342471522475, 28.360987765703182, 27.027983215737336, 12.510292895518278, 15.08195718692922, 18.04858291907044, 10.465057748361426, 21.978882344989835, 19.19599492027384, 10.249260422546458, 27.49138941453423, 19.80640773179836, 29.29675544705301, 27.35020534279648, 18.84192558794532, 20.143369578761778, 12.190528815882598, 13.234386695259097, 12.307559634581738, 21.903343578174272, 28.316744012207167, 20.076252358675184, 27.799552388706942, 12.430029583264833, 15.21769102989123, 27.147320389454816, 28.84881423495435, 10.289599820894335, 12.632821110128438, 18.573024740625865, 18.43744696585427, 13.315260733366918, 27.319530652728005, 15.723256567039435, 13.058172187712394, 16.11771067917175, 26.783813986688145, 28.281370045457514, 25.84972440753974, 16.37206986195357, 11.53940573303627, 25.862079221725516, 12.421899016945071, 16.974721130621607, 27.899423208626867, 23.94427001090075]
-            demand = [(1.3327185569866247, 26.578004698672753), (2.1451046250725723, 34.96995311494437), (38.96538519195313, 1.214281117134822), (41.32430130707104, 2.2386522787974825), (28.161635048523543, 4.392188187795879), (1.4919583053683931, 46.131744883214324), (37.694456781667846, 3.8133279239502422), (3.6368049325377436, 34.71688811267414), (2.7556326104892874, 44.471943054415604), (41.73639848335215, 4.936652730701006), (4.436997442877024, 31.465636395464944), (2.814360099685854, 40.446334042202174), (35.186813645741445, 2.247151441306695), (25.82434507252789, 2.9766864288454853), (27.101238160713798, 1.144648269362878), (28.924007958218144, 4.76502164770424), (4.885493221424168, 35.384058224086274), (28.280955350534043, 2.3949557238027506), (1.788647831259305, 29.007483373421877), (27.58762314814667, 4.8220637886542255), (1.977926680832649, 29.989526921497045), (4.055644120263752, 36.226272991299524), (48.42426904935452, 4.613942532865045), (4.310367250302273, 45.19265878822756), (2.8565533228916937, 32.80694794647271), (45.549515155378316, 2.220203393513902), (36.60799821838276, 2.9771357093982647), (26.645801312631402, 3.275713761622243), (49.65665844011782, 3.8342616067942306), (3.343684884036226, 47.46146644975276), (2.253510924917405, 49.58977962846717), (3.6980672529136167, 48.45704294470164), (2.405504803186821, 38.727302500903534), (1.4910071921243708, 41.520388957677326), (38.07283445347876, 1.8164910473630762), (29.353649374593076, 4.229702278616407), (2.3865861867323592, 41.22121108097354), (47.83631588351712, 1.7182419550989074), (4.128567987723979, 34.03809646761347), (33.55576743467706, 1.0107826458205564), (1.9049057975768569, 37.0202698325086), (1.0708510581687496, 34.81946275349077), (2.1341585691351006, 44.346433430191766), (35.17389850481341, 3.300765362443588), (4.39564619088428, 38.17842642610517), (1.086674737013217, 37.94751503748752), (3.4281272781378886, 41.03412800662693), (26.273228934920912, 3.2383484587780687), (46.612838068039466, 1.8298177205408117), (3.750948259062607, 37.78093008235358)]
-            return edges,duration,demand
 
     def reset(self):
         '''
@@ -479,14 +477,10 @@ class MyEnv(gym.Env):
         :para None
         :return: 初始状态，每一次reset就是重新一幕
         '''
-        # self.seed1 = random.randint(0, 99) 
-        self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
-        self.seed1 += 1
-        if self.seed1 == 100:
-            self.seed1 = 0
         ###随机生成一个workflow
+        self.seed1 = random.randint(0, len(self.duration_lib)-1) 
+        self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
         # self.edges,self.duration,self.demand,self.position = workflows_generator('default')
-        # self.edges,self.duration,self.demand = self.save_10dag()
         # print("DAG结构Edges：",self.edges)
         # print("任务占用时间Ti:",self.duration)                    #生成的原始数据
         # print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
@@ -504,14 +498,10 @@ class MyEnv(gym.Env):
         self.tasks = []
         self.DeepRM_reward = 0
         self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])
-        # print("ready list:",self.ready_list)
         for i in range(len(self.duration)):
             self.wait_duration_dic[i+1] = self.duration[i]
             self.cpu_demand_dic[i+1] = self.demand[i][0]
             self.memory_demand_dic[i+1] = self.demand[i][1]
-        # print("wait_duration_dic:",self.wait_duration_dic)
-        # print("cpu_demand_dic:", self.cpu_demand_dic)
-        # print("memory_demand_dic:",self.memory_demand_dic)
         for i in range(len(self.ready_list)):
             job_id = self.ready_list[i]
             if i < self.M: 
@@ -522,11 +512,6 @@ class MyEnv(gym.Env):
                 self.backlot_time += self.wait_duration_dic[job_id]
                 self.backlot_cpu_res += self.cpu_demand_dic[job_id]
                 self.backlot_memory_res += self.memory_demand_dic[job_id]
-
-        self.average_time_duration = 0
-        for i in self.wait_duration_dic.values():
-            self.average_time_duration += i
-        self.average_time_duration /= args.n 
 
         self.b_level = self.find_b_level(self.edges[:],self.done_job) 
         self.children_num = self.find_children_num(self.ready_list,self.edges[:])
