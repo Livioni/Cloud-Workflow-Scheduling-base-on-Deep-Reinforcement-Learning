@@ -78,7 +78,7 @@ print("logging at : " + log_f_name)
 
 ################### checkpointing ###################
 
-run_num_pretrained = 30      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 501      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):

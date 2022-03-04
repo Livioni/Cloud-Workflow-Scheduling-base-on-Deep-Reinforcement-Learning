@@ -231,7 +231,7 @@ def randomagent(n_iters):
 if __name__ == '__main__':
     n = 5  #有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('data/Makespans50_lite.xlsx')
+    workbook = xlsxwriter.Workbook('data/Makespans40_lite.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
@@ -242,8 +242,9 @@ if __name__ == '__main__':
     worksheet.write('B1', 'Makespan(s)')
     worksheet.write('C1', '方法')
     worksheet.write('D1', 'DAG大小')
-    for i in range(100*n):
-        worksheet.write(i+1, 0, i+1) 
+    for line in range(0,n):
+        for i in range(100):
+            worksheet.write(i+1+line*100, 0, i+1) 
     for i in range(100):
         worksheet.write(i+1, 2, 'Actor-Critic') 
     for i in range(100,200):
@@ -255,7 +256,7 @@ if __name__ == '__main__':
     for i in range(400,500):
         worksheet.write(i+1, 2, 'PPO')
     for i in range(100*n):
-        worksheet.write(i+1, 3, 'n=50') 
+        worksheet.write(i+1, 3, 'n=40') 
 
     env = gym.make("MyEnv-v0").unwrapped
     state_size = env.observation_space.shape[0] #38

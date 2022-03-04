@@ -27,7 +27,7 @@ def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
         args.beta = random.sample(set_beta,1)[0]
         args.prob = 0.9
     else: 
-        args.n = 30
+        args.n = 40
         args.max_out = random.sample(set_max_out,1)[0]
         args.alpha = random.sample(set_alpha,1)[0]
         args.beta = random.sample(set_beta,1)[0]
@@ -145,9 +145,9 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     #初始化资源需求   
     for i in range(len(in_degree)):
         if random.random()<0.5:
-            demand.append((round(random.uniform(0.25*r,0.5*r),0),round(random.uniform(0.05*r,0.01*r),0)))
+            demand.append((random.uniform(0.25*r,0.5*r),random.uniform(0.05*r,0.01*r)))
         else:
-            demand.append((round(random.uniform(0.05*r,0.01*r),0),round(random.uniform(0.25*r,0.5*r),0)))
+            demand.append((random.uniform(0.05*r,0.01*r),random.uniform(0.25*r,0.5*r)))
 
     return edges,duration,demand,position
 
@@ -170,7 +170,6 @@ def generate_train_datasheet(amount):
     np.save('npy/train_datasheet/'+str(args.n)+'/duration'+str(args.n)+'_lib.npy',duration_lib_np)
     np.save('npy/train_datasheet/'+str(args.n)+'/demand'+str(args.n)+'_lib.npy',demand_lib_np)
 
-
 def generate_test_datasheet(amount):
     edges_lib = []
     duration_lib = []
@@ -191,6 +190,6 @@ def generate_test_datasheet(amount):
     np.save('npy/test_datasheet/'+str(args.n)+'/demand'+str(args.n)+'_lib.npy',demand_lib_np)
 
 if __name__ == '__main__':
-    # generate_train_datasheet(1000)
-    generate_test_datasheet(100)
+    generate_train_datasheet(100)
+    # generate_test_datasheet(100)
     

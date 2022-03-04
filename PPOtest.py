@@ -31,7 +31,7 @@ print("=========================================================================
 ####### initialize environment hyperparameters ######
 env_name = "MyEnv-v0"               #定义自己的环境名称 
 max_ep_len = 10000                  # max timesteps in one episode
-auto_save = 20
+auto_save = 1
 total_test_episodes = 100*auto_save    # total num of testing episodes
 
 
@@ -58,7 +58,7 @@ action_dim = env.action_space.n
 
 ################### checkpointing ###################
 
-run_num_pretrained = 30      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 40      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):

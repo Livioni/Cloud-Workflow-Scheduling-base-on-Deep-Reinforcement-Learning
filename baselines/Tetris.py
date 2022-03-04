@@ -50,7 +50,7 @@ def alignment_score(state):
     if all(map(lambda x : x<0,alignment_score)):
         return -1
     else:
-        return np.where(alignment_score==np.max(alignment_score))[0][0]
+        return np.where(alignment_score == np.max(alignment_score))[0][0]
 
 def tetris(n_iters):
     print("Tetris")

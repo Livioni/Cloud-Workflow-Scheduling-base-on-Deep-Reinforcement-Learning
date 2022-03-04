@@ -148,9 +148,11 @@ def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1
     #初始化资源需求   
     for i in range(len(in_degree)):
         if random.random()<0.5:
-            demand.append((round(random.uniform(0.25*r,0.5*r),0),round(random.uniform(0.05*r,0.01*r),0)))
+            # demand.append((random.uniform(0.25*r,0.5*r),random.uniform(0.05*r,0.01*r)))
+            demand.append((random.uniform(0.25*r,0.5*r),random.uniform(0.05*r,0.01*r)))
         else:
-            demand.append((round(random.uniform(0.05*r,0.01*r),0),round(random.uniform(0.25*r,0.5*r),0)))
+            # demand.append((random.uniform(0.05*r,0.01*r),random.uniform(0.25*r,0.5*r)))
+            demand.append((random.uniform(0.05*r,0.01*r),random.uniform(0.25*r,0.5*r)))
 
     return edges,duration,demand,position
 
@@ -217,22 +219,32 @@ class MyEnv(gym.Env):
         self.tasks_remaing_time = {}                            #计算资源上挂起的任务剩余执行时间
         self.DeepRM_reward = 0
         self.seed()
+        self.seed1 = 0
         self.viewer = None
         self.state = None
-        
         self.edges_lib = []
         self.duration_lib = []
         self.demand_lib = []
-
-        print('load lib.')
-        DAGsize = 30
-        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/edges' + str(DAGsize) +'_lib.npy'
-        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/duration' + str(DAGsize) +'_lib.npy'
-        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/demand'+str(DAGsize)+'_lib.npy'
-        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
-        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
-        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
-        print('load completed.')
+        
+        DAGsize = 40
+        ##########################################training################################
+        # print('train datasheet lib.')
+        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
+        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
+        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
+        # self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
+        # self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
+        # self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        # print('load completed.')
+        ##########################################testing################################
+        # print('test datasheet loaded.')
+        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
+        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
+        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
+        # self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
+        # self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
+        # self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        # print('load completed.')
 
     def search_for_predecessor(self,node,edges):
         '''
@@ -403,8 +415,8 @@ class MyEnv(gym.Env):
                 self.pend_task(action)
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
                 self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]                                     
-                reward = 0.0
-                # reward = ((1 - self.cpu_res/self.cpu_res_unit) + (1 - self.memory_res/self.memory_res_unit))                                                                                            #时间步没动，收益为0
+                reward = 0.0                                                                                         #时间步没动，收益为0
+
                 done = self.check_episode_finish()
                 return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
             else:
@@ -462,15 +474,17 @@ class MyEnv(gym.Env):
         :para None
         :return: 初始状态，每一次reset就是重新一幕
         '''
-        seed = random.randrange(100)
-        self.edges,self.duration,self.demand = self.edges_lib[seed],self.duration_lib[seed],self.demand_lib[seed]
+        # self.seed1 = random.randint(0, 99) 
+        self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
+        self.seed1 += 1
+        if self.seed1 == 100:
+            self.seed1 = 0
         ###随机生成一个workflow
         # self.edges,self.duration,self.demand,self.position = workflows_generator('default')
         # self.edges,self.duration,self.demand = self.save_10dag()
         # print("DAG结构Edges：",self.edges)
         # print("任务占用时间Ti:",self.duration)                    #生成的原始数据
         # print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
-        
         ###初始化一些状态
         self.time,self.cpu_res,self.memory_res = 0,100,100      
         self.done_job = []

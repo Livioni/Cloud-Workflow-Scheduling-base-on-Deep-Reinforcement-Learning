@@ -271,8 +271,9 @@ if __name__ == '__main__':
     worksheet.write('B1', 'Makespan(s)')
     worksheet.write('C1', '方法')
     worksheet.write('D1', 'DAG大小')
-    for i in range(100*n):
-        worksheet.write(i+1, 0, i+1) 
+    for line in range(0,n):
+        for i in range(100):
+            worksheet.write(i+1+line*100, 0, i+1) 
     for i in range(100):
         worksheet.write(i+1, 2, 'Actor-Critic') 
     for i in range(100,200):
@@ -289,7 +290,7 @@ if __name__ == '__main__':
     env = gym.make("MyEnv-v0").unwrapped
     state_size = env.observation_space.shape[0] #38
     action_size = env.action_space.n #11
-    auto_save = 20
+    auto_save = 50
     test_order = 100*auto_save
     sum_reward = 0
     time_durations = []  
