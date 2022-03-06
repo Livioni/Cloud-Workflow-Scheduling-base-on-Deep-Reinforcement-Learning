@@ -1,15 +1,13 @@
-from enum import auto
-import os,xlwt
-import glob
-import time
+import os
 from datetime import datetime
-import torch
-import numpy as np
+
 import gym
+import numpy as np
 import torch
 import torch.nn as nn
-from torch.distributions import MultivariateNormal
-from torch.distributions import Categorical
+import xlwt
+from torch.distributions import Categorical, MultivariateNormal
+
 
 def initial_excel():
     global worksheet,workbook
@@ -58,7 +56,7 @@ action_dim = env.action_space.n
 
 ################### checkpointing ###################
 
-run_num_pretrained = 30      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 10100      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -292,7 +290,9 @@ def test():
     print("============================================================================================")
 
     ppo_agent.load(checkpoint_path)
+    print("Network ID:",run_num_pretrained)
     print('PPO agent has been loaded!')
+
     makespans = []
     line = 0
     # training loop

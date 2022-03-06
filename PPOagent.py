@@ -1,14 +1,11 @@
 import os
-import glob
-import time
 from datetime import datetime
-import torch
-import numpy as np
+
 import gym
+import numpy as np
 import torch
 import torch.nn as nn
-from torch.distributions import MultivariateNormal
-from torch.distributions import Categorical
+from torch.distributions import Categorical, MultivariateNormal
 from torch.utils.tensorboard import SummaryWriter
 
 writer = SummaryWriter(comment='Workflow scheduler Reward Record')
@@ -78,7 +75,7 @@ print("logging at : " + log_f_name)
 
 ################### checkpointing ###################
 
-run_num_pretrained = 30      #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 10100      #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -243,6 +240,7 @@ class PPO:
         self.policy_old.load_state_dict(self.policy.state_dict())
         
         self.MseLoss = nn.MSELoss()
+        self.record = 0
 
 
     def select_action(self, state):
@@ -297,6 +295,9 @@ class PPO:
 
             # final loss of clipped objective PPO
             loss = -torch.min(surr1, surr2) + 0.5*self.MseLoss(state_values, rewards) - 0.01*dist_entropy
+            # for j in range(update_timestep):
+            #     writer.add_scalar('Loss/PPO_loss', loss[j], global_step=self.record)
+            #     self.record += 1
             # take gradient step
             self.optimizer.zero_grad()
             loss.mean().backward()

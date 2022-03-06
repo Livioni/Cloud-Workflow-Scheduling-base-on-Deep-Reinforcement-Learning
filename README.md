@@ -1,4 +1,5 @@
 # Cloud Workflow Scheduling base on Deep Reinforcement Learning
+
  北京化工大学本科毕业设计《基于深度强化学习的云工作流调度》
 
 ## 有向无环图生成设计
@@ -135,6 +136,8 @@ reset函数表示初始化环境，包括随机生成一个DAG并且生成工作
 
 ## 强化学习算法与具体实现
 
+### Actor-Crtitc
+
 采用Actor-Critic框架，伪代码如下。引入两个结构相同的网络分别作为策略网络和状态价值网络，策略网络输出的是动作的概率分布，状态价值网络输出的是当前状态的估计价值。
 
 采用REINFORCE算法更新Actor网络，在计算target($\delta$) 时用当步的估计收益减去Critic网络的价值基线，以减小方差。
@@ -143,18 +146,89 @@ reset函数表示初始化环境，包括随机生成一个DAG并且生成工作
 
 ![image-20220228153127773](README.assets/image-20220228153127773.png)
 
+### Proximal Policy Optimization
+
+暂时未更新伪代码，代码来源https://github.com/nikhilbarhate99/PPO-PyTorch。
+
+![PPO](README.assets/PPO.png)
+
 ## 实验
 
 ### 对比方法
 
 1. Shortest Job First（SJF）：首先选择耗时最短的任务执行。SJF首先按可执行任务的时间从小到大排序，将任务放入计算资源中直到放不下后，再执行动作$a=-1$
-
 2. Random：在{-1,0,1,2,3,4,5,6,7,8,9}中随机执行动作，若遇到无效动作重新随机。
 3. Tetris: *Multi-Resource Packing for Cluster Schedulers* 中为最小makespan设计的策略。
 
-以上两种方法均在同样的gym环境中交互，这意味着SJF方法仅仅知道Ready_task 任务列表10个长度的信息。
+​		
 
-### 参数信息
+#### Tetris
+
+Tetris, a cluster scheduler that packs tasks to machines based on their requirements along multiple resources.
+
+objectives：
+
+$\bullet$Packing Efficiency for Makespan
+
+$\bullet$Average Completion Time
+
+$\bullet$Fairness
+
+
+
+现在Ready task列表中有2个任务，CPU和memory需求资源分别为: $[t_1:(31.432, 1.019), t_{2}:(4.733, 25.308)，t_{3}:(15.000, 1.019)]$
+
+假设当前资源中CPU和memory剩余的资源为(30,60)。
+
+计算任务的Alignment Score：
+
+$$AS_2 = (4.733,25.308)\cdot (30,60) = 4.733\times 30+25.308\times 60 = 1660.47$$
+
+$$AS_3 = (15.000,1.019)\cdot (30,60) = 15.000\times 30+1.019\times 60 = 511.14$$
+
+因为$AS_{2}>AS_{3}$，因此先选择$t_{2}$执行。
+
+在每次选择动作的时候，计算ready task中的每一个任务的Alignment Score，选择最大AC的任务放在计算资源上，然后重复计算，放置，直到计算资源上不能再容纳更多的任务，这时候动作$a=-1$。
+
+
+
+在只考虑makespan时不一定能减少任务的平均完成时间。例如：
+
+Machines have 2 cores and 4GB of memory.
+
+$t_{1} $ 有6个任务，每个任务需要 [2 cores, 3 GB], $t_{2}$有两个任务，每个任务需要 [1 cores, 2 GB]
+
+如果按照alignment score的方法的计算，先执行$t_1$，再执行$t_{2}$,这样的话很明显平均任务完成时间要比先先执行$t_1$再执行$t_{2}$的长。、
+
+一种常见的减少任务平均完成时间的算法就是Shortest Job First(SJF)。
+
+为了同时优化Makespan和average completion time两个目标，定义分数：$(a+\varepsilon \cdot p)$
+
+式中，$\varepsilon=(\bar{a} / \bar{p})$，$a$ 表示 alignment score，$p$表示任务持续时间。
+
+
+
+以上三种方法均在同样的gym环境中交互，这意味着SJF方法仅仅知道Ready_task 任务列表10个长度的信息。
+
+### PPO单图训练
+
+
+
+### ![PPO10](README.assets/PPO10.png)
+
+​                                                                                                          n = 10
+
+![PPO30](README.assets/PPO30.png)
+
+​																										n = 30
+
+
+
+![PPO50](README.assets/PPO50.png)
+
+​																										n = 50
+
+### AC参数信息
 
 ```python
 1.	class Actor(nn.Module): #策略网络  
@@ -248,6 +322,6 @@ reset函数表示初始化环境，包括随机生成一个DAG并且生成工作
 
 从图中可以看出AC网络训练出来的模型要优于SJF方法，智能体学习到的策略要优于SJF方法 5%-15%，优于Random方法50%-54% 尤其是当DAG规模变大之后，DRL的优势更明显。在之后的实验中，不断修改max_out, alpha, beta, prob等参数，情况大致相同，DRL都要优于其余两种方法。
 
-最新的方法对比图：
+对于下一图每一小组实验数据，都是随机生成100张不同的DAG图进行处理。
 
 ![Makespan对比图](README.assets/Makespan%E5%AF%B9%E6%AF%94%E5%9B%BE.png)

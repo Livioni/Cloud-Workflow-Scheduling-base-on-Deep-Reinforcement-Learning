@@ -1,9 +1,11 @@
-import random,math,argparse
-import numpy as np
-from numpy.random.mtrand import sample
-from matplotlib import pyplot as plt
+import argparse
+import math
+import random
+
 import networkx as nx
-import json
+import numpy as np
+from matplotlib import pyplot as plt
+from numpy.random.mtrand import sample
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', default='default', type=str)#parameters setting
@@ -190,8 +192,8 @@ def generate_test_datasheet(amount,DAGsize):
     np.save('npy/test_datasheet/'+str(args.n)+'/demand'+str(args.n)+'_lib.npy',demand_lib_np)
 
 if __name__ == '__main__':
-    # generate_train_datasheet(1000,30)
-    generate_test_datasheet(1000,50)
+    generate_train_datasheet(100,10)
+    # generate_test_datasheet(1000,50)
 
 
     # edges, duration, demand, _ = workflows_generator('default')

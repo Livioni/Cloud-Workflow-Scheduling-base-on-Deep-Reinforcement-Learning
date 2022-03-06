@@ -3,8 +3,8 @@ import gym,xlwt
 import numpy as np
 from itertools import count
 
-env = gym.make("MyEnv-v0").unwrapped
-# env = gym.make("testEnv-v0").unwrapped
+# env = gym.make("MyEnv-v0").unwrapped
+env = gym.make("testEnv-v0").unwrapped
 n_iters=100
 
 def initial_excel():
