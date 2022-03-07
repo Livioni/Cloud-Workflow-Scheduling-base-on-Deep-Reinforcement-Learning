@@ -1,7 +1,7 @@
 import argparse
 import math
 import random
-
+from scipy import sparse
 import networkx as nx
 import numpy as np
 from matplotlib import pyplot as plt
@@ -196,11 +196,9 @@ def generate_test_datasheet(amount, DAGsize):
     np.save('npy/test_datasheet/' + str(args.n) + '/demand' + str(args.n) + '_lib.npy', demand_lib_np)
 
 
+
 if __name__ == '__main__':
-    generate_train_datasheet(100, 10)
+    # generate_train_datasheet(100, 10)
     # generate_test_datasheet(1000,50)
 
-    # edges, duration, demand, _ = workflows_generator('default')
-    # print(edges)
-    # print(duration)
-    # print(demand)
+    edges, duration, demand, _ = workflows_generator('default')
