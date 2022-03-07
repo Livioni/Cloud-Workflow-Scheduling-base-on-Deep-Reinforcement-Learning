@@ -5,28 +5,37 @@ import gym
 import numpy as np
 import torch
 import torch.nn as nn
+import xlwt
 from torch.distributions import Categorical, MultivariateNormal
-from torch.utils.tensorboard import SummaryWriter
 
-writer = SummaryWriter(comment='Workflow scheduler Reward Record')
+
+def initial_excel():
+    global worksheet, workbook
+    # xlwt 库将数据导入Excel并设置默认字符编码为ascii
+    workbook = xlwt.Workbook(encoding='ascii')
+    # 添加一个表 参数为表名
+    worksheet = workbook.add_sheet('makespan')
+    # 生成单元格样式的方法
+    # 设置列宽, 3为列的数目, 12为列的宽度, 256为固定值
+    for i in range(3):
+        worksheet.col(i).width = 256 * 12
+    # 设置单元格行高, 25为行高, 20为固定值
+    worksheet.row(1).height_mismatch = True
+    worksheet.row(1).height = 20 * 25
+    # 保存excel文件
+    workbook.save('data/makespan_GCN.xls')
+
+
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
-env_name = "MyEnv-v0"  # 定义自己的环境名称
-max_ep_len = 1000  # max timesteps in one episode
-max_training_timesteps = int(3e5)  # break training loop if timeteps > max_training_timesteps
-
-print_freq = max_ep_len / 10  # print avg reward in the interval (in num timesteps)
-save_model_freq = int(5e3)  # save model frequency (in num timesteps)
-
-#####################################################
-
-## Note : print frequencies should be > than max_ep_len
+env_name = "graphEnv-v0"  # 定义自己的环境名称
+max_ep_len = 10000  # max timesteps in one episode
+auto_save = 10
+total_test_episodes = 100 * auto_save  # total num of testing episodes
 
 ################ PPO hyperparameters ################
 
-update_timestep = max_ep_len  # update policy every n timesteps
 K_epochs = 80  # update policy for K epochs in one PPO update
-
 eps_clip = 0.2  # clip parameter for PPO
 gamma = 0.99  # discount factor
 
@@ -35,7 +44,7 @@ lr_critic = 0.001  # learning rate for critic network
 
 #####################################################
 
-print("training environment name : " + env_name)
+print("Testing environment name : " + env_name)
 
 env = gym.make(env_name).unwrapped
 
@@ -44,20 +53,19 @@ state_dim = env.observation_space.shape[0]
 # action space dimension
 action_dim = env.action_space.n
 
-
 ################### checkpointing ###################
 
-run_num_pretrained = 10100  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 10  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-directory = directory + '/' + env_name + '/'
+directory = directory + '/' + 'graphEnv-v0' + '/'
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-checkpoint_path = directory + "PPO_{}_{}.pth".format(env_name, run_num_pretrained)
+checkpoint_path = directory + "PPO_graphEnv-v0_{}.pth".format(run_num_pretrained)
 print("save checkpoint path : " + checkpoint_path)
 
 #####################################################
@@ -67,11 +75,7 @@ print("save checkpoint path : " + checkpoint_path)
 
 print("--------------------------------------------------------------------------------------------")
 
-print("最大步数 : ", max_training_timesteps)
 print("每一幕的最大步数 : ", max_ep_len)
-
-print("模型保存频率 : " + str(save_model_freq) + " timesteps")
-print("printing average reward over episodes in last : " + str(print_freq) + " timesteps")
 
 print("--------------------------------------------------------------------------------------------")
 
@@ -79,24 +83,14 @@ print("状态空间维数 : ", state_dim)
 print("动作空间维数 : ", action_dim)
 
 print("--------------------------------------------------------------------------------------------")
-
 print("初始化离散动作空间策略")
-
 print("--------------------------------------------------------------------------------------------")
 
-print("PPO 更新频率 : " + str(update_timestep) + " timesteps")
 print("PPO K epochs : ", K_epochs)
 print("PPO epsilon clip : ", eps_clip)
 print("discount factor (gamma) : ", gamma)
 
 print("--------------------------------------------------------------------------------------------")
-
-print("optimizer learning rate actor : ", lr_actor)
-print("optimizer learning rate critic : ", lr_critic)
-
-#####################################################
-
-print("============================================================================================")
 
 ################################## set device ##################################
 print("============================================================================================")
@@ -208,7 +202,6 @@ class PPO:
         self.policy_old.load_state_dict(self.policy.state_dict())
 
         self.MseLoss = nn.MSELoss()
-        self.record = 0
 
     def select_action(self, state):
         with torch.no_grad():
@@ -259,9 +252,7 @@ class PPO:
 
             # final loss of clipped objective PPO
             loss = -torch.min(surr1, surr2) + 0.5 * self.MseLoss(state_values, rewards) - 0.01 * dist_entropy
-            # for j in range(update_timestep):
-            #     writer.add_scalar('Loss/PPO_loss', loss[j], global_step=self.record)
-            #     self.record += 1
+
             # take gradient step
             self.optimizer.zero_grad()
             loss.mean().backward()
@@ -281,94 +272,60 @@ class PPO:
         self.policy.load_state_dict(torch.load(checkpoint_path, map_location=lambda storage, loc: storage))
 
 
-def train():
-    ################# training procedure ################
+def test():
+    ################# testing procedure ################
     # initialize a PPO agent
     ppo_agent = PPO(state_dim, action_dim, lr_actor, lr_critic, gamma, K_epochs, eps_clip)
-    # track total training time
+    # track total testing time
     start_time = datetime.now().replace(microsecond=0)
-    print("Started training at (GMT) : ", start_time)
+    print("Started testing at (GMT) : ", start_time)
 
     print("============================================================================================")
 
-    if not os.path.exists(checkpoint_path):
-        print('Network Initilized.')
-    else:
-        ppo_agent.load(checkpoint_path)
-        print("PPO has been loaded!")
+    ppo_agent.load(checkpoint_path)
+    print("Network ID:", run_num_pretrained)
+    print('PPO agent has been loaded!')
 
-    # printing and logging variables
-    print_running_reward = 0
-    print_running_episodes = 1
-
-
-    time_step = 0
-    i_episode = 0
-
+    makespans = []
+    line = 0
     # training loop
-    while time_step <= max_training_timesteps:
+    for ep in range(1, total_test_episodes + 1):
 
         state = env.reset()
-        current_ep_reward = 0
+        ep_reward = 0
 
         for t in range(1, max_ep_len + 1):
-
             # select action with policy
             state, reward, done, info = ppo_agent.select_action(state)
-
             # saving reward and is_terminals
-            ppo_agent.buffer.rewards.append(reward)  # 保存收益
-            ppo_agent.buffer.is_terminals.append(done)  # 保存是否完成一幕
-
-            time_step += 1
-            current_ep_reward += reward
-
-            # update PPO agent
-            if time_step % update_timestep == 0:
-                print('Network updating.')
-                ppo_agent.update()
-
-            # printing average reward
-            if time_step % print_freq == 0:
-                # print average reward till last episode
-                print_avg_reward = print_running_reward / print_running_episodes
-                print_avg_reward = round(print_avg_reward, 2)
-                print("Episode : {} \t\t Timestep : {} \t\t Average Reward : {}".format(i_episode, time_step,
-                                                                                        print_avg_reward))
-                print_running_reward = 0
-                print_running_episodes = 0
-
-            # save model weights
-            if time_step % save_model_freq == 0:
-                print("--------------------------------------------------------------------------------------------")
-                print("saving model at : " + checkpoint_path)
-                ppo_agent.save(checkpoint_path)
-                print("model saved")
-                print("Elapsed Time  : ", datetime.now().replace(microsecond=0) - start_time)
-                print("--------------------------------------------------------------------------------------------")
-
+            ep_reward += reward
             # break; if the episode is over
             if done:
                 time = state[0]
                 time_to_write = round(float(time), 3)
-                writer.add_scalar('info/PPO_makespan', time_to_write, global_step=i_episode)
-                writer.add_scalar('info/PPO_Sum_reward', current_ep_reward, global_step=i_episode)
+                makespans.append(time_to_write)
+                if ep % auto_save == 0:
+                    average_makespan = np.mean(makespans)
+                    worksheet.write(line, 1, average_makespan)
+                    print('PPO : Episode: {},  Makespan: {:.3f}s'.format((line + 1) * auto_save, average_makespan))
+                    line += 1
+                    makespans = []
                 break
+        workbook.save('data/makespan_GCN.xls')
+        ppo_agent.buffer.clear()
+        ep_reward = 0
 
-        print_running_reward += current_ep_reward
-        print_running_episodes += 1
-
-        i_episode += 1
     env.close()
 
     # print total training time
     print("============================================================================================")
     end_time = datetime.now().replace(microsecond=0)
-    print("Started training at (GMT) : ", start_time)
-    print("Finished training at (GMT) : ", end_time)
-    print("Total training time  : ", end_time - start_time)
+    print("Started testing at (GMT) : ", start_time)
+    print("Finished testing at (GMT) : ", end_time)
+    print("Total testing time  : ", end_time - start_time)
     print("============================================================================================")
 
 
 if __name__ == '__main__':
-    train()
+    initial_excel()
+    test()

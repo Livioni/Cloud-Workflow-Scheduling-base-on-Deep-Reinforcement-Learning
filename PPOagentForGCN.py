@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
-env_name = "MyEnv-v0"  # 定义自己的环境名称
+env_name = "graphEnv-v0"  # 定义自己的环境名称
 max_ep_len = 1000  # max timesteps in one episode
 max_training_timesteps = int(3e5)  # break training loop if timeteps > max_training_timesteps
 
@@ -44,10 +44,10 @@ state_dim = env.observation_space.shape[0]
 # action space dimension
 action_dim = env.action_space.n
 
-
+ 
 ################### checkpointing ###################
 
-run_num_pretrained = 10100  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 50  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -138,9 +138,9 @@ class ActorCritic(nn.Module):
 
         self.actor = nn.Sequential(
             nn.Linear(state_dim, 64),
-            nn.Tanh(),
+            nn.Sigmoid(),
             nn.Linear(64, 64),
-            nn.Tanh(),
+            nn.Sigmoid(),
             nn.Linear(64, action_dim),
             nn.Softmax(dim=-1)
         )
@@ -301,7 +301,6 @@ def train():
     print_running_reward = 0
     print_running_episodes = 1
 
-
     time_step = 0
     i_episode = 0
 
@@ -312,10 +311,8 @@ def train():
         current_ep_reward = 0
 
         for t in range(1, max_ep_len + 1):
-
             # select action with policy
             state, reward, done, info = ppo_agent.select_action(state)
-
             # saving reward and is_terminals
             ppo_agent.buffer.rewards.append(reward)  # 保存收益
             ppo_agent.buffer.is_terminals.append(done)  # 保存是否完成一幕
