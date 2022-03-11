@@ -1,8 +1,41 @@
 # Cloud Workflow Scheduling base on Deep Reinforcement Learning
 
  北京化工大学本科毕业设计《基于深度强化学习的云工作流调度》
- 
+
  关键词：有向无环图，工作流，深度强化学习，图神经网络； 
+
+
+
+## Installation
+
+It requires the following packages:
+
+- Python 3.9.7
+- torch 1.10
+- gym  0.21.0
+- networkx 2.6.3
+
+
+
+## Instructions
+
+1. 将 Env/___.py 文件注册在gym的环境中；
+2. 运行 DAGs_generator.py 生成 train dataset， test dataset.
+3. 修改环境代码适应生成数据集的路径；
+4. 运行 PPO/DRLagent.py 训练网络；
+5. 运行 PPO/DRLtest.py 测试推理。
+
+
+
+## 目前进度
+
+2022.03.11
+
+- 目前状态空间，动作空间下设计的Actor- Critic，PPO方法难以超越baseline Tetris的效果。
+- 尝试经典GCN编码DAG，效果不佳。
+- 尝试Decima中的编码结构。
+
+
 
 ## 有向无环图生成设计
 

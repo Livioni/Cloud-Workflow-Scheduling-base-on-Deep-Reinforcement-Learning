@@ -196,9 +196,7 @@ def generate_test_datasheet(amount, DAGsize):
     np.save('npy/test_datasheet/' + str(args.n) + '/demand' + str(args.n) + '_lib.npy', demand_lib_np)
 
 
-
 if __name__ == '__main__':
     generate_train_datasheet(1000, 50)
     # generate_test_datasheet(1000,50)
-
     # edges, duration, demand, _ = workflows_generator('default')

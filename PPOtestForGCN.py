@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-
 import gym
 import numpy as np
 import torch
@@ -24,7 +23,6 @@ def initial_excel():
     worksheet.row(1).height = 20 * 25
     # 保存excel文件
     workbook.save('data/makespan_GCN.xls')
-
 
 print("============================================================================================")
 ####### initialize environment hyperparameters ######

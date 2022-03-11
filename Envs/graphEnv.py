@@ -25,7 +25,7 @@ def DAGs_generate(mode='default', n=10, max_out=2, alpha=1, beta=1.0):
         alpha = random.sample(set_alpha, 1)[0]
         beta = random.sample(set_beta, 1)[0]
     else:
-        n = 50
+        n = 10
         max_out = random.sample(set_max_out, 1)[0]
         alpha = random.sample(set_alpha, 1)[0]
         beta = random.sample(set_beta, 1)[0]
@@ -242,8 +242,9 @@ class graphEnv(gym.Env):
         self.state = None
         self.gcn = models.GCN(3,16,3)
         self.gcn.load_state_dict(torch.load('GCN_initialtion/GCN_0.pth', map_location=lambda storage, loc: storage))
+        print('Gcn parameters have been loaded.')
 
-        DAGsize = 50
+        DAGsize = 10
         ##########################################training################################
         print('train datasheet lib.')
         edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
@@ -476,7 +477,6 @@ class graphEnv(gym.Env):
         return np.array(self.state, dtype=np.float32)
 
     def render(self, mode="human"):
-
         return plot_DAG(self.edges, self.position)
 
     def close(self):
