@@ -273,7 +273,7 @@ def randomagent(n_iters):
 if __name__ == '__main__':
     n = 5  # 有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('data/Makespans10100.xlsx')
+    workbook = xlsxwriter.Workbook('data/Makespans30.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
@@ -298,7 +298,7 @@ if __name__ == '__main__':
     for i in range(400, 500):
         worksheet.write(i + 1, 2, 'PPO')
     for i in range(100 * n):
-        worksheet.write(i + 1, 3, 'n=10')
+        worksheet.write(i + 1, 3, 'n=30')
 
     env = gym.make("testEnv-v0").unwrapped
     state_size = env.observation_space.shape[0]  # 38

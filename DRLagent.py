@@ -18,7 +18,7 @@ env = gym.make("MyEnv-v0").unwrapped
 state_size = env.observation_space.shape[0]  # 38
 action_size = env.action_space.n  # 11
 lr = 0.0001  # 学习率
-n_iters = 50000
+n_iters = 10000
 sum_reward = 0
 time_durations = []
 
@@ -33,8 +33,8 @@ class Actor(nn.Module):  # 策略网络
         self.linear3 = nn.Linear(40, self.action_size)
 
     def forward(self, state):
-        output = torch.sigmoid(self.linear1(state))
-        output = self.linear2(output)
+        output = F.leaky_relu(self.linear1(state))
+        output = F.leaky_relu(self.linear2(output))
         output = self.linear3(output)
         distribution = Categorical(F.softmax(output, dim=-1))
         return distribution  # 输出动作概率分布

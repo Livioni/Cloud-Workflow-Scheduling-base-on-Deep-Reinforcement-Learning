@@ -15,7 +15,7 @@ env_name = "MyEnv-v0"  # 定义自己的环境名称
 max_ep_len = 1000  # max timesteps in one episode
 max_training_timesteps = int(3e5)  # break training loop if timeteps > max_training_timesteps
 
-print_freq = max_ep_len / 10  # print avg reward in the interval (in num timesteps)
+print_freq = max_ep_len / 2   # print avg reward in the interval (in num timesteps)
 save_model_freq = int(5e3)  # save model frequency (in num timesteps)
 
 #####################################################
@@ -299,7 +299,7 @@ def train():
 
     # printing and logging variables
     print_running_reward = 0
-    print_running_episodes = 1
+    print_running_episodes = 0
 
 
     time_step = 0
