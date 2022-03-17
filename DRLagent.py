@@ -152,7 +152,7 @@ def trainIters(actor, critic, n_iters):
         total_makespan += times
 
     average_makespan = total_makespan / n_iters
-    print(average_makespan)
+    # print(average_makespan)
     torch.save(actor, 'models/ACagent/actor.pkl')
     torch.save(critic, 'models/ACagent/critic.pkl')
     env.close()

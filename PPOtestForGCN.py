@@ -52,7 +52,7 @@ action_dim = env.action_space.n
 
 ################### checkpointing ###################
 
-run_num_pretrained = 'Decima30new'  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 'Decima30'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -285,7 +285,6 @@ def test():
     line = 0
     # training loop
     for ep in range(1, total_test_episodes + 1):
-
         state = env.reset()
         ep_reward = 0
 

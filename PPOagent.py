@@ -6,9 +6,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.distributions import Categorical, MultivariateNormal
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 
-writer = SummaryWriter(comment='Workflow scheduler Reward Record')
+# writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
 env_name = "MyEnv-v0"  # 定义自己的环境名称
@@ -39,11 +39,8 @@ print("training environment name : " + env_name)
 
 env = gym.make(env_name).unwrapped
 
-# state space dimension
-state_dim = env.observation_space.shape[0]
-# action space dimension
-action_dim = env.action_space.n
-
+# state space dimension action space dimension
+state_dim,action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
@@ -187,7 +184,6 @@ class ActorCritic(nn.Module):
         state_values = self.critic(state)
 
         return action_logprobs, state_values, dist_entropy
-
 
 class PPO:
     def __init__(self, state_dim, action_dim, lr_actor, lr_critic, gamma, K_epochs, eps_clip):
@@ -351,8 +347,8 @@ def train():
             if done:
                 time = state[0]
                 time_to_write = round(float(time), 3)
-                writer.add_scalar('info/PPO_makespan', time_to_write, global_step=i_episode)
-                writer.add_scalar('info/PPO_Sum_reward', current_ep_reward, global_step=i_episode)
+                # writer.add_scalar('info/PPO_makespan', time_to_write, global_step=i_episode)
+                # writer.add_scalar('info/PPO_Sum_reward', current_ep_reward, global_step=i_episode)
                 break
 
         print_running_reward += current_ep_reward

@@ -1,4 +1,4 @@
-import torch
+import torch,random
 from gym import spaces
 import gym
 from gym.utils import seeding
@@ -85,25 +85,34 @@ class graphEnv(gym.Env):
         self.NonLinearNw2.load_state_dict(torch.load('GCN_initialization/NonLinearNw2.pth', map_location=lambda storage, loc: storage))
         self.NonLinearNw3.load_state_dict(torch.load('GCN_initialization/NonLinearNw3.pth', map_location=lambda storage, loc: storage))
 
-        DAGsize = 30
-        ##########################################training#####################################
-        # print('train datasheet lib.')
-        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
-        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
-        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
-        # self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
-        # self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
-        # self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
-        # print('load completed.')
-        ##########################################testing################################
-        # print('test datasheet loaded.')
-        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
-        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
-        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
-        # self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
-        # self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
-        # self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
-        # print('load completed.')
+        self.DAGsize = 30
+        self.load_train_dataset(self.DAGsize)
+        # self.load_test_dataset(self.DAGsize)
+        
+    def load_train_dataset(self,DAGsize):
+        DAGsize = DAGsize
+        ##########################################training################################
+        print('train datasheet lib.')
+        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
+        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
+        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
+        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
+        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
+        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        print('load completed.')
+        return
+    
+    def load_test_dataset(self,DAGsize):
+        #########################################testing################################
+        print('test datasheet loaded.')
+        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
+        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
+        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
+        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
+        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
+        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        print('load completed.')
+        return
 
     def search_for_predecessor(self, node, edges):
         '''

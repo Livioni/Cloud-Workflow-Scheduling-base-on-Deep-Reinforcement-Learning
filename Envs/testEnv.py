@@ -14,37 +14,7 @@ class testEnv(gym.Env):
         self.t_unit = 10                                                                                 #时间单位，用于生成DAG节点的任务需求时间，80%的概率平均分布于t-3t 20的概率平均分布在10t-15t
         self.cpu_res_unit = 100                                                                          #CPU资源单位，用于生成DAG节点的CPU占用需求，50%的概率的任务为CPU资源需求密集型，随机占用0.25r-0.5r 50%的概率随机占用0.05r-0.01r
         self.memory_res_unit = 100                                                                       #Memory资源单位，用于生成DAG节点的memoory占用需求，50%的概率的任务为memory资源需求密集型，随机占用0.25r-0.5r 50%的概率随机占用0.05r-0.01r
-        #以下是各状态的上限定义，好像gym中都需要
-        self.max_time = np.array([[999999]],dtype=np.float32)                                            #当前执行时间/当前执行时间上限：没有规定上限，理论上是inf
-        self.backlot_max_time = np.array([[999999]],dtype=np.float32)                                    #backlot中任务所需要总时间/backlot中任务所需要总时间上限：没有规定上限，理论上是inf     //超过动作列表长度的任务的信息被算进backlot，backlot没有个数上限
-        self.max_cpu_res=  np.array([[self.cpu_res_unit]],dtype=np.float32)                              #计算资源中的CPU总容量
-        self.max_memory_res=  np.array([[self.memory_res_unit]],dtype=np.float32)                        #计算资源中的Memory总容量
-        self.t_duration = self.t_unit * np.ones((1,self.M),dtype=np.float32)                             #动作列表中每一个任务的执行时间/动作列表中每一个任务的执行时间上限
-        self.cpu_res_limt = self.cpu_res_unit* 0.5 * np.ones((1,self.M),dtype=np.float32)                #动作列表中每一个任务CPU资源需求/动作列表中每一个任务CPU资源需求上限
-        self.backlot_cpu_res_limt = np.array([[100 * self.cpu_res_unit * 0.5]],dtype=np.float32)         #backlot中任务所需要总CPU资源
-        self.memory_res_limt = self.memory_res_unit* 0.5 * np.ones((1,self.M),dtype=np.float32)          #动作列表中每一个任务memory资源需求/动作列表中每一个任务memory资源需求上限
-        self.backlot_memory_res_limt = np.array([[100 * self.memory_res_unit * 0.5]],dtype=np.float32)   #backlot中任务所需要总memory资源
-        self.max_b_level = np.array([[100]],dtype=np.float32)                                            #b-level上限
-        self.max_children = np.array([[100]],dtype=np.float32)                                           #max_children上限
-        high = np.ravel(np.hstack((
-                                    self.max_time,                  #1 dim
-                                    self.max_cpu_res,               #1 dim 
-                                    self.max_memory_res,            #1 dim 
-                                    self.t_duration,                #10dim
-                                    self.cpu_res_limt,              #10dim
-                                    self.memory_res_limt,           #10dim
-                                    self.max_b_level,               #1 dim
-                                    self.max_children,              #1 dim 
-                                    self.backlot_max_time,          #1 dim
-                                    self.backlot_cpu_res_limt,      #1 dim
-                                    self.backlot_memory_res_limt,   #1 dim
-                                    )))                             # totally 38 dim
-        low = [0,0,0] 
-        low.extend([-1 for i in range(self.M * 3)])
-        low.extend([0,0,0,0,0])
-        low = np.array(low,dtype=np.float32)
-        self.action_space = spaces.Discrete(self.M+1)#{-1,0,1,2,3,4,5,6,7,8,9}
-        self.observation_space = spaces.Box(low, high, dtype=np.float32)
+        
         ##状态信息
         self.time = 0                                           #整体环境时钟，DAG执行已花费时间
         self.cpu_res = 100                                      #当前计算资源的CPU容量
@@ -68,7 +38,6 @@ class testEnv(gym.Env):
         self.tasks = []                                         #计算资源上挂起的任务
         self.tasks_remaing_time = {}                            #计算资源上挂起的任务剩余执行时间
         
-        self.seed()
         self.seed1 = 0
         self.viewer = None
         self.state = None
@@ -76,17 +45,28 @@ class testEnv(gym.Env):
         self.duration_lib = []
         self.demand_lib = []
         
-        DAGsize = 30
+        self.DAGsize = 30
+        self.load_train_dataset(self.DAGsize)
+        # self.load_test_dataset(self.DAGsize)
+
+    def load_train_dataset(self,DAGsize):
+        DAGsize = DAGsize
         ##########################################training################################
-        # print('train datasheet lib.')
-        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
-        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
-        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
-        # self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
-        # self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
-        # self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
-        # print('load completed.')
-        ##########################################testing################################
+        print('train datasheet lib.')
+        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
+        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
+        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
+        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
+        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
+        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        print('load completed.')
+        return
+        
+    def return_dim_info(self):
+        return (3 + self.M * 3 + 5),self.M+1
+
+    def load_test_dataset(self,DAGsize):
+        #########################################testing################################
         print('test datasheet loaded.')
         edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
         duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
@@ -95,6 +75,7 @@ class testEnv(gym.Env):
         self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
         self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
         print('load completed.')
+        return
 
     def search_for_predecessor(self,node,edges):
         '''
@@ -228,11 +209,6 @@ class testEnv(gym.Env):
         if len(self.done_job) == len(self.duration):
             return True   
         else: False
-
-
-    def seed(self, seed=None):
-        self.np_random, seed = seeding.np_random(seed)
-        return [seed]
 
     def pend_task(self,action):
         job_id = self.ready_list[action]
