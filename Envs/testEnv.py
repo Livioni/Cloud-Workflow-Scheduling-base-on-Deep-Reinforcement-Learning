@@ -1,151 +1,9 @@
-import math,argparse
-import gym,random
-from matplotlib import pyplot as plt
-from gym import spaces, logger
+import gym
+from gym import spaces
 from gym.utils import seeding
-from gym.envs.classic_control import rendering
 import numpy as np
 import networkx as nx
-
-
-set_dag_size = [20,30,40,50,60,70,80,90]             #random number of DAG  nodes       
-set_max_out = [1,2,3,4,5]                              #max out_degree of one node
-set_alpha = [0.5,1.0,1.5]                            #DAG shape
-set_beta = [0.0,0.5,1.0,2.0]                         #DAG regularity
-
-def DAGs_generate(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0):
-    ##############################################initialize############################################
-    if mode != 'default':
-        n = random.sample(set_dag_size,1)[0]
-        max_out = random.sample(set_max_out,1)[0]
-        alpha = random.sample(set_alpha,1)[0]
-        beta = random.sample(set_beta,1)[0]
-    else: 
-        n = 40
-        max_out = random.sample(set_max_out,1)[0]
-        alpha = random.sample(set_alpha,1)[0]
-        beta = random.sample(set_beta,1)[0]
-
-    length = math.floor(math.sqrt(n)/alpha)                                           #根据公式计算出来的DAG深度
-    mean_value = n/length                                                                  #计算平均长度
-    random_num = np.random.normal(loc = mean_value, scale = beta,  size = (length,1))      #计算每一层的数量，满足正态分布
-    ###############################################division#############################################
-    position = {'Start':(0,4),'Exit':(10,4)}
-    generate_num = 0
-    dag_num = 1
-    dag_list = [] 
-    for i in range(len(random_num)):                                                            #对于每一层
-        dag_list.append([]) 
-        for j in range(math.ceil(random_num[i])):                                               #向上取整
-            dag_list[i].append(j)
-        generate_num += len(dag_list[i])
-
-    if generate_num != n:                                                                  #不等的话做微调
-        if generate_num < n:                                                                 
-            for i in range(n-generate_num):
-                index = random.randrange(0,length,1)
-                dag_list[index].append(len(dag_list[index]))
-        if generate_num > n:
-            i = 0
-            while i < generate_num-n:
-                index = random.randrange(0,length,1)                                            #随机找一层
-                if len(dag_list[index]) < 1:
-                    continue
-                else:
-                    del dag_list[index][-1]
-                    i += 1
-
-    dag_list_update = []
-    pos = 1
-    max_pos = 0
-    for i in range(length):
-        dag_list_update.append(list(range(dag_num,dag_num+len(dag_list[i]))))
-        dag_num += len(dag_list_update[i])
-        pos = 1
-        for j in dag_list_update[i]:
-            position[j] = (3*(i+1),pos)
-            pos += 5
-        max_pos = pos if pos > max_pos else max_pos
-        position['Start']=(0,max_pos/2)
-        position['Exit']=(3*(length+1),max_pos/2)
-
-    ############################################link#####################################################
-    into_degree = [0]*n            
-    out_degree = [0]*n             
-    edges = []                          
-    pred = 0
-
-    for i in range(length-1):
-        sample_list = list(range(len(dag_list_update[i+1])))
-        for j in range(len(dag_list_update[i])):
-            od = random.randrange(1,max_out+1,1)
-            od = len(dag_list_update[i+1]) if len(dag_list_update[i+1])<od else od
-            bridge = random.sample(sample_list,od)
-            for k in bridge:
-                edges.append((dag_list_update[i][j],dag_list_update[i+1][k]))
-                into_degree[pred+len(dag_list_update[i])+k]+=1
-                out_degree[pred+j]+=1 
-        pred += len(dag_list_update[i])
-
-
-    ######################################create start node and exit node################################
-    for node,id in enumerate(into_degree):#给所有没有入边的节点添加入口节点作父亲
-        if id ==0:
-            edges.append(('Start',node+1))
-            into_degree[node]+=1
-
-    for node,od in enumerate(out_degree):#给所有没有出边的节点添加出口节点作儿子
-        if od ==0:
-            edges.append((node+1,'Exit'))
-            out_degree[node]+=1
-
-    #############################################plot###################################################
-    return edges,into_degree,out_degree,position
-
-def plot_DAG(edges,postion):
-    plt.figure(1)
-    g1 = nx.DiGraph()
-    g1.add_edges_from(edges)
-    nx.draw_networkx(g1, arrows=True, pos=postion)
-    plt.savefig("DAG.png", format="PNG")
-    plt.close()
-    return plt.clf
-
-def workflows_generator(mode = 'default', n = 10, max_out = 2,alpha = 1,beta = 1.0, t_unit = 10, resource_unit = 100):
-    '''
-    随机生成一个DAG任务并随机分配它的持续时间和（CPU，Memory）的需求
-    :param mode: DAG按默认参数生成
-    :param n: DAG中任务数
-    :para max_out: DAG节点最大子节点数
-    :return: edges      DAG边信息
-             duration   DAG节点持续时间
-             demand     DAG节点资源需求数量
-    '''
-    t = t_unit  #s   time unit
-    r = resource_unit #resource unit
-    edges,in_degree,_,position = DAGs_generate(mode,n,max_out,alpha,beta)
-    # plot_DAG(edges,position)
-    duration = []
-    demand = []
-    #初始化持续时间
-    for i in range(len(in_degree)):
-        if random.random()<1:
-            # duration.append(random.uniform(t,3*t))
-            duration.append(random.sample(range(1,3*t),1)[0])
-        else:
-            # duration.append(random.uniform(5*t,10*t))
-            duration.append(random.sample(range(5*t,10*t),1)[0])
-    #初始化资源需求   
-    for i in range(len(in_degree)):
-        if random.random()<0.5:
-            # demand.append((random.uniform(0.25*r,0.5*r),random.uniform(0.05*r,0.01*r)))
-            demand.append((random.uniform(0.25*r,0.5*r),random.uniform(0.05*r,0.01*r)))
-        else:
-            # demand.append((random.uniform(0.05*r,0.01*r),random.uniform(0.25*r,0.5*r)))
-            demand.append((random.uniform(0.05*r,0.01*r),random.uniform(0.25*r,0.5*r)))
-
-    return edges,duration,demand,position
-
+from . import utils
 
 class testEnv(gym.Env):
 
@@ -218,25 +76,25 @@ class testEnv(gym.Env):
         self.duration_lib = []
         self.demand_lib = []
         
-        DAGsize = 10
+        DAGsize = 30
         ##########################################training################################
-        print('train datasheet lib.')
-        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
-        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
-        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
-        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
-        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
-        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
-        print('load completed.')
-        ##########################################testing################################
-        # print('test datasheet loaded.')
-        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
-        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
-        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
+        # print('train datasheet lib.')
+        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
+        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
+        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
         # self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
         # self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
         # self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
         # print('load completed.')
+        ##########################################testing################################
+        print('test datasheet loaded.')
+        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
+        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
+        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
+        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
+        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
+        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        print('load completed.')
 
     def search_for_predecessor(self,node,edges):
         '''
@@ -467,12 +325,12 @@ class testEnv(gym.Env):
         '''
         # self.seed1 = random.randint(0, 99)
         # self.seed1 = 0 
-        self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
-        self.seed1 += 1
-        if self.seed1 == 100:
-            self.seed1 = 0
+        # self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
+        # self.seed1 += 1
+        # if self.seed1 == 1000:
+        #     self.seed1 = 0
         ###随机生成一个workflow
-        # self.edges,self.duration,self.demand,self.position = workflows_generator('default')
+        self.edges,self.duration,self.demand,self.position = utils.workflows_generator('default')
         # self.edges,self.duration,self.demand = self.save_40dag()
         # print("DAG结构Edges：",self.edges)
         # print("任务占用时间Ti:",self.duration)                    #生成的原始数据
@@ -496,9 +354,6 @@ class testEnv(gym.Env):
             self.wait_duration_dic[i+1] = self.duration[i]
             self.cpu_demand_dic[i+1] = self.demand[i][0]
             self.memory_demand_dic[i+1] = self.demand[i][1]
-        # print("wait_duration_dic:",self.wait_duration_dic)
-        # print("cpu_demand_dic:", self.cpu_demand_dic)
-        # print("memory_demand_dic:",self.memory_demand_dic)
         for i in range(len(self.ready_list)):
             job_id = self.ready_list[i]
             if i < self.M: 
@@ -519,9 +374,9 @@ class testEnv(gym.Env):
         return np.array(self.state, dtype=np.float32)
 
     def render(self, mode="human"):
-
-        return plot_DAG(self.edges,self.position)
-
+        pass
+        return 
+        
     def close(self):
         if self.viewer:
             self.viewer.close()

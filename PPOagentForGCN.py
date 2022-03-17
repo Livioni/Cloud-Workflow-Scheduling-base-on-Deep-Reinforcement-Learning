@@ -13,7 +13,7 @@ print("=========================================================================
 ####### initialize environment hyperparameters ######
 env_name = "graphEnv-v0"  # 定义自己的环境名称
 max_ep_len = 1000  # max timesteps in one episode
-max_training_timesteps = int(3e5)  # break training loop if timeteps > max_training_timesteps
+max_training_timesteps = int(2e5)  # break training loop if timeteps > max_training_timesteps
 
 print_freq = max_ep_len / 10  # print avg reward in the interval (in num timesteps)
 save_model_freq = int(5e3)  # save model frequency (in num timesteps)
@@ -28,7 +28,7 @@ update_timestep = max_ep_len  # update policy every n timesteps
 K_epochs = 80  # update policy for K epochs in one PPO update
 
 eps_clip = 0.2  # clip parameter for PPO
-gamma = 0.99  # discount factor
+gamma = 0.99  # discount fatctor
 
 lr_actor = 0.0003  # learning rate for actor network
 lr_critic = 0.001  # learning rate for critic network
@@ -47,7 +47,7 @@ action_dim = env.action_space.n
  
 ################### checkpointing ###################
 
-run_num_pretrained = 'Decima30'  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 'Decima30new'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):

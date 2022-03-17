@@ -7,7 +7,6 @@ import torch.nn as nn
 import xlwt
 from torch.distributions import Categorical, MultivariateNormal
 
-
 def initial_excel():
     global worksheet, workbook
     # xlwt 库将数据导入Excel并设置默认字符编码为ascii
@@ -53,7 +52,7 @@ action_dim = env.action_space.n
 
 ################### checkpointing ###################
 
-run_num_pretrained = 'Decima30'  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 'Decima30new'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -106,8 +105,6 @@ print("=========================================================================
 
 
 ################################## PPO Policy ##################################
-
-
 class RolloutBuffer:
     def __init__(self):
         self.actions = []

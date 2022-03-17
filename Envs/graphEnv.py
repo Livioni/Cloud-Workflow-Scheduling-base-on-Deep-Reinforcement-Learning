@@ -1,192 +1,26 @@
-import math,torch
-from scipy import sparse
-import scipy as sp
+import torch
 from gym import spaces
-import gym, random
+import gym
 from gym.utils import seeding
-from matplotlib import pyplot as plt
-from gym.envs.classic_control import rendering
 import numpy as np
-import networkx as nx
-import GCNutils.utils as utils
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import GCNutils.models as models
+from . import utils 
 
+class DecimaGNN(nn.Module):  # 策略网络
+    def __init__(self, input_size, output_size):
+        super(DecimaGNN, self).__init__()
+        self.input_size = input_size
+        self.output_size = output_size
+        self.linear1 = nn.Linear(self.input_size, 16)
+        self.linear2 = nn.Linear(16, self.output_size)
 
-set_dag_size = [20, 30, 40, 50, 60, 70, 80, 90]  # random number of DAG  nodes
-set_max_out = [1, 2, 3, 4, 5]  # max out_degree of one node
-set_alpha = [0.5, 1.0, 1.5]  # DAG shape
-set_beta = [0.0, 0.5, 1.0, 2.0]  # DAG regularity
-
-def DAGs_generate(mode='default', n=10, max_out=2, alpha=1, beta=1.0):
-    ##############################################initialize############################################
-    if mode != 'default':
-        n = random.sample(set_dag_size, 1)[0]
-        max_out = random.sample(set_max_out, 1)[0]
-        alpha = random.sample(set_alpha, 1)[0]
-        beta = random.sample(set_beta, 1)[0]
-    else:
-        n = 10
-        max_out = random.sample(set_max_out, 1)[0]
-        alpha = random.sample(set_alpha, 1)[0]
-        beta = random.sample(set_beta, 1)[0]
-
-    length = math.floor(math.sqrt(n) / alpha)  # 根据公式计算出来的DAG深度
-    mean_value = n / length  # 计算平均长度
-    random_num = np.random.normal(loc=mean_value, scale=beta, size=(length, 1))  # 计算每一层的数量，满足正态分布
-    ###############################################division#############################################
-    position = {'Start': (0, 4), 'Exit': (10, 4)}
-    generate_num = 0
-    dag_num = 1
-    dag_list = []
-    for i in range(len(random_num)):  # 对于每一层
-        dag_list.append([])
-        for j in range(math.ceil(random_num[i])):  # 向上取整
-            dag_list[i].append(j)
-        generate_num += len(dag_list[i])
-
-    if generate_num != n:  # 不等的话做微调
-        if generate_num < n:
-            for i in range(n - generate_num):
-                index = random.randrange(0, length, 1)
-                dag_list[index].append(len(dag_list[index]))
-        if generate_num > n:
-            i = 0
-            while i < generate_num - n:
-                index = random.randrange(0, length, 1)  # 随机找一层
-                if len(dag_list[index]) < 1:
-                    continue
-                else:
-                    del dag_list[index][-1]
-                    i += 1
-
-    dag_list_update = []
-    pos = 1
-    max_pos = 0
-    for i in range(length):
-        dag_list_update.append(list(range(dag_num, dag_num + len(dag_list[i]))))
-        dag_num += len(dag_list_update[i])
-        pos = 1
-        for j in dag_list_update[i]:
-            position[j] = (3 * (i + 1), pos)
-            pos += 5
-        max_pos = pos if pos > max_pos else max_pos
-        position['Start'] = (0, max_pos / 2)
-        position['Exit'] = (3 * (length + 1), max_pos / 2)
-
-    ############################################link#####################################################
-    into_degree = [0] * n
-    out_degree = [0] * n
-    edges = []
-    pred = 0
-
-    for i in range(length - 1):
-        sample_list = list(range(len(dag_list_update[i + 1])))
-        for j in range(len(dag_list_update[i])):
-            od = random.randrange(1, max_out + 1, 1)
-            od = len(dag_list_update[i + 1]) if len(dag_list_update[i + 1]) < od else od
-            bridge = random.sample(sample_list, od)
-            for k in bridge:
-                edges.append((dag_list_update[i][j], dag_list_update[i + 1][k]))
-                into_degree[pred + len(dag_list_update[i]) + k] += 1
-                out_degree[pred + j] += 1
-        pred += len(dag_list_update[i])
-
-    ######################################create start node and exit node################################
-    for node, id in enumerate(into_degree):  # 给所有没有入边的节点添加入口节点作父亲
-        if id == 0:
-            edges.append(('Start', node + 1))
-            into_degree[node] += 1
-
-    for node, od in enumerate(out_degree):  # 给所有没有出边的节点添加出口节点作儿子
-        if od == 0:
-            edges.append((node + 1, 'Exit'))
-            out_degree[node] += 1
-
-    #############################################plot###################################################
-    return edges, into_degree, out_degree, position
-
-def plot_DAG(edges, postion):
-    plt.figure(1)
-    g1 = nx.DiGraph()
-    g1.add_edges_from(edges)
-    nx.draw_networkx(g1, arrows=True, pos=postion)
-    plt.savefig("DAG.png", format="PNG")
-    plt.close()
-    return plt.clf
-
-def workflows_generator(mode='default', n=10, max_out=2, alpha=1, beta=1.0, t_unit=10, resource_unit=100):
-    '''
-    随机生成一个DAG任务并随机分配它的持续时间和（CPU，Memory）的需求
-    :param mode: DAG按默认参数生成
-    :param n: DAG中任务数
-    :para max_out: DAG节点最大子节点数
-    :return: edges      DAG边信息
-             duration   DAG节点持续时间
-             demand     DAG节点资源需求数量
-    '''
-    t = t_unit  # s   time unit
-    r = resource_unit  # resource unit
-    edges, in_degree, out_degree, position = DAGs_generate(mode, n, max_out, alpha, beta)
-    # plot_DAG(edges,position)
-    duration = []
-    demand = []
-    # 初始化持续时间
-    for i in range(len(in_degree)):
-        if random.random() < 1:
-            # duration.append(random.uniform(t,3*t))
-            duration.append(random.sample(range(0, 3 * t), 1)[0])
-        else:
-            # duration.append(random.uniform(5*t,10*t))
-            duration.append(random.sample(range(5 * t, 10 * t), 1)[0])
-    # 初始化资源需求
-    for i in range(len(in_degree)):
-        if random.random() < 0.5:
-            demand.append((random.uniform(0.25 * r, 0.5 * r), random.uniform(0.05 * r, 0.01 * r)))
-        else:
-            demand.append((random.uniform(0.05 * r, 0.01 * r), random.uniform(0.25 * r, 0.5 * r)))
-
-    return edges, duration, demand, position
-
-def admatrix(edges,n):
-    '''
-    返回一个图的邻接矩阵
-    :param edges: 生成图边信息
-    :param n: 节点个数，不包括'Start'和 'Exit'
-    :return adjacency_matrix: 图的邻接矩阵     稀疏形式  
-    '''
-    graph = nx.DiGraph(edges)
-    ndlist = [i for i in range(1,n)]
-    adjacency_matrix = nx.to_scipy_sparse_matrix(G = graph,nodelist = ndlist,dtype = np.float32)
-    return adjacency_matrix
-
-def convert_to_feature(duration,demand):
-    feature = np.array([],dtype=np.float32)
-    for line in range(len(duration)):
-        feature = np.append(feature,np.array([duration[line],demand[line][0],demand[line][1]],dtype=np.float32))
-    feature = sparse.csr_matrix(feature)
-    return feature
-
-
-def gcn_embedding(edges,duration,demand):
-    '''
-    使用GCN仅编码DAG图信息，每个节点保留三维信息
-    :param mode: DAG按默认参数生成
-    :param duration: DAG中工作流信息
-    :para demand: DAG中工作流信息
-    :return: features 节点信息
-    :return: adj    邻接矩阵   
-    '''
-    feature = convert_to_feature(duration,demand)
-    features = utils.normalize(feature)
-    features = features.toarray().reshape([-1,3])
-    features = torch.FloatTensor(features)
-    adj = admatrix(edges,len(duration)+1)
-    adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
-    adj = utils.normalize(adj + sp.eye(adj.shape[0]))
-    adj = sparse.csr_matrix(adj)
-    adj = utils.sparse_mx_to_torch_sparse_tensor(adj)
-    return features,adj
-
+    def forward(self, input_feature):
+        output = self.linear1(input_feature)
+        output = F.leaky_relu(self.linear2(output))
+        return output  # 输出动作概率分布
 
 class graphEnv(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
@@ -203,20 +37,20 @@ class graphEnv(gym.Env):
         self.max_memory_res = np.array([[self.memory_res_unit]], dtype=np.float32)  # 计算资源中的Memory总容量
 
         self.graph_embedding1_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
-        self.graph_embedding2_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
-        self.graph_embedding3_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
+        # self.graph_embedding2_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
+        # self.graph_embedding3_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
 
         high = np.ravel(np.hstack((
             self.max_time,  # 1 dim
             self.max_cpu_res,  # 1 dim
             self.max_memory_res,  # 1 dim
-            self.graph_embedding1_upperbound,
-            self.graph_embedding2_upperbound,
-            self.graph_embedding3_upperbound
+            self.graph_embedding1_upperbound
+            # self.graph_embedding2_upperbound,
+            # self.graph_embedding3_upperbound
         )))  # totally 38 dim
 
         low = [0, 0, 0]
-        low.extend([-100 for i in range(self.M * 3)])
+        low.extend([-100 for i in range(self.M * 1)])
         low = np.array(low, dtype=np.float32)
         self.action_space = spaces.Discrete(self.M+1)  # {-1,0,1,2,3,4,5,6,7,8,9}
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
@@ -235,25 +69,32 @@ class graphEnv(gym.Env):
         ##状态转移信息和中间变量
         self.tasks = []  # 计算资源上挂起的任务
         self.tasks_remaing_time = {}  # 计算资源上挂起的任务剩余执行时间
-
         self.seed()
         self.seed1 = 0
         self.viewer = None
         self.state = None
-        self.gcn = models.GCN(3,16,3)
-        self.gcn.load_state_dict(torch.load('GCN_initialtion/GCN_0.pth', map_location=lambda storage, loc: storage))
-        print('Gcn parameters have been loaded.')
 
-        DAGsize = 10
-        ##########################################training################################
-        print('train datasheet lib.')
-        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
-        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
-        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
-        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
-        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
-        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
-        print('load completed.')
+        ##########################################GCN embeddings################################
+        self.gcn = models.GCN(3,16,1)
+        self.gcn.load_state_dict(torch.load('GCN_initialization/GCN_1.pth', map_location=lambda storage, loc: storage))
+        print('Gcn parameters have been loaded.')
+        # self.NonLinearNw1 = DecimaGNN(3,3)
+        self.NonLinearNw2 = DecimaGNN(1,1)
+        self.NonLinearNw3 = DecimaGNN(1,1)
+        # self.NonLinearNw1.load_state_dict(torch.load('GCN_initialization/NonLinearNw1.pth', map_location=lambda storage, loc: storage))
+        self.NonLinearNw2.load_state_dict(torch.load('GCN_initialization/NonLinearNw2.pth', map_location=lambda storage, loc: storage))
+        self.NonLinearNw3.load_state_dict(torch.load('GCN_initialization/NonLinearNw3.pth', map_location=lambda storage, loc: storage))
+
+        DAGsize = 30
+        ##########################################training#####################################
+        # print('train datasheet lib.')
+        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
+        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
+        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
+        # self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
+        # self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
+        # self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        # print('load completed.')
         ##########################################testing################################
         # print('test datasheet loaded.')
         # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
@@ -263,7 +104,6 @@ class graphEnv(gym.Env):
         # self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
         # self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
         # print('load completed.')
-
 
     def search_for_predecessor(self, node, edges):
         '''
@@ -299,6 +139,21 @@ class graphEnv(gym.Env):
         pred = map[node]
         return pred
 
+    def search_for_all_successors(self,node, edges):
+        save = node
+        node = [node]
+        for ele in node:
+            succ = self.search_for_successors(ele,edges)
+            if(len(succ)==1 and succ[0]=='Exit'):
+                break
+            for item in succ:
+                if item in node:
+                    continue
+                else:
+                    node.append(item)
+        node.remove(save)
+        return node
+
     def update_ready_list(self, ready_list, done_job, edges):
         '''
         根据已完成的任务更新当前可以执行的task列表，满足DAG的依赖关系。并不表明它可以被执行，因为还要受资源使用情况限制
@@ -323,7 +178,6 @@ class graphEnv(gym.Env):
             if job in ready_list: ready_list.remove(job)
         return sorted(set(ready_list), key=ready_list.index)
 
-
     def check_episode_finish(self):
         '''
         判断当前幕是否已经执行完成
@@ -334,7 +188,6 @@ class graphEnv(gym.Env):
             return True
         else:
             False
-
 
     def res_is_available(self,action):
         '''
@@ -377,6 +230,49 @@ class graphEnv(gym.Env):
         self.graph_embedding2[job_id-1] = -1.0
         self.graph_embedding3[job_id-1] = -1.0
 
+    def Decima_encoder(self,edges,duration,demand):
+        '''
+        使用Decima编码器编码DAG图信息
+        :param duration: 工作流信息
+        :param edges: DAG边信息
+        :param demand: 工作流信息
+        :return: embeddings dag图的节点编码信息，以字典形式储存。
+        '''
+        raw_embeddings = [] #原始节点feature
+        embeddings =  {}  #编码后的feature字典  job_id : embedding
+
+        cpu_demands = [demand[i][0] for i in range(len(demand))]
+        memory_demands = [demand[i][1] for i in range(len(demand))]
+        for exetime,cpu_demand,memory_demand in zip(duration,cpu_demands,memory_demands):
+            raw_embeddings.append([exetime,cpu_demand,memory_demand])
+        raw_embeddings = np.array(raw_embeddings,dtype=np.float32)
+        raw_embeddings = torch.from_numpy(raw_embeddings)
+        features,adj = utils.gcn_embedding(self.edges,self.duration,self.demand)
+        embeddings1 = self.gcn(features,adj)  #第一层初始编码信息
+        # embeddings1 = self.gcn(raw_embeddings) 
+
+        pred0 = self.search_for_predecessor('Exit',edges[:])
+        for ele in pred0:
+            embeddings[ele] = embeddings1[ele-1].data
+
+        while(len(embeddings.keys())<len(duration)):
+            box = []
+            for ele in pred0:
+                pred = self.search_for_predecessor(ele,edges[:])
+                for i in pred:
+                    if i in embeddings.keys():
+                        continue
+                    if i == 'Start':
+                        continue
+                    succ = self.search_for_all_successors(i,edges[:])
+                    g = torch.tensor([0],dtype=torch.float32)
+                    for j in succ:
+                        g +=self.NonLinearNw2(embeddings[j])
+                    embeddings[i] = self.NonLinearNw3(g) + embeddings1[i]
+                    box.append(i)
+            pred0 = box
+        return embeddings
+
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
@@ -398,7 +294,7 @@ class graphEnv(gym.Env):
         if (action >= 0 & action<=self.M-1): 
             if (self.check_action(action)):
                 self.pend_task(action)
-                self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 + self.graph_embedding2 + self.graph_embedding3                                
+                self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 #+ self.graph_embedding2 + self.graph_embedding3                                
                 reward = 0.0                                                                                         #时间步没动，收益为0
                 done = self.check_episode_finish()
                 return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
@@ -425,7 +321,7 @@ class graphEnv(gym.Env):
 
                 self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])       #更新ready_list
 
-                self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 + self.graph_embedding2 + self.graph_embedding3
+                self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 #+ self.graph_embedding2 + self.graph_embedding3
                 return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
             else:
                 return np.array(self.state, dtype=np.float32), 0, 0, [False, self.tasks]
@@ -437,19 +333,18 @@ class graphEnv(gym.Env):
         :return: 初始状态，每一次reset就是重新一幕
         '''
         ###随机生成一个workflow
-        # self.edges,self.duration,self.demand,self.position = workflows_generator('default')
-        self.seed1 = random.randint(0, len(self.duration_lib)-1) 
-        self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
+        self.edges,self.duration,self.demand,self.position = utils.workflows_generator('default',n=30)
+        # self.seed1 = random.randint(0, len(self.duration_lib)-1) 
+        # self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
         # self.seed1 += 1
-        # if self.seed1 == 100:
+        # if self.seed1 == 1000:
         #     self.seed1 = 0
         # print("DAG结构Edges：",self.edges)
         # print("任务占用时间Ti:",self.duration)                    #生成的原始数据
         # print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
         ###初始化一些状态
-        #使用GCN编码DAG信息
-        features,adj = gcn_embedding(self.edges,self.duration,self.demand)
-        output = self.gcn(features,adj)    
+        #使用GCN编码DAG信息  
+        output = self.Decima_encoder(edges=self.edges,duration=self.duration,demand=self.demand)
         
         ####初始化变量
         self.time,self.cpu_res,self.memory_res = 0,100,100
@@ -462,9 +357,9 @@ class graphEnv(gym.Env):
         self.cpu_demand_dic = {}                                #随机生成的DAG CPU资源占用信息 job_id : value
         self.memory_demand_dic = {}                             #随机生成的DAG Memo资源占用信息 job_id : value
         for ele in range(len(self.duration)):
-            self.graph_embedding1[ele] = output[ele][0].item()
-            self.graph_embedding2[ele] = output[ele][1].item()
-            self.graph_embedding3[ele] = output[ele][2].item()
+            self.graph_embedding1[ele] = output[ele+1][0].item()
+            # self.graph_embedding2[ele] = output[ele+1][1].item()
+            # self.graph_embedding3[ele] = output[ele+1][2].item()
 
         for i in range(len(self.duration)):
             self.wait_duration_dic[i+1] = self.duration[i]
@@ -472,7 +367,7 @@ class graphEnv(gym.Env):
             self.memory_demand_dic[i+1] = self.demand[i][1]
         
         self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:]) #第一次计算等待任务
-        self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 + self.graph_embedding2 + self.graph_embedding3
+        self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 # + self.graph_embedding2 + self.graph_embedding3
         self.steps_beyond_done = None
         return np.array(self.state, dtype=np.float32)
 
