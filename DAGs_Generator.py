@@ -147,11 +147,13 @@ def workflows_generator(mode='default', n=10, max_out=2, alpha=1, beta=1.0, t_un
             # duration.append(random.uniform(5*t,10*t))
             duration.append(random.sample(range(5 * t, 10 * t), 1)[0])
     # 初始化资源需求
+    # for i in range(len(in_degree)):
+    #     if random.random() < 0.5:
+    #         demand.append((random.uniform(0.25 * r, 0.5 * r), random.uniform(0.05 * r, 0.01 * r)))
+    #     else:
+    #         demand.append((random.uniform(0.05 * r, 0.01 * r), random.uniform(0.25 * r, 0.5 * r)))
     for i in range(len(in_degree)):
-        if random.random() < 0.5:
-            demand.append((random.uniform(0.25 * r, 0.5 * r), random.uniform(0.05 * r, 0.01 * r)))
-        else:
-            demand.append((random.uniform(0.05 * r, 0.01 * r), random.uniform(0.25 * r, 0.5 * r)))
+        demand.append((random.uniform(0.25 * r, 0.5 * r), random.uniform(0.25 * r, 0.5 * r)))
 
     return edges, duration, demand, position
 
@@ -167,7 +169,7 @@ def generate_train_datasheet(amount, DAGsize):
         duration_lib.append(duration)
         demand_lib.append(demand)
 
-    edges_lib_np = np.array(edges_lib)
+    edges_lib_np = np.array(edges_lib,dtype=object)
     duration_lib_np = np.array(duration_lib, dtype=np.float32)
     demand_lib_np = np.array(demand_lib, dtype=np.float32)
 
@@ -187,7 +189,7 @@ def generate_test_datasheet(amount, DAGsize):
         duration_lib.append(duration)
         demand_lib.append(demand)
 
-    edges_lib_np = np.array(edges_lib)
+    edges_lib_np = np.array(edges_lib,dtype=object)
     duration_lib_np = np.array(duration_lib, dtype=np.float32)
     demand_lib_np = np.array(demand_lib, dtype=np.float32)
 
@@ -198,5 +200,5 @@ def generate_test_datasheet(amount, DAGsize):
 
 if __name__ == '__main__':
     generate_train_datasheet(1000, 30)
-    # generate_test_datasheet(1000,30)
+    generate_test_datasheet(1000,30)
     # edges, duration, demand, _ = workflows_generator('default')

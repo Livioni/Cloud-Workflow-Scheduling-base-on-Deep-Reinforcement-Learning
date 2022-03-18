@@ -301,16 +301,15 @@ if __name__ == '__main__':
         worksheet.write(i + 1, 3, 'n=30')
 
     env = gym.make("testEnv-v0").unwrapped
-    state_size = env.observation_space.shape[0]  # 38
-    action_size = env.action_space.n  # 11
+    state_size,action_size = env.return_dim_info()
     auto_save = 10
     test_order = 100 * auto_save
     sum_reward = 0
     time_durations = []
-    actor = torch.load('models/ACagent/actor.pkl')
-    critic = torch.load('models/ACagent/critic.pkl')
+    # actor = torch.load('models/ACagent/actor.pkl')
+    # critic = torch.load('models/ACagent/critic.pkl')
     tetris(test_order)
-    test(actor, critic, test_order)
+    # test(actor, critic, test_order)
     sjf(test_order)
     randomagent(test_order)
     workbook.close()

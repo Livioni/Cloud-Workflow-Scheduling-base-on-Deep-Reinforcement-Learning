@@ -6,9 +6,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.distributions import Categorical, MultivariateNormal
-# from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
-# writer = SummaryWriter(comment='Workflow scheduler Reward Record')
+writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
 env_name = "MyEnv-v0"  # 定义自己的环境名称
@@ -44,7 +44,7 @@ state_dim,action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
-run_num_pretrained = 10100  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = '30fix'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -347,8 +347,8 @@ def train():
             if done:
                 time = state[0]
                 time_to_write = round(float(time), 3)
-                # writer.add_scalar('info/PPO_makespan', time_to_write, global_step=i_episode)
-                # writer.add_scalar('info/PPO_Sum_reward', current_ep_reward, global_step=i_episode)
+                writer.add_scalar('info/PPO_makespan', time_to_write, global_step=i_episode)
+                writer.add_scalar('info/PPO_Sum_reward', current_ep_reward, global_step=i_episode)
                 break
 
         print_running_reward += current_ep_reward
