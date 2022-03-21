@@ -53,7 +53,7 @@ state_dim,action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
-run_num_pretrained = 10100  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 30  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -156,6 +156,7 @@ class ActorCritic(nn.Module):
         for j in range(action_dim):
             probability[j] = dist.probs.detach()[j]  # 记录当前动作概率分布
         action = dist.sample()
+        # action = np.argmax(dist.probs)
         state, reward, done, info = env.step(action.item() - 1)
         while (info[0] == False):  # 重采样
             probability[action.item()] = 0
@@ -167,6 +168,7 @@ class ActorCritic(nn.Module):
             probs = torch.FloatTensor(probability_list)
             dist_1 = Categorical(probs)
             action = dist_1.sample().to(device)  # 采样当前动作
+            # action = np.argmax(dist_1.probs).to(device)  # 采样当前动作
             state, reward, done, info = env.step(action.item() - 1)  # 输入step的都是
         action_logprob = dist.log_prob(action).unsqueeze(0)
         return action.detach(), action_logprob.detach(), state, reward, done, info

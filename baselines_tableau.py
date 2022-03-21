@@ -124,7 +124,7 @@ def check_ready(state, index):
     return True if (job_cpu_demand[index] < cpu_res and job_memory_demand[index] < memory_res) else False
 
 
-def test(actor, critic, test_order):
+def test(actor, test_order):
     global worksheet, workbook
     print("AC")
     makespans = []
@@ -307,9 +307,8 @@ if __name__ == '__main__':
     sum_reward = 0
     time_durations = []
     # actor = torch.load('models/ACagent/actor.pkl')
-    # critic = torch.load('models/ACagent/critic.pkl')
     tetris(test_order)
-    # test(actor, critic, test_order)
+    # test(actor, test_order)
     sjf(test_order)
     randomagent(test_order)
     workbook.close()

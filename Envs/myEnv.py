@@ -50,7 +50,6 @@ class MyEnv(gym.Env):
         # self.load_test_dataset(self.DAGsize)
         
     def load_train_dataset(self,DAGsize):
-        DAGsize = DAGsize
         ##########################################training################################
         print('train datasheet lib.')
         edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
@@ -77,7 +76,7 @@ class MyEnv(gym.Env):
     def return_dim_info(self):
         return (3 + self.M * 3 + 5),self.M+1
 
-    def search_for_predecessor(self,node,edges):
+    def _search_for_predecessor(self,node,edges):
         '''
         寻找前继节点
         :param node: 需要查找的节点id
@@ -94,7 +93,7 @@ class MyEnv(gym.Env):
         succ = map[node]
         return succ
 
-    def search_for_successors(self,node,edges):
+    def _search_for_successors(self,node,edges):
         '''
         寻找后续节点
         :param node: 需要查找的节点id
@@ -111,7 +110,7 @@ class MyEnv(gym.Env):
         pred = map[node]
         return pred
 
-    def update_ready_list(self,ready_list,done_job,edges):
+    def _update_ready_list(self,ready_list,done_job,edges):
         '''
         根据已完成的任务更新当前可以执行的task列表，满足DAG的依赖关系。并不表明它可以被执行，因为还要受资源使用情况限制
         :param ready_list: 上一时刻可用task列表
@@ -123,19 +122,19 @@ class MyEnv(gym.Env):
         preds = []
         if ready_list:
             for i in range(len(ready_list)):
-                all_succ.extend(self.search_for_successors(ready_list[i],edges))
+                all_succ.extend(self._search_for_successors(ready_list[i],edges))
         else:
             ready_list = ['Start']
-            return self.update_ready_list(ready_list,['Start'],edges)
+            return self._update_ready_list(ready_list,['Start'],edges)
         for i in all_succ:
-            preds = self.search_for_predecessor(i,edges)
+            preds = self._search_for_predecessor(i,edges)
             if (set(done_job)>= set(preds)):
                 ready_list.append(i)
         for job in done_job : 
             if job in ready_list: ready_list.remove(job)
         return sorted(set(ready_list), key = ready_list.index)
 
-    def find_b_level(self,edges,done_job):
+    def _find_b_level(self,edges,done_job):
         '''
         计算当前未完成DAG的b-level（lenth of the longest path) 不包括 Start 和 Exit节点
         :para edges: DAG边信息(注意最好传列表的值（edges[:]）进去而不是传列表的地址（edges）!!!)
@@ -143,14 +142,14 @@ class MyEnv(gym.Env):
         :return: b_level
         '''
         for i in range(len(done_job)):
-            preds = self.search_for_predecessor(done_job[i],edges)
+            preds = self._search_for_predecessor(done_job[i],edges)
             for j in preds: edges.pop(edges.index((j,done_job[i])))
         g1 = nx.DiGraph()
         g1.add_edges_from(edges)
         b_level_road = nx.dag_longest_path(g1)
         return len(b_level_road[1:-1])
 
-    def find_children_num(self,ready_list,edges):
+    def _find_children_num(self,ready_list,edges):
         '''
         计算ready task的子节点数，作为状态的输入
         :param ready_list: DAG中准备好的任务列表
@@ -159,13 +158,13 @@ class MyEnv(gym.Env):
         '''
         children = []
         for job in ready_list:
-            children.extend(self.search_for_successors(job,edges))
+            children.extend(self._search_for_successors(job,edges))
         length = 0
         while (length != len(children)):
             length = len(children)
             for job in children:
                 if job != 'Exit':
-                    children.extend(self.search_for_successors(job,edges))
+                    children.extend(self._search_for_successors(job,edges))
                 children = sorted(set(children), key = children.index)
         return len(set(children))-1    
 
@@ -200,7 +199,7 @@ class MyEnv(gym.Env):
         else:
             return False
 
-    def check_episode_finish(self):
+    def _check_episode_finish(self):
         '''
         判断当前幕是否已经执行完成
         :para None
@@ -210,7 +209,7 @@ class MyEnv(gym.Env):
             return True   
         else: False
 
-    def pend_task(self,action):
+    def _pend_task(self,action):
         job_id = self.ready_list[action]
         self.tasks.append(job_id)#self.ready_list[action]表示的是任务ID 
         self.tasks_remaing_time[job_id] = self.wait_duration_dic[job_id] 
@@ -220,6 +219,21 @@ class MyEnv(gym.Env):
         self.cpu_demand[action] = -1.0                                                                          #waiting列表中挂起的任务信息变为-1
         self.memory_demand[action] = -1.0 
 
+    def return_action_list(self):
+        available_action = []
+        if self.tasks:
+            available_action.append(-1)
+        for index in range(len(self.ready_list)):
+            if self.check_action(index):
+                available_action.append(index)
+        return available_action
+            
+    def set_state(self,state,ready_list,done_job,task):
+        self.state = state
+        self.ready_list = ready_list
+        self.done_job = done_job
+        self.tasks = task
+        return
 
     def step(self, action):
         '''
@@ -233,12 +247,12 @@ class MyEnv(gym.Env):
         '''
         if (action >= 0 & action<=self.M-1): 
             if (self.check_action(action)):
-                self.pend_task(action)
+                self._pend_task(action)
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
                 self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]                                     
                 reward = 0.0                                                                                         #时间步没动，收益为0
 
-                done = self.check_episode_finish()
+                done = self._check_episode_finish()
                 return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
             else:
                 return np.array(self.state, dtype=np.float32), 0, 0, [False, self.tasks] 
@@ -249,7 +263,7 @@ class MyEnv(gym.Env):
                 time_shift = self.tasks_remaing_time_list[0][1]                                             #记录最小执行时间的长度
                 self.time += time_shift                                                                     #改变时间戳
                 self.done_job.append(job_id)                                                                #更新已完成的任务
-                done = self.check_episode_finish()
+                done = self._check_episode_finish()
                 if done:
                     return np.array(self.state, dtype=np.float32), 0, done, [True, self.tasks]
                 self.cpu_res += self.cpu_demand_dic[job_id]                                                 #释放CPU资源
@@ -261,7 +275,7 @@ class MyEnv(gym.Env):
 
                 reward = -time_shift/self.t_unit
                 
-                self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])       #更新ready_list
+                self.ready_list = self._update_ready_list(self.ready_list,self.done_job,self.edges[:])       #更新ready_list
                 self.wait_duration = [-1] * self.M                                                                      
                 self.cpu_demand = [-1] * self.M                                                                         
                 self.memory_demand = [-1] * self.M  
@@ -280,8 +294,8 @@ class MyEnv(gym.Env):
                         self.backlot_time += self.wait_duration_dic[job_id]
                         self.backlot_cpu_res += self.cpu_demand_dic[job_id]
                         self.backlot_memory_res += self.memory_demand_dic[job_id]
-                self.b_level = self.find_b_level(self.edges[:],self.done_job)
-                self.children_num = self.find_children_num(self.ready_list,self.edges[:]) 
+                self.b_level = self._find_b_level(self.edges[:],self.done_job)
+                self.children_num = self._find_children_num(self.ready_list,self.edges[:]) 
                 self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
                         self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]
                 return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
@@ -317,7 +331,7 @@ class MyEnv(gym.Env):
         self.backlot_memory_res = 0                             #backlot的总memory占用信息 
         self.tasks_remaing_time = {}
         self.tasks = []
-        self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])
+        self.ready_list = self._update_ready_list(self.ready_list,self.done_job,self.edges[:])
         for i in range(len(self.duration)):
             self.wait_duration_dic[i+1] = self.duration[i]
             self.cpu_demand_dic[i+1] = self.demand[i][0]
@@ -333,12 +347,12 @@ class MyEnv(gym.Env):
                 self.backlot_cpu_res += self.cpu_demand_dic[job_id]
                 self.backlot_memory_res += self.memory_demand_dic[job_id]
 
-        self.b_level = self.find_b_level(self.edges[:],self.done_job) 
-        self.children_num = self.find_children_num(self.ready_list,self.edges[:])
+        self.b_level = self._find_b_level(self.edges[:],self.done_job) 
+        self.children_num = self._find_children_num(self.ready_list,self.edges[:])
 
         self.state = [self.time,self.cpu_res,self.memory_res] + self.wait_duration + self.cpu_demand + \
             self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]
-        self.steps_beyond_done = None
+
         return np.array(self.state, dtype=np.float32)
 
     def render(self, mode="human"):

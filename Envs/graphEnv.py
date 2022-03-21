@@ -37,8 +37,8 @@ class graphEnv(gym.Env):
         self.max_memory_res = np.array([[self.memory_res_unit]], dtype=np.float32)  # 计算资源中的Memory总容量
 
         self.graph_embedding1_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
-        # self.graph_embedding2_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
-        # self.graph_embedding3_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
+        self.graph_embedding2_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
+        self.graph_embedding3_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
 
         high = np.ravel(np.hstack((
             self.max_time,  # 1 dim
@@ -69,7 +69,6 @@ class graphEnv(gym.Env):
         ##状态转移信息和中间变量
         self.tasks = []  # 计算资源上挂起的任务
         self.tasks_remaing_time = {}  # 计算资源上挂起的任务剩余执行时间
-        self.seed()
         self.seed1 = 0
         self.viewer = None
         self.state = None
@@ -276,7 +275,7 @@ class graphEnv(gym.Env):
                     succ = self.search_for_all_successors(i,edges[:])
                     g = torch.tensor([0],dtype=torch.float32)
                     for j in succ:
-                        g +=self.NonLinearNw2(embeddings[j])
+                        g += self.NonLinearNw2(embeddings[j])
                     embeddings[i] = self.NonLinearNw3(g) + embeddings1[i]
                     box.append(i)
             pred0 = box
@@ -342,9 +341,9 @@ class graphEnv(gym.Env):
         :return: 初始状态，每一次reset就是重新一幕
         '''
         ###随机生成一个workflow
-        self.edges,self.duration,self.demand,self.position = utils.workflows_generator('default',n=30)
-        # self.seed1 = random.randint(0, len(self.duration_lib)-1) 
-        # self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
+        # self.edges,self.duration,self.demand,self.position = utils.workflows_generator('default',n=30)
+        self.seed1 = random.randint(0, len(self.duration_lib)-1) 
+        self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
         # self.seed1 += 1
         # if self.seed1 == 1000:
         #     self.seed1 = 0
@@ -381,7 +380,8 @@ class graphEnv(gym.Env):
         return np.array(self.state, dtype=np.float32)
 
     def render(self, mode="human"):
-        return plot_DAG(self.edges, self.position)
+        pass
+        return 
 
     def close(self):
         if self.viewer:

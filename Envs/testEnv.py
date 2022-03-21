@@ -46,11 +46,10 @@ class testEnv(gym.Env):
         self.demand_lib = []
         
         self.DAGsize = 30
-        self.load_train_dataset(self.DAGsize)
-        # self.load_test_dataset(self.DAGsize)
+        # self.load_train_dataset(self.DAGsize)
+        self.load_test_dataset(self.DAGsize)
 
     def load_train_dataset(self,DAGsize):
-        DAGsize = DAGsize
         ##########################################training################################
         print('train datasheet lib.')
         edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
@@ -210,6 +209,12 @@ class testEnv(gym.Env):
             return True   
         else: False
 
+    def return_res_usage(self):
+        time = self.state[0]
+        cpu_usage = self.state[1]
+        memory_usage = self.state[2]
+        return time,round(cpu_usage,2),round(memory_usage,2)
+
     def pend_task(self,action):
         job_id = self.ready_list[action]
         self.tasks.append(job_id)#self.ready_list[action]表示的是任务ID 
@@ -301,16 +306,13 @@ class testEnv(gym.Env):
         '''
         # self.seed1 = random.randint(0, 99)
         # self.seed1 = 0 
-        # self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
-        # self.seed1 += 1
-        # if self.seed1 == 1000:
-        #     self.seed1 = 0
+        self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
+        self.seed1 += 1
+        if self.seed1 == 1000:
+            self.seed1 = 0
         ###随机生成一个workflow
-        self.edges,self.duration,self.demand,self.position = utils.workflows_generator('default')
+        # self.edges,self.duration,self.demand,self.position = utils.workflows_generator('default')
         # self.edges,self.duration,self.demand = self.save_40dag()
-        # print("DAG结构Edges：",self.edges)
-        # print("任务占用时间Ti:",self.duration)                    #生成的原始数据
-        # print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
         ###初始化一些状态
         self.time,self.cpu_res,self.memory_res = 0,100,100      
         self.done_job = []
