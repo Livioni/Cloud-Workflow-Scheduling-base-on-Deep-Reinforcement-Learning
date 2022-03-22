@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter(comment='Workflow scheduler Reward Record')
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
-env_name = "MyEnv-v0"  # 定义自己的环境名称
+env_name = "clusterEnv-v0"  # 定义自己的环境名称
 max_ep_len = 1000  # max timesteps in one episode
 max_training_timesteps = int(3e5)  # break training loop if timeteps > max_training_timesteps
 
@@ -44,7 +44,7 @@ state_dim,action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
-run_num_pretrained = '30'  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = '5'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
