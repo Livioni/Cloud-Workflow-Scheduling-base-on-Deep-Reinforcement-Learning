@@ -2,7 +2,7 @@
 
  北京化工大学本科毕业设计《基于深度强化学习的云工作流调度》
 
- 关键词：有向无环图，工作流，深度强化学习，图神经网络； 
+ 关键词：有向无环图，工作流，深度强化学习，图神经网络； 蒙特卡洛树搜索
 
 
 
@@ -32,8 +32,14 @@ It requires the following packages:
 2022.03.11
 
 - 目前状态空间，动作空间下设计的Actor- Critic，PPO方法难以超越baseline Tetris的效果。
-- 尝试经典GCN编码DAG，效果不佳。
+- 尝试经典[GCN](https://arxiv.org/abs/1609.02907)编码DAG，效果不佳。
 - 尝试Decima中的编码结构。
+
+2020.03.23
+
+- 结合[Decima](https://dl.acm.org/doi/abs/10.1145/3341302.3342080)中的[GCN](https://arxiv.org/abs/1609.02907)对DAG进行编码，改变编码数量，效果不佳
+- 完成深度强化学习加速蒙特卡洛树搜索算法（魔改[spear](https://ieeexplore.ieee.org/abstract/document/8885307/)），目前在DAG_size=10大小上效果最佳。
+- 编写了单DAG任务资源用量检测脚本。
 
 
 

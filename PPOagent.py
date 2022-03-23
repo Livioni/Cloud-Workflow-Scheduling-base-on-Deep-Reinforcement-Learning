@@ -44,7 +44,7 @@ state_dim,action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
-run_num_pretrained = '5'  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = '10MCTS'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):

@@ -1,4 +1,4 @@
-import gym,torch,copy,os
+import gym,torch,copy,os,xlwt
 import torch.nn as nn
 from datetime import datetime
 import numpy as np
@@ -7,7 +7,7 @@ from torch.distributions import Categorical, MultivariateNormal
 env = gym.make("clusterEnv-v0").unwrapped
 state_dim,action_dim = env.return_dim_info()
 ################### checkpointing ###################
-run_num_pretrained = 5
+run_num_pretrained = '10MCTS'
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
     os.makedirs(directory)
@@ -16,7 +16,27 @@ if not os.path.exists(directory):
     os.makedirs(directory)
 checkpoint_path = directory + "PPO_clusterEnv-v0_{}.pth".format(run_num_pretrained)
 #####################################################
+####### initialize environment hyperparameters ######
+max_ep_len = 1000  # max timesteps in one episode
+auto_save = 10
+total_test_episodes = 100 * auto_save  # total num of testing episodes
 
+
+def initial_excel():
+    global worksheet, workbook
+    # xlwt 库将数据导入Excel并设置默认字符编码为ascii
+    workbook = xlwt.Workbook(encoding='ascii')
+    # 添加一个表 参数为表名
+    worksheet = workbook.add_sheet('makespan')
+    # 生成单元格样式的方法
+    # 设置列宽, 3为列的数目, 12为列的宽度, 256为固定值
+    for i in range(3):
+        worksheet.col(i).width = 256 * 12
+    # 设置单元格行高, 25为行高, 20为固定值
+    worksheet.row(1).height_mismatch = True
+    worksheet.row(1).height = 20 * 25
+    # 保存excel文件
+    workbook.save('data/makespan_MCTS.xls')
 
 class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dim):
@@ -162,6 +182,9 @@ class TreeNode(object):
         else:
             print("done")
     
+    def get_average_makespan(self):
+        return self._makespan
+
     def get_value(self):
         self._value = self._makespan + self._c * np.sqrt(np.log(self._parent._n_visits+1)/(self._n_visits+1))
         return self._value
@@ -202,14 +225,17 @@ print("Network ID:", run_num_pretrained)
 print('PPO agent has been loaded!')
 
 class MCTS(object):
-    def __init__(self, state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time,ppo_agent, n_playout=100,):
+    def __init__(self,state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time,ppo_agent,depth):
         self._root = TreeNode(None, state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time)
         self._root.expand() #初始化扩展
-        self._n_playout = n_playout
         self._ppo_agent = ppo_agent
+        self._initial_buget = 50
+        self._min_buget = 10
+        self._depth = depth
 
     def playout(self):
-        for j in range(100):
+        buget = max(self._initial_buget/self._depth,self._min_buget)
+        for j in range(int(buget)):
             node = self._root
             while True:
                 if node.is_leaf():
@@ -224,7 +250,7 @@ class MCTS(object):
                 else: 
                     node = node.select() 
         node = self._root
-        return max(node._children.items(), key=lambda act_node: act_node[1].get_value())[0] 
+        return max(node._children.items(), key=lambda act_node: act_node[1].get_average_makespan())[0] 
             
     def _roll_out(self,cur_state,cur_ready_list,cur_done_job,cur_tasks,cur_wait_duration,cur_cpu_demand,cur_memory_demand,cur_tasks_remaing_time,cur_cpu_res,cur_memory_res,cur_time):
         load_current_state(cur_state,cur_ready_list,cur_done_job,cur_tasks,cur_wait_duration,cur_cpu_demand,cur_memory_demand,cur_tasks_remaing_time,cur_cpu_res,cur_memory_res,cur_time)
@@ -243,19 +269,30 @@ class MCTS(object):
                 break
         return makespan  
 
-
-
-initial_state = env.reset()
-state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time = read_current_state()
-for _ in range(1000):
-    tree = MCTS(state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time,ppo_agent)
-    best_action = tree.playout()
-    load_current_state(tree._root._state,tree._root._ready_list,tree._root._done_job,tree._root._tasks,tree._root._wait_duration,tree._root._cpu_demand,tree._root._memory_demand,tree._root._tasks_remaing_time,tree._root._cpu_res,tree._root._memory_res,tree._root._time)
-    observation, reward, done, info = env.step(best_action)
-    state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time = read_current_state()
-    del tree
-    if done:
-        makespan = observation[0]
-        print(makespan)
-        break
-env.close()
+if __name__ == '__main__':
+    initial_excel()
+    makespans = []
+    line = 0
+    for ep in range(1, total_test_episodes + 1):
+        initial_state = env.reset()
+        state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time = read_current_state()
+        for depth in range(1,max_ep_len+1):
+            tree = MCTS(state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time,ppo_agent,depth=depth)
+            best_action = tree.playout()
+            load_current_state(tree._root._state,tree._root._ready_list,tree._root._done_job,tree._root._tasks,tree._root._wait_duration,tree._root._cpu_demand,tree._root._memory_demand,tree._root._tasks_remaing_time,tree._root._cpu_res,tree._root._memory_res,tree._root._time)
+            observation, reward, done, info = env.step(best_action)
+            state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time = read_current_state()
+            del tree
+            if done:
+                makespan = observation[0]
+                makespans.append(makespan)
+                print("Episode:",ep,"Makespan:",makespan)
+                if ep % auto_save == 0:
+                    average_makespan = np.mean(makespans)
+                    worksheet.write(line, 1, float(average_makespan))
+                    print('MCTS : Episode: {},  Makespan: {:.3f}s'.format((line + 1) * auto_save, average_makespan))
+                    line += 1
+                    makespans = []
+                break
+            workbook.save('data/makespan_MCTS.xls')
+    env.close()
