@@ -45,7 +45,7 @@ class testEnv(gym.Env):
         self.duration_lib = []
         self.demand_lib = []
         
-        self.DAGsize = 30
+        self.DAGsize = 10
         # self.load_train_dataset(self.DAGsize)
         self.load_test_dataset(self.DAGsize)
 

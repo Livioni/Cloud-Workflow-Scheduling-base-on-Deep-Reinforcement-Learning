@@ -80,13 +80,14 @@ class graphEnv(gym.Env):
         # self.NonLinearNw1 = DecimaGNN(3,3)
         self.NonLinearNw2 = DecimaGNN(1,1)
         self.NonLinearNw3 = DecimaGNN(1,1)
+        
         # self.NonLinearNw1.load_state_dict(torch.load('GCN_initialization/NonLinearNw1.pth', map_location=lambda storage, loc: storage))
         self.NonLinearNw2.load_state_dict(torch.load('GCN_initialization/NonLinearNw2.pth', map_location=lambda storage, loc: storage))
         self.NonLinearNw3.load_state_dict(torch.load('GCN_initialization/NonLinearNw3.pth', map_location=lambda storage, loc: storage))
 
         self.DAGsize = 30
-        self.load_train_dataset(self.DAGsize)
-        # self.load_test_dataset(self.DAGsize)
+        # self.load_train_dataset(self.DAGsize)
+        self.load_test_dataset(self.DAGsize)
         
     def load_train_dataset(self,DAGsize):
         DAGsize = DAGsize
@@ -274,6 +275,7 @@ class graphEnv(gym.Env):
                         continue
                     succ = self.search_for_all_successors(i,edges[:])
                     g = torch.tensor([0],dtype=torch.float32)
+                    # g = torch.tensor([0,0,0],dtype=torch.float32)
                     for j in succ:
                         g += self.NonLinearNw2(embeddings[j])
                     embeddings[i] = self.NonLinearNw3(g) + embeddings1[i]
@@ -342,11 +344,11 @@ class graphEnv(gym.Env):
         '''
         ###随机生成一个workflow
         # self.edges,self.duration,self.demand,self.position = utils.workflows_generator('default',n=30)
-        self.seed1 = random.randint(0, len(self.duration_lib)-1) 
+        # self.seed1 = random.randint(0, len(self.duration_lib)-1) 
         self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
-        # self.seed1 += 1
-        # if self.seed1 == 1000:
-        #     self.seed1 = 0
+        self.seed1 += 1
+        if self.seed1 == 1000:
+            self.seed1 = 0
         # print("DAG结构Edges：",self.edges)
         # print("任务占用时间Ti:",self.duration)                    #生成的原始数据
         # print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
@@ -375,7 +377,7 @@ class graphEnv(gym.Env):
             self.memory_demand_dic[i+1] = self.demand[i][1]
         
         self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:]) #第一次计算等待任务
-        self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 # + self.graph_embedding2 + self.graph_embedding3
+        self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 #+ self.graph_embedding2 + self.graph_embedding3
         self.steps_beyond_done = None
         return np.array(self.state, dtype=np.float32)
 

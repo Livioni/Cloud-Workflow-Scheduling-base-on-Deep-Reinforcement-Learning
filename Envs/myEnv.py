@@ -46,8 +46,8 @@ class MyEnv(gym.Env):
         self.demand_lib = []
         
         self.DAGsize = 30
-        self.load_train_dataset(self.DAGsize)
-        # self.load_test_dataset(self.DAGsize)
+        # self.load_train_dataset(self.DAGsize)
+        self.load_test_dataset(self.DAGsize)
         
     def load_train_dataset(self,DAGsize):
         ##########################################training################################
