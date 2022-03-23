@@ -28,9 +28,9 @@ def initial_excel():
 
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
-env_name = "testEnv-v0"  # 定义自己的环境名称
+env_name = "clusterEnv-v0"  # 定义自己的环境名称
 max_ep_len = 10000  # max timesteps in one episode
-auto_save = 10
+auto_save = 1
 total_test_episodes = 100 * auto_save  # total num of testing episodes
 
 ################ PPO hyperparameters ################
@@ -53,17 +53,19 @@ state_dim,action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
-run_num_pretrained = 30  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = '20MCTS'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-directory = directory + '/' + 'MyEnv-v0' + '/'
+# directory = directory + '/' + 'MyEnv-v0' + '/'
+directory = directory + '/' + 'clusterEnv-v0' + '/'
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-checkpoint_path = directory + "PPO_MyEnv-v0_{}.pth".format(run_num_pretrained)
+# checkpoint_path = directory + "PPO_MyEnv-v0_{}.pth".format(run_num_pretrained)
+checkpoint_path = directory + "PPO_clusterEnv-v0_{}.pth".format(run_num_pretrained)
 print("save checkpoint path : " + checkpoint_path)
 
 #####################################################

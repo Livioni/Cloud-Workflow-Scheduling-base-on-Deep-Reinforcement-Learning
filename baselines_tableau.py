@@ -165,8 +165,7 @@ def test(actor, test_order):
                 if o % auto_save == 0:
                     average_makespan = np.mean(makespans)
                     worksheet.write(line, 1, average_makespan)
-                    print('AC : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line * auto_save, sum_reward,
-                                                                                       average_makespan))
+                    print('AC : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line * auto_save, sum_reward,average_makespan))
                     line += 1
                     makespans = []
                 break
@@ -190,7 +189,7 @@ def tetris(n_iters):
                 time = state[0]
                 time_to_write = round(float(time), 3)
                 makespans.append(time_to_write)
-                print("Episode:",iter,"makespan:",time)
+                # print("Episode:",iter,"makespan:",time)
                 if iter % auto_save == 0:
                     average_makespan = np.mean(makespans)
                     worksheet.write(line + 100, 1, average_makespan)
@@ -272,9 +271,9 @@ def randomagent(n_iters):
 
 
 if __name__ == '__main__':
-    n = 5  # 有多少个方法对比
+    n = 6  # 有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('data/Makespans10.xlsx')
+    workbook = xlsxwriter.Workbook('data/Makespans30.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
@@ -298,12 +297,15 @@ if __name__ == '__main__':
         worksheet.write(i + 1, 2, 'Random')
     for i in range(400, 500):
         worksheet.write(i + 1, 2, 'PPO')
+    for i in range(500, 600):
+        worksheet.write(i + 1, 2, 'MCTS') 
     for i in range(100 * n):
-        worksheet.write(i + 1, 3, 'n=10')
+        worksheet.write(i + 1, 3, 'n=30')
+    
 
     env = gym.make("clusterEnv-v0").unwrapped
     state_size,action_size = env.return_dim_info()
-    auto_save = 10
+    auto_save = 1
     test_order = 100 * auto_save
     sum_reward = 0
     time_durations = []

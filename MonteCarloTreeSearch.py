@@ -7,7 +7,7 @@ from torch.distributions import Categorical, MultivariateNormal
 env = gym.make("clusterEnv-v0").unwrapped
 state_dim,action_dim = env.return_dim_info()
 ################### checkpointing ###################
-run_num_pretrained = '10MCTS'
+run_num_pretrained = '20MCTS'
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
     os.makedirs(directory)
@@ -18,7 +18,7 @@ checkpoint_path = directory + "PPO_clusterEnv-v0_{}.pth".format(run_num_pretrain
 #####################################################
 ####### initialize environment hyperparameters ######
 max_ep_len = 1000  # max timesteps in one episode
-auto_save = 10
+auto_save = 1
 total_test_episodes = 100 * auto_save  # total num of testing episodes
 
 
@@ -195,14 +195,25 @@ class TreeNode(object):
         '''
         return max(self._children.items(), key=lambda act_node: act_node[1].get_value())[1]
 
+    # def update(self, makespan):
+    #     # Count visit.
+    #     self._n_visits += 1
+    #     if self._total_makespan == 0:
+    #         self._total_makespan = -makespan
+    #     else:
+    #         self._total_makespan -= makespan
+    #         self._makespan = self._total_makespan / self._n_visits
+    #     if self._parent != None:
+    #         self._value = self.get_value()
+
     def update(self, makespan):
         # Count visit.
         self._n_visits += 1
-        if self._total_makespan == 0:
-            self._total_makespan = -makespan
+        if self._makespan == 0:
+            self._makespan = -makespan
         else:
-            self._total_makespan -= makespan
-            self._makespan = self._total_makespan / self._n_visits
+            if -makespan > self._makespan:
+                self._makespan = -makespan
         if self._parent != None:
             self._value = self.get_value()
 
@@ -229,7 +240,7 @@ class MCTS(object):
         self._root = TreeNode(None, state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time)
         self._root.expand() #初始化扩展
         self._ppo_agent = ppo_agent
-        self._initial_buget = 50
+        self._initial_buget = 60
         self._min_buget = 10
         self._depth = depth
 
