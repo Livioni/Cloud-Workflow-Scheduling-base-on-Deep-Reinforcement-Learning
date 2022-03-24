@@ -45,7 +45,7 @@ class clusterEnv(gym.Env):
         self.duration_lib = []
         self.demand_lib = []
         
-        self.DAGsize = 10
+        self.DAGsize = 30
         # self.load_train_dataset(self.DAGsize)
         self.load_test_dataset(self.DAGsize)
 
@@ -337,7 +337,7 @@ class clusterEnv(gym.Env):
         # self.seed1 = 0
         self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
         self.seed1 += 1
-        if self.seed1 == 1000:
+        if self.seed1 == 100:
             self.seed1 = 0
         # self.edges,self.duration,self.demand,self.position = utils.workflows_generator('default')
         # print("DAG结构Edges：",self.edges)
