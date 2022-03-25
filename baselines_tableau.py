@@ -273,7 +273,7 @@ def randomagent(n_iters):
 if __name__ == '__main__':
     n = 6  # 有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('data/Makespans30.xlsx')
+    workbook = xlsxwriter.Workbook('data/Makespans20.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
@@ -300,12 +300,12 @@ if __name__ == '__main__':
     for i in range(500, 600):
         worksheet.write(i + 1, 2, 'MCTS') 
     for i in range(100 * n):
-        worksheet.write(i + 1, 3, 'n=30')
+        worksheet.write(i + 1, 3, 'n=20')
     
 
     env = gym.make("clusterEnv-v0").unwrapped
     state_size,action_size = env.return_dim_info()
-    auto_save = 1
+    auto_save = 10
     test_order = 100 * auto_save
     sum_reward = 0
     time_durations = []

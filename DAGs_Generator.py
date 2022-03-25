@@ -200,5 +200,5 @@ def generate_test_datasheet(amount, DAGsize):
 
 if __name__ == '__main__':
     # generate_train_datasheet(1000, 50)
-    generate_test_datasheet(1000,50)
+    generate_test_datasheet(1000,100)
     # edges, duration, demand, _ = workflows_generator('default')

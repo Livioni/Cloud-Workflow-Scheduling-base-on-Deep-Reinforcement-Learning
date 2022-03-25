@@ -24,6 +24,8 @@ It requires the following packages:
 3. 修改环境代码适应生成数据集的路径；
 4. 运行 PPO/DRLagent.py 训练网络；
 5. 运行 PPO/DRLtest.py 测试推理。
+5. 运行baseline_tableau.py 得出baseline算法效果
+5. 运行MonteCarloTreeSearch.py 得出MCTS算法效果
 
 
 
@@ -31,15 +33,15 @@ It requires the following packages:
 
 2022.03.11
 
-- 目前状态空间，动作空间下设计的Actor- Critic，PPO方法难以超越baseline Tetris的效果。
+- 目前状态空间，动作空间下设计的Actor- Critic，PPO方法难以超越baseline [Tetris](https://dl.acm.org/doi/abs/10.1145/2740070.2626334?casa_token=EYl_WpNS79MAAAAA:iNwogrNmlUceBfJ-P0vySitXQzV01kmwGmkRj4qTHPeqBiyd04Zqt6giZpwvOR3TgR1Nv46_8jJYdt0)的效果。
 - 尝试经典[GCN](https://arxiv.org/abs/1609.02907)编码DAG，效果不佳。
-- 尝试Decima中的编码结构。
+- 尝试[Decima](https://dl.acm.org/doi/abs/10.1145/3341302.3342080)中的编码结构。
 
 2020.03.23
 
 - 结合[Decima](https://dl.acm.org/doi/abs/10.1145/3341302.3342080)中的[GCN](https://arxiv.org/abs/1609.02907)对DAG进行编码，改变编码数量，效果不佳
 - 完成深度强化学习加速蒙特卡洛树搜索算法（魔改[spear](https://ieeexplore.ieee.org/abstract/document/8885307/)），目前在DAG_size=10大小上效果最佳。
-- 编写了单DAG任务资源用量检测脚本。
+- 编写了单个DAG任务资源用量检测脚本。
 
 
 
@@ -117,11 +119,11 @@ CPU密集型的任务CPU的资源占用量在$[0.25r,0.5r]$中随机取值，Mem
 
 3. 当前资源中剩余的 Memory 资源（1维）
 
-4. Ready_task 任务列表（长度为 10）中的任务要求时间（10维）如果不足10空位补-1
+4. Ready_task 任务列表（长度为 10）中的任务要求时间（30维）如果不足30空位补-1
 
-5. Ready_task 任务列表中的 CPU 要求资源（10维）      如果不足10空位补-1
+5. Ready_task 任务列表中的 CPU 要求资源（30维）      如果不足30空位补-1
 
-6. Ready_task 任务列表中的 Memory 要求资源（10维）     如果不足10空位补-1
+6. Ready_task 任务列表中的 Memory 要求资源（30维）     如果不足30空位补-1
 
 7. 当前未完成 DAG 部分的最大路径长度（1维）
 
@@ -133,15 +135,15 @@ CPU密集型的任务CPU的资源占用量在$[0.25r,0.5r]$中随机取值，Mem
 
 11. 超出 Ready_task 任务列表长度且准备好的任务的 Memory 要求总和（1维）
 
-共38维状态。
+共98维状态。
 
 ### 动作空间
 
-{-1,0,1,2,3,4,5,6,7,8,9}
+{-1,0,1,2,3,4,5,6,7,8,9,...,29}
 
 •选择 $a=-1$表示执行完计算资源里的一个耗时最短的任务。此时执行时间增加该任务的消耗时间，释放占用的CPU和Memory资源。
 
-•选择$a=0\sim9$表示把当前 Ready_task 任务列表的第a个任务提交给计算资源。此时当前执行时间不变，当前CPU/Memory资源减去该任务占用的资源。
+•选择$a=0\sim29$表示把当前 Ready_task 任务列表的第a个任务提交给计算资源。此时当前执行时间不变，当前CPU/Memory资源减去该任务占用的资源。
 
 ### 回报函数
 
@@ -167,7 +169,7 @@ c)   如果当前计算资源中没有提交的任务,动作$a=-1$是无效的�
 
 如果动作有效，则更新状态：
 
-a)  $ a=0\sim9$ ：计算资源中CPU/Memory分别减去该任务占用的资源，更新Ready_task 任务列表中该任务对应位置上的执行时间，CPU/Memory资源全部置为-1，表示该任务已经提交给计算机。
+a)  $ a=0\sim29$ ：计算资源中CPU/Memory分别减去该任务占用的资源，更新Ready_task 任务列表中该任务对应位置上的执行时间，CPU/Memory资源全部置为-1，表示该任务已经提交给计算机。
 
 b) $a=-1$ ：表示执行当前计算机上挂起的任务，执行的时间等于已经提交的任务列表中耗时最短的任务。例如$t=0s$时计算机上挂起了三个任务，他们执行时间分别为$23s,12s,29s$,执行$a=-1$后，第二个任务耗时最短，被执行。第一维状态就变为了12s，挂起任务执行时间列表就被更新为$11s,17s$。同时，计算资源CPU/Memory加上相应的数值，之后根据DAG结构更新Ready_task 任务列表，当前未完成 DAG 部分的最大路径长度，当前未完成 DAG 部分的子节点数等状态。
 
@@ -192,6 +194,64 @@ reset函数表示初始化环境，包括随机生成一个DAG并且生成工作
 暂时未更新伪代码，代码来源https://github.com/nikhilbarhate99/PPO-PyTorch。
 
 ![PPO](README.assets/PPO.png)
+
+### 蒙特卡洛树搜索
+
+蒙特卡洛树搜索是一种高效的决策规划算法，主要应用于以 (状态，行动) 定义和用模拟进行 预测输出结果的领域（例如：围棋）。它是一种基于树数据结构的、在搜索空间巨大的时候仍 然比较有效的搜索算法。
+
+![p11](README.assets/p11.png)
+
+蒙特卡洛树搜索算法主要分为 4 步：选择，扩展，模拟，回溯。 我们将节点分成三类：
+
+- 未访问：还没有评估过当前局面
+
+- 未完全展开：被评估过至少一次，但是子节点（下一步的局面）没有被全部访问过，可以进一步扩展
+
+- 完全展开：子节点被全部访问过
+
+  我们找到目前认为「最有可能会走到的」一个未被评估的局面，并且选择它。
+
+  (1) 选择（seletion)：这一步会从根节点开始，根据树策略选一个“最值得搜索的叶子节点”，一般使用 Upper Conﬁdence Bound Applied to Trees(UCT) 标准选择分数最高的节点，直到来到一个“存在未 扩展的子节点”的节点。
+
+  UCT: $\quad$ score $=\frac{w_{i}}{n_{i}}+c \sqrt{\frac{\ln N_{i}}{n_{i}}}$
+
+  式中 $w_i$ 是$ i$ 节点胜利次数，$n_i$ 是 $i$ 节点的模拟次数，$N_I$ 是所有模拟次数，$c$ 是探索常数，$c$ 约小越偏向于开发，$c$ 越大越偏向于试探。这个树策略函数相当于在开发和试探做权衡。
+
+  (2) 扩展（expansion）：在选择阶段结束时候，我们查找到了一个最迫切被拓展的节点 $N$，以 及一个尚未拓展的动作$ A$。动作 $A $选取在这里是随机的。
+
+  (3) 模拟 (simulation)：我们从 $N_n$开始，让游戏快速地随机进行，直到得到一个游戏结局， 得到的是一次蒙特卡洛实验，这个结局将作为 $N_n$的初始评分。一般使用胜利/失败来作为评分，只有 $1$ 或者$0$。 模拟一般适合很快可能不是很精确的策略。比如一般的蒙特卡洛树使用随机的策略，精度不一定高，但速度快，本文使用了 DRL 辅助搜索策略，结果又快又准。
+
+  (4) 回溯 (backpropagation)：在 $N_n$的模拟结束之后，从叶节点到根节点由下到上的路径上的所有节 点都会根据本次模拟的结果来更新累计评分。 每一次迭代都会拓展搜索树，随着迭代次数的增加，搜索树的规模也不断增加。当到了一定的迭代 次数或者时间之后结束，选择根节点下最好的子节点作为本次决策的结果。
+
+  ### 蒙特卡洛树结合深度强化学习智能体搜索
+
+  论文：[Multi-resource packing for cluster schedulers]((https://dl.acm.org/doi/abs/10.1145/2740070.2626334?casa_token=EYl_WpNS79MAAAAA:iNwogrNmlUceBfJ-P0vySitXQzV01kmwGmkRj4qTHPeqBiyd04Zqt6giZpwvOR3TgR1Nv46_8jJYdt0)-resource ) 
+
+  **Spear** 使用 DRL 加速蒙特卡洛树搜索，解决了目标是 makespan 最短的多资源需求的 DAG 问 题。Spear 根据当前计算资源和任务的状态用 MCTS 搜索最佳动作，在树扩张和模拟的过程中 使用 DRL 来将搜索区域缩小到更具有价值的动作空间。结果表明，Spear 在花费相同的时间 内，完成时间上要短于之前最好的方法 Graphene。
+
+  **Spear**: 核心思想：用 DRL 模型替代 MCTS 中扩展和模拟中随机选择动作的策略。有以下优点：
+
+  (1) 训练过的 DRL 模型，可以将动作搜索范围缩小到那些更快完成调度任务的动作上；
+
+  (2) 在 Simulation 中可以精准的估计每一个状态的 makespan。
+
+  ![spear](README.assets/spear.png)
+
+  改进的蒙特卡洛树搜索:
+
+  (1) 选择：将UCT公式中的前一项改为最大的 reward，也就是：
+
+  score $=\max _{I}+c \sqrt{\frac{\ln N_{i}}{n_{i}}}$
+
+  (2) 扩展: 当前状态下有许多动作都是没必要探索的，传统的 MCTS 使用随机策略选择动作， 很显然是不高效的。不过，训练好的 DRL 模型可以高效的选择未被探索过的动作，根据 策略网络输出动作的概率，makespan 越小的动作具有越高的概率。
+
+  (3) 模拟：同样使用训练好的 DRL 模型来选择动作，这提供了更有意义的 makespan 估计。
+
+  (4)回溯：更新从叶节点到根节点路径上所有节点的值：max{current_value, new_value } ， 并且记录该节点上 value 的平均值。 
+
+- The budget（控制树搜索次数）：$\max \left(\frac{b_{i n i t i a l}}{d_{i}}, b_{\min }\right)$
+
+  $d_i$ 是目前树的深度，$b_{initial}$ 是初始迭代预算次数，$b_min$ 是最小迭代预算次数。
 
 ## 实验
 
@@ -249,120 +309,13 @@ $t_{1} $ 有6个任务，每个任务需要 [2 cores, 3 GB], $t_{2}$有两个任
 
 
 
-以上三种方法均在同样的gym环境中交互，这意味着SJF方法仅仅知道Ready_task 任务列表10个长度的信息。
-
-### PPO单图训练
+以上三种方法均在同样的gym环境中交互，这意味着SJF方法知道Ready_task 任务列表30个长度的信息。
 
 
 
-### ![PPO10](README.assets/PPO10.png)
+### 最终实验结果
 
-​                                                                                                          n = 10
+![10DAG](README.assets/10DAG.png)
 
-![PPO30](README.assets/PPO30.png)
+​       N=10 
 
-​																										n = 30
-
-
-
-![PPO50](README.assets/PPO50.png)
-
-​																										n = 50
-
-### AC参数信息
-
-```python
-1.	class Actor(nn.Module): #策略网络  
-2.	    def __init__(self, state_size, action_size):  
-3.	        super(Actor, self).__init__()  
-4.	        self.state_size = state_size  
-5.	        self.action_size = action_size  
-6.	        self.linear1 = nn.Linear(self.state_size, 40)  
-7.	        self.dropout = nn.Dropout(p=0.6)  
-8.	        self.linear2 = nn.Linear(40, 40)  
-9.	        self.linear3 = nn.Linear(40, self.action_size)  
-10.	  
-11.	    def forward(self, state):  
-12.	        output = F.sigmoid(self.linear1(state))  
-13.	        output = self.dropout(output)  
-14.	        output = self.linear3(output)  
-15.	        distribution = Categorical(F.softmax(output, dim=-1))  
-16.	        return distribution #输出动作概率分布  
-
-1.	Class Critic(nn.Module) #状态值函数网络 
-2.	    def __init__(self, state_size, action_size):  
-3.	        super(Critic, self).__init__()  
-4.	        self.state_size = state_size  
-5.	        self.action_size = action_size  
-6.	        self.linear1 = nn.Linear(self.state_size, 40)  
-7.	        self.dropout = nn.Dropout(p=0.6)  
-8.	        self.linear2 = nn.Linear(40, 40)  
-9.	        self.linear3 = nn.Linear(40, 1)  
-10.	  
-11.	    def forward(self, state):  
-12.	        output = F.relu(self.linear1(state))  
-13.	        output = self.dropout(output)  
-14.	        value = self.linear3(output)  
-15.	        return value #输出状态值函数  
-
-```
-
-网络参数在训练时都有改动，基本上是选择这样三层的网络，神经元从40-400都有试过，激活函数用relu的话容易导致输出概率极小趋近于零，尝试使用sigmoid后就没有出现过这个问题。
-
-可变动的一些参数：
-
-| **参数设置**            |                                    |
-| ----------------------- | ---------------------------------- |
-| Episode                 | 1000至10000                        |
-| learning rate           | 0.0001                             |
-| size                    | [20,30,40,50,60,70,80,90]or random |
-| max_out                 | [1,2,3,4,5] or random              |
-| alpha                   | [0.5,1.0,1.5] or random            |
-| beta                    | [0.0,0.5,1.0,2.0] or random        |
-| Reward = -time_shift/10 |                                    |
-| prob = 0.8              |                                    |
-
-在各种实验条件下训练网络，虽然AC网络都在loss上表现收敛，但训练过程中reward和makespan表现太过于随机，整体趋势也时好时坏。于是尝试将状态空间**降维**，删除了第7，8，9，10，11维状态，也就是从原来的38维状态减少至前33维状态，这样的话给智能体感知的DAG整体结构信息就变少了，但这样做有更大几率训练出好一点的模型，下面这个网络在参数learning rate = 0.0001 size = 20 max_out = 3 alpha = 2 beta = 1 prob = 1 的情况下训练1000次偶然得出一个比较好的智能体：
-
-![image-20220228184055021](README.assets/image-20220228184055021.png)
-
-​																														图3 actor loss
-
-![image-20220228184153934](README.assets/image-20220228184153934.png)
-
-​																														图 4 critic loss
-
-![image-20220228184210414](README.assets/image-20220228184210414.png)
-
-​																														图 5 makespan
-
-![image-20220228184228433](README.assets/image-20220228184228433.png)
-
-​																														图 6 reward
-
-因为收益设置为Reward = -time_shift/100，所以makespan和reward训练的趋势差不多是相反的，但把Smoothing拉到最大后并没有明显的下降趋势。
-
-![image-20220228184419066](README.assets/image-20220228184419066.png)
-
-​																										图 7 makespan (smoothing=0.999)
-
-随后将该训练好的网络与SJF和random方法对比，使用相同的env环境，每个方法求解100个DAG任务（因为gym环境的限制，每个方法各按照同样的参数生成100个DAG；如果要对比每种方法求解同样的一个DAG任务，会比较麻烦。），观察makespan数据。
-
-1. max_out = 3 alpha = 2 beta = 1 prob = 1，在n=10,30,50中的表现：
-
-   | 不同方法在不同size下的makespan平均值(单位s) |        |        |        |
-   | ------------------------------------------- | ------ | ------ | ------ |
-   |                                             | A-C    | SJF    | Random |
-   | N=10                                        | 72.88  | 76.53  | 109.53 |
-   | N=20                                        | 186.02 | 207.50 | 277.70 |
-   | N=30                                        | 288.85 | 331.94 | 446.32 |
-
-![image-20220228184456348](README.assets/image-20220228184456348.png)
-
-​																												图8 各方法的实验数据对比
-
-从图中可以看出AC网络训练出来的模型要优于SJF方法，智能体学习到的策略要优于SJF方法 5%-15%，优于Random方法50%-54% 尤其是当DAG规模变大之后，DRL的优势更明显。在之后的实验中，不断修改max_out, alpha, beta, prob等参数，情况大致相同，DRL都要优于其余两种方法。
-
-对于下一图每一小组实验数据，都是随机生成100张不同的DAG图进行处理。
-
-![Makespan对比图](README.assets/Makespan%E5%AF%B9%E6%AF%94%E5%9B%BE.png)

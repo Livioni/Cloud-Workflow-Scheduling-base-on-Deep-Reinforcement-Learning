@@ -7,7 +7,7 @@ from torch.distributions import Categorical, MultivariateNormal
 env = gym.make("clusterEnv-v0").unwrapped
 state_dim,action_dim = env.return_dim_info()
 ################### checkpointing ###################
-run_num_pretrained = '20MCTS'
+run_num_pretrained = '50MCTS'
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
     os.makedirs(directory)
@@ -18,7 +18,7 @@ checkpoint_path = directory + "PPO_clusterEnv-v0_{}.pth".format(run_num_pretrain
 #####################################################
 ####### initialize environment hyperparameters ######
 max_ep_len = 1000  # max timesteps in one episode
-auto_save = 1
+auto_save = 10
 total_test_episodes = 100 * auto_save  # total num of testing episodes
 
 
@@ -240,7 +240,7 @@ class MCTS(object):
         self._root = TreeNode(None, state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time)
         self._root.expand() #初始化扩展
         self._ppo_agent = ppo_agent
-        self._initial_buget = 60
+        self._initial_buget = 100
         self._min_buget = 10
         self._depth = depth
 
@@ -284,6 +284,9 @@ if __name__ == '__main__':
     initial_excel()
     makespans = []
     line = 0
+    start_time = datetime.now().replace(microsecond=0)
+    print("Started training at (GMT) : ", start_time)
+    print("============================================================================================")
     for ep in range(1, total_test_episodes + 1):
         initial_state = env.reset()
         state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time = read_current_state()
@@ -301,9 +304,14 @@ if __name__ == '__main__':
                 if ep % auto_save == 0:
                     average_makespan = np.mean(makespans)
                     worksheet.write(line, 1, float(average_makespan))
+                    workbook.save('data/makespan_MCTS.xls')
                     print('MCTS : Episode: {},  Makespan: {:.3f}s'.format((line + 1) * auto_save, average_makespan))
                     line += 1
                     makespans = []
+                    end_time = datetime.now().replace(microsecond=0)
+                    print("Finished testing at (GMT) : ", end_time)
+                    print("Total testing time  : ", end_time - start_time)
+                    start_time = end_time
                 break
             workbook.save('data/makespan_MCTS.xls')
     env.close()
