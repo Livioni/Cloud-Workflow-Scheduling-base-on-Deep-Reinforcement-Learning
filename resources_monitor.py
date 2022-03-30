@@ -27,14 +27,12 @@ def initial_excel():
     worksheet.write(0, 3, 'time1')
     worksheet.write(0, 4, 'CPU(%)')
     worksheet.write(0, 5, 'Memory(%)')
-    for i in range(3):
-        worksheet.write(1, i, 0)
     # 保存excel文件
-    workbook.save('data/gcnres_monitor.xls')
+    workbook.save('data/res_monitor.xls')
 
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
-env_name = "graphEnv-v0"  # 定义自己的环境名称
+env_name = "clusterEnv-v0"  # 定义自己的环境名称
 max_ep_len = 10000  # max timesteps in one episode
 total_test_episodes = 1 # total num of testing episodes
 
@@ -53,24 +51,22 @@ print("Testing environment name : " + env_name)
 
 env = gym.make(env_name).unwrapped
 
-# state space dimension
-state_dim = env.observation_space.shape[0]
-# action space dimension
-action_dim = env.action_space.n
+# state space dimension # action space dimension
+state_dim,action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
-run_num_pretrained = 'Decima30singlegraph'  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = 'resourceTest'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-directory = directory + '/' + 'graphEnv-v0' + '/'
+directory = directory + '/' + 'clusterEnv-v0' + '/'
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-checkpoint_path = directory + "PPO_graphEnv-v0_{}.pth".format(run_num_pretrained)
+checkpoint_path = directory + "PPO_clusterEnv-v0_{}.pth".format(run_num_pretrained)
 print("save checkpoint path : " + checkpoint_path)
 
 #####################################################
@@ -146,6 +142,7 @@ class ActorCritic(nn.Module):
         raise NotImplementedError
 
     def act(self, state):
+        # global flag,line
         probability = {}
         action_probs = self.actor(state)
         dist = Categorical(action_probs)
@@ -163,6 +160,12 @@ class ActorCritic(nn.Module):
             probs = torch.FloatTensor(probability_list)
             dist_1 = Categorical(probs)
             action = dist_1.sample().to(device)  # 采样当前动作
+            # if action.item() == 0:
+            #     time, cpu_usage, memory_usage = env.return_res_usage()
+            #     worksheet.write(line, 1, str(100-cpu_usage)+'%')
+            #     worksheet.write(line, 2, str(100-memory_usage)+'%')   
+            #     flag = 1         
+            #     line += 1
             state, reward, done, info = env.step(action.item() - 1)  # 输入step的都是
         action_logprob = dist.log_prob(action).unsqueeze(0)
         return action.detach(), action_logprob.detach(), state, reward, done, info
@@ -198,7 +201,6 @@ class PPO:
         self.MseLoss = nn.MSELoss()
 
     def select_action(self, state):
-        global flag,line
         with torch.no_grad():
             state = torch.FloatTensor(state).to(device)
             self.buffer.states.append(state)
@@ -206,12 +208,6 @@ class PPO:
 
         self.buffer.actions.append(action)  # 保存动作
         self.buffer.logprobs.append(action_logprob)  # 保存动作概率
-        if action.item() == 0:
-            time, cpu_usage, memory_usage = env.return_res_usage()
-            worksheet.write(line, 1, str(100-cpu_usage)+'%')
-            worksheet.write(line, 2, str(100-memory_usage)+'%')   
-            flag = 1         
-            line += 1
         return state, reward, done, info
 
     def update(self):
@@ -278,10 +274,6 @@ def test():
     global flag
     ppo_agent = PPO(state_dim, action_dim, lr_actor, lr_critic, gamma, K_epochs, eps_clip)
     # track total testing time
-    start_time = datetime.now().replace(microsecond=0)
-    print("Started testing at (GMT) : ", start_time)
-
-    print("============================================================================================")
 
     ppo_agent.load(checkpoint_path)
     print("Network ID:", run_num_pretrained)
@@ -302,20 +294,13 @@ def test():
         #记录资源使用率
         state = new_state
         if done:
+            print("makesspan:",state[0])
             break
     ppo_agent.buffer.clear()
-    workbook.save('data/gcnres_monitor.xls')
+    # workbook.save('data/res_monitor.xls')
     env.close()
-
-    # print total training time
-    print("============================================================================================")
-    end_time = datetime.now().replace(microsecond=0)
-    print("Started testing at (GMT) : ", start_time)
-    print("Finished testing at (GMT) : ", end_time)
-    print("Total testing time  : ", end_time - start_time)
-    print("============================================================================================")
 
 
 if __name__ == '__main__':
-    initial_excel()
+    # initial_excel()
     test()

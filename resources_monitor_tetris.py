@@ -53,9 +53,9 @@ def alignment_score(state):
         return np.where(alignment_score == np.max(alignment_score))[0][0]
 
 initial_excel()
-env = gym.make("testEnv-v0").unwrapped
+env = gym.make("clusterEnv-v0").unwrapped
 print("Tetris")
-line = 1 
+line = 2
 state = env.reset()
 sum_reward = 0      #记录每一幕的reward
 for i in count():
@@ -63,7 +63,6 @@ for i in count():
     action = alignment_score(valid_state)
     if action == -1:
         time, cpu_usage, memory_usage = env.return_res_usage()
-
         worksheet.write(line, 1, str(100-cpu_usage)+'%')
         worksheet.write(line, 2, str(100-memory_usage)+'%')            
         line += 1
@@ -76,6 +75,7 @@ for i in count():
 
     state = next_state
     if done:
+        print("makespan : ",time)
         break
 
 workbook.save('data/tetrisres_monitor.xls')

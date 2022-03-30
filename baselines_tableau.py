@@ -180,9 +180,18 @@ def tetris(n_iters):
         sum_reward = 0  # 记录每一幕的reward
         time = 0  # 记录makespan
         for i in count():
-            valid_state = check_res_Tetris(state)
-            action = alignment_score(valid_state)
-            next_state, reward, done, info = env.step(action)
+            chance = random.random()
+            if chance <= 0.15:
+                action = random.choice(range(action_size)) - 1
+                state, reward, done, info = env.step(action)
+                while (info[0] == False):
+                    action = random.choice(range(action_size)) - 1
+                    state, reward, done, info = env.step(action)  # 输入step的都是
+                next_state, reward, done, _ = state, reward, done, info
+            else:
+                valid_state = check_res_Tetris(state)
+                action = alignment_score(valid_state)
+                next_state, reward, done, info = env.step(action)
             sum_reward += reward
             state = next_state
             if done:
@@ -209,17 +218,24 @@ def sjf(n_iters):
         sum_reward = 0  # 记录每一幕的reward
         time = 0  # 记录makespan
         for i in count():
-            if (check_res(state)):
-                preaction = find_shortest_job(state)
-                if check_ready(state, preaction):
-                    action = preaction
+            chance = random.random()
+            if chance <= 1:
+                if (check_res(state)):
+                    preaction = find_shortest_job(state)
+                    if check_ready(state, preaction):
+                        action = preaction
+                    else:
+                        action = -1
                 else:
                     action = -1
+                next_state, reward, done, info = env.step(action)
             else:
-                action = -1
-            # print(action)
-            next_state, reward, done, info = env.step(action)
-            # print(next_state)
+                action = random.choice(range(action_size)) - 1
+                state, reward, done, info = env.step(action)
+                while (info[0] == False):
+                    action = random.choice(range(action_size)) - 1
+                    state, reward, done, info = env.step(action)  # 输入step的都是
+                next_state, reward, done, _ = state, reward, done, info
             sum_reward += reward
             state = next_state
             if done:
@@ -251,9 +267,6 @@ def randomagent(n_iters):
                 action = random.choice(range(action_size)) - 1
                 state, reward, done, info = env.step(action)  # 输入step的都是
             next_state, reward, done, _ = state, reward, done, info
-            # print(action)
-            next_state, reward, done, info = env.step(action)
-            # print(next_state)
             sum_reward += reward
             state = next_state
             if done:
@@ -273,7 +286,7 @@ def randomagent(n_iters):
 if __name__ == '__main__':
     n = 6  # 有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('data/Makespans20.xlsx')
+    workbook = xlsxwriter.Workbook('data/Makespans30.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
@@ -300,9 +313,8 @@ if __name__ == '__main__':
     for i in range(500, 600):
         worksheet.write(i + 1, 2, 'MCTS') 
     for i in range(100 * n):
-        worksheet.write(i + 1, 3, 'n=20')
+        worksheet.write(i + 1, 3, 'n=30')
     
-
     env = gym.make("clusterEnv-v0").unwrapped
     state_size,action_size = env.return_dim_info()
     auto_save = 10
