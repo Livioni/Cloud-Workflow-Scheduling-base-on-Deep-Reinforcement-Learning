@@ -159,8 +159,7 @@ def test(actor, test_order):
             sum_reward += reward
             if done:
                 time = state[0]
-                time_to_write = round(float(time), 3)
-                makespans.append(time_to_write)
+                makespans.append(time)
                 # print("Makespan: {:.3f} s".format(time))
                 if o % auto_save == 0:
                     average_makespan = np.mean(makespans)
@@ -181,7 +180,7 @@ def tetris(n_iters):
         time = 0  # 记录makespan
         for i in count():
             chance = random.random()
-            if chance <= 0.15:
+            if chance <= 0.20:
                 action = random.choice(range(action_size)) - 1
                 state, reward, done, info = env.step(action)
                 while (info[0] == False):
@@ -196,8 +195,7 @@ def tetris(n_iters):
             state = next_state
             if done:
                 time = state[0]
-                time_to_write = round(float(time), 3)
-                makespans.append(time_to_write)
+                makespans.append(time)
                 # print("Episode:",iter,"makespan:",time)
                 if iter % auto_save == 0:
                     average_makespan = np.mean(makespans)
@@ -219,7 +217,7 @@ def sjf(n_iters):
         time = 0  # 记录makespan
         for i in count():
             chance = random.random()
-            if chance <= 1:
+            if chance <= 0.9:
                 if (check_res(state)):
                     preaction = find_shortest_job(state)
                     if check_ready(state, preaction):
@@ -271,8 +269,7 @@ def randomagent(n_iters):
             state = next_state
             if done:
                 time = state[0]
-                time_to_write = round(float(time), 3)
-                makespans.append(time_to_write)
+                makespans.append(time)
                 if iter % auto_save == 0:
                     average_makespan = np.mean(makespans)
                     worksheet.write(line + 300, 1, average_makespan)
@@ -286,7 +283,7 @@ def randomagent(n_iters):
 if __name__ == '__main__':
     n = 6  # 有多少个方法对比
     # Create an new Excel file and add a worksheet.
-    workbook = xlsxwriter.Workbook('data/Makespans30.xlsx')
+    workbook = xlsxwriter.Workbook('data/Makespans50.xlsx')
     worksheet = workbook.add_worksheet()
     # Widen the first column to make the text clearer.
     worksheet.set_column('A:A', 15)
@@ -313,7 +310,7 @@ if __name__ == '__main__':
     for i in range(500, 600):
         worksheet.write(i + 1, 2, 'MCTS') 
     for i in range(100 * n):
-        worksheet.write(i + 1, 3, 'n=30')
+        worksheet.write(i + 1, 3, 'n=50')
     
     env = gym.make("clusterEnv-v0").unwrapped
     state_size,action_size = env.return_dim_info()
