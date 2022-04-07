@@ -179,18 +179,9 @@ def tetris(n_iters):
         sum_reward = 0  # 记录每一幕的reward
         time = 0  # 记录makespan
         for i in count():
-            chance = random.random()
-            if chance <= 0.20:
-                action = random.choice(range(action_size)) - 1
-                state, reward, done, info = env.step(action)
-                while (info[0] == False):
-                    action = random.choice(range(action_size)) - 1
-                    state, reward, done, info = env.step(action)  # 输入step的都是
-                next_state, reward, done, _ = state, reward, done, info
-            else:
-                valid_state = check_res_Tetris(state)
-                action = alignment_score(valid_state)
-                next_state, reward, done, info = env.step(action)
+            valid_state = check_res_Tetris(state)
+            action = alignment_score(valid_state)
+            next_state, reward, done, info = env.step(action)
             sum_reward += reward
             state = next_state
             if done:
@@ -216,24 +207,15 @@ def sjf(n_iters):
         sum_reward = 0  # 记录每一幕的reward
         time = 0  # 记录makespan
         for i in count():
-            chance = random.random()
-            if chance <= 0.9:
-                if (check_res(state)):
-                    preaction = find_shortest_job(state)
-                    if check_ready(state, preaction):
-                        action = preaction
-                    else:
-                        action = -1
+            if (check_res(state)):
+                preaction = find_shortest_job(state)
+                if check_ready(state, preaction):
+                    action = preaction
                 else:
                     action = -1
-                next_state, reward, done, info = env.step(action)
             else:
-                action = random.choice(range(action_size)) - 1
-                state, reward, done, info = env.step(action)
-                while (info[0] == False):
-                    action = random.choice(range(action_size)) - 1
-                    state, reward, done, info = env.step(action)  # 输入step的都是
-                next_state, reward, done, _ = state, reward, done, info
+                action = -1
+            next_state, reward, done, info = env.step(action)
             sum_reward += reward
             state = next_state
             if done:
