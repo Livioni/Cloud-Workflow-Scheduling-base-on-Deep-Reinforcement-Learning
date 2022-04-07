@@ -164,7 +164,8 @@ def test(actor, test_order):
                 if o % auto_save == 0:
                     average_makespan = np.mean(makespans)
                     worksheet.write(line, 1, average_makespan)
-                    print('AC : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line * auto_save, sum_reward,average_makespan))
+                    print('AC : Episode: {}, Reward: {:.3f}, Makespan: {:.3f}s'.format(line * auto_save, sum_reward,
+                                                                                       average_makespan))
                     line += 1
                     makespans = []
                 break
@@ -290,12 +291,12 @@ if __name__ == '__main__':
     for i in range(400, 500):
         worksheet.write(i + 1, 2, 'PPO')
     for i in range(500, 600):
-        worksheet.write(i + 1, 2, 'MCTS') 
+        worksheet.write(i + 1, 2, 'MCTS')
     for i in range(100 * n):
         worksheet.write(i + 1, 3, 'n=50')
-    
+
     env = gym.make("clusterEnv-v0").unwrapped
-    state_size,action_size = env.return_dim_info()
+    state_size, action_size = env.return_dim_info()
     auto_save = 10
     test_order = 100 * auto_save
     sum_reward = 0

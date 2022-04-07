@@ -44,7 +44,7 @@ state_dim,action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
-run_num_pretrained = '30withBN'  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = '30pycharm'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -135,10 +135,8 @@ class ActorCritic(nn.Module):
 
         self.actor = nn.Sequential(
             nn.Linear(state_dim, 64),
-            nn.BatchNorm1d(64),
             nn.Tanh(),
             nn.Linear(64, 64),
-            nn.BatchNorm1d(64),
             nn.Tanh(),
             nn.Linear(64, action_dim),
             nn.Softmax(dim=-1)

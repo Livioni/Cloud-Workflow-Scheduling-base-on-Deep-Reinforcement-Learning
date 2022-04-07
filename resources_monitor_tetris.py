@@ -1,6 +1,7 @@
-import gym,xlwt
+import gym, xlwt
 import numpy as np
 from itertools import count
+
 
 def initial_excel():
     global worksheet, workbook
@@ -21,7 +22,8 @@ def initial_excel():
     for i in range(3):
         worksheet.write(1, i, 0)
     # 保存excel文件
-    workbook.save('data/tetrisres_monitor.xls')    
+    workbook.save('data/tetrisres_monitor.xls')
+
 
 def check_res(state):
     job_cpu_demand = state[33:63]
@@ -31,15 +33,16 @@ def check_res(state):
     for i in range(len(job_cpu_demand)):
         if ((job_cpu_demand[i] == -1.0) and (job_memory_demand[i] == -1.0)):
             continue
-        else: 
+        else:
             if (job_cpu_demand[i] > cpu_res or job_memory_demand[i] > memory_res):
                 job_cpu_demand[i] = -1.0
                 job_memory_demand[i] = -1.0
             else:
-                continue  
+                continue
     state[33:63] = job_cpu_demand
     state[63:93] = job_memory_demand
     return np.array(state, dtype=np.float32)
+
 
 def alignment_score(state):
     job_cpu_demand = state[33:63]
@@ -47,35 +50,36 @@ def alignment_score(state):
     cpu_res = state[1]
     memory_res = state[2]
     alignment_score = cpu_res * job_cpu_demand + memory_res * job_memory_demand
-    if all(map(lambda x : x<0,alignment_score)):
+    if all(map(lambda x: x < 0, alignment_score)):
         return -1
     else:
         return np.where(alignment_score == np.max(alignment_score))[0][0]
+
 
 initial_excel()
 env = gym.make("clusterEnv-v0").unwrapped
 print("Tetris")
 line = 2
 state = env.reset()
-sum_reward = 0      #记录每一幕的reward
+sum_reward = 0  # 记录每一幕的reward
 for i in count():
     valid_state = check_res(state)
     action = alignment_score(valid_state)
     if action == -1:
         time, cpu_usage, memory_usage = env.return_res_usage()
-        worksheet.write(line, 1, str(100-cpu_usage)+'%')
-        worksheet.write(line, 2, str(100-memory_usage)+'%')            
+        worksheet.write(line, 1, str(100 - cpu_usage) + '%')
+        worksheet.write(line, 2, str(100 - memory_usage) + '%')
         line += 1
-    next_state,reward,done,info = env.step(action)
+    next_state, reward, done, info = env.step(action)
     if action == -1:
         time, cpu_usage, memory_usage = env.return_res_usage()
-        worksheet.write(line-1, 0, time)
+        worksheet.write(line - 1, 0, time)
     sum_reward += reward
-    #记录资源使用率
+    # 记录资源使用率
 
     state = next_state
     if done:
-        print("makespan : ",time)
+        print("makespan : ", time)
         break
 
 workbook.save('data/tetrisres_monitor.xls')

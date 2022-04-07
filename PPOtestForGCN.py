@@ -7,6 +7,7 @@ import torch.nn as nn
 import xlwt
 from torch.distributions import Categorical, MultivariateNormal
 
+
 def initial_excel():
     global worksheet, workbook
     # xlwt 库将数据导入Excel并设置默认字符编码为ascii
@@ -22,6 +23,7 @@ def initial_excel():
     worksheet.row(1).height = 20 * 25
     # 保存excel文件
     workbook.save('data/makespan_GCN.xls')
+
 
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
@@ -152,7 +154,7 @@ class ActorCritic(nn.Module):
         dist = Categorical(action_probs)
         for j in range(action_dim):
             probability[j] = dist.probs.detach()[j]  # 记录当前动作概率分布
-        action = dist.sample()    
+        action = dist.sample()
         # action = np.argmax(dist.probs)
         state, reward, done, info = env.step(action.item() - 1)
         while (info[0] == False):  # 重采样

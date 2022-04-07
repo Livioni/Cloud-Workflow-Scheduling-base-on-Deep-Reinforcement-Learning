@@ -169,7 +169,7 @@ def generate_train_datasheet(amount, DAGsize):
         duration_lib.append(duration)
         demand_lib.append(demand)
 
-    edges_lib_np = np.array(edges_lib,dtype=object)
+    edges_lib_np = np.array(edges_lib, dtype=object)
     duration_lib_np = np.array(duration_lib, dtype=np.float32)
     demand_lib_np = np.array(demand_lib, dtype=np.float32)
 
@@ -189,7 +189,7 @@ def generate_test_datasheet(amount, DAGsize):
         duration_lib.append(duration)
         demand_lib.append(demand)
 
-    edges_lib_np = np.array(edges_lib,dtype=object)
+    edges_lib_np = np.array(edges_lib, dtype=object)
     duration_lib_np = np.array(duration_lib, dtype=np.float32)
     demand_lib_np = np.array(demand_lib, dtype=np.float32)
 
@@ -200,5 +200,5 @@ def generate_test_datasheet(amount, DAGsize):
 
 if __name__ == '__main__':
     # generate_train_datasheet(1000, 50)
-    generate_test_datasheet(1000,100)
+    generate_test_datasheet(1000, 100)
     # edges, duration, demand, _ = workflows_generator('default')

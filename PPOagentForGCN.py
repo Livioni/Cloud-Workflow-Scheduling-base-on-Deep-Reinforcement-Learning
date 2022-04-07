@@ -44,7 +44,6 @@ state_dim = env.observation_space.shape[0]
 # action space dimension
 action_dim = env.action_space.n
 
- 
 ################### checkpointing ###################
 
 run_num_pretrained = '30'  #### change this to prevent overwriting weights in same env_name folder

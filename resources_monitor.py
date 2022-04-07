@@ -30,11 +30,12 @@ def initial_excel():
     # 保存excel文件
     workbook.save('data/res_monitor.xls')
 
+
 print("============================================================================================")
 ####### initialize environment hyperparameters ######
 env_name = "clusterEnv-v0"  # 定义自己的环境名称
 max_ep_len = 10000  # max timesteps in one episode
-total_test_episodes = 1 # total num of testing episodes
+total_test_episodes = 1  # total num of testing episodes
 
 ################ PPO hyperparameters ################
 
@@ -52,7 +53,7 @@ print("Testing environment name : " + env_name)
 env = gym.make(env_name).unwrapped
 
 # state space dimension # action space dimension
-state_dim,action_dim = env.return_dim_info()
+state_dim, action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
@@ -99,6 +100,8 @@ print("=========================================================================
 
 line = 1
 flag = 0
+
+
 ################################## PPO Policy ##################################
 class RolloutBuffer:
     def __init__(self):
@@ -279,8 +282,7 @@ def test():
     print("Network ID:", run_num_pretrained)
     print('PPO agent has been loaded!')
 
-
-    #GCN test 
+    # GCN test
     state = env.reset()
     for t in range(1, max_ep_len + 1):
         # select action with policy
@@ -289,12 +291,12 @@ def test():
         # break; if the episode is over
         if flag == 1:
             time, cpu_usage, memory_usage = env.return_res_usage()
-            worksheet.write(line-1, 0, time)
+            worksheet.write(line - 1, 0, time)
             flag = 0
-        #记录资源使用率
+        # 记录资源使用率
         state = new_state
         if done:
-            print("makesspan:",state[0])
+            print("makesspan:", state[0])
             break
     ppo_agent.buffer.clear()
     # workbook.save('data/res_monitor.xls')

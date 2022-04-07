@@ -1,4 +1,4 @@
-import torch,random
+import torch, random
 from gym import spaces
 import gym
 from gym.utils import seeding
@@ -7,7 +7,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import GCNutils.models as models
-from . import utils 
+from . import utils
+
 
 class DecimaGNN(nn.Module):  # 策略网络
     def __init__(self, input_size, output_size):
@@ -21,6 +22,7 @@ class DecimaGNN(nn.Module):  # 策略网络
         output = self.linear1(input_feature)
         output = F.leaky_relu(self.linear2(output))
         return output  # 输出动作概率分布
+
 
 class graphEnv(gym.Env):
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 50}
@@ -36,9 +38,9 @@ class graphEnv(gym.Env):
         self.max_cpu_res = np.array([[self.cpu_res_unit]], dtype=np.float32)  # 计算资源中的CPU总容量
         self.max_memory_res = np.array([[self.memory_res_unit]], dtype=np.float32)  # 计算资源中的Memory总容量
 
-        self.graph_embedding1_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
-        self.graph_embedding2_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
-        self.graph_embedding3_upperbound =  100 * np.ones((1, self.M), dtype=np.float32)
+        self.graph_embedding1_upperbound = 100 * np.ones((1, self.M), dtype=np.float32)
+        self.graph_embedding2_upperbound = 100 * np.ones((1, self.M), dtype=np.float32)
+        self.graph_embedding3_upperbound = 100 * np.ones((1, self.M), dtype=np.float32)
 
         high = np.ravel(np.hstack((
             self.max_time,  # 1 dim
@@ -52,7 +54,7 @@ class graphEnv(gym.Env):
         low = [0, 0, 0]
         low.extend([-100 for i in range(self.M * 1)])
         low = np.array(low, dtype=np.float32)
-        self.action_space = spaces.Discrete(self.M+1)  # {-1,0,1,2,3,4,5,6,7,8,9}
+        self.action_space = spaces.Discrete(self.M + 1)  # {-1,0,1,2,3,4,5,6,7,8,9}
         self.observation_space = spaces.Box(low, high, dtype=np.float32)
 
         ##状态信息
@@ -74,43 +76,51 @@ class graphEnv(gym.Env):
         self.state = None
 
         ##########################################GCN embeddings################################
-        self.gcn = models.GCN(3,16,1)
+        self.gcn = models.GCN(3, 16, 1)
         self.gcn.load_state_dict(torch.load('GCN_initialization/GCN_1.pth', map_location=lambda storage, loc: storage))
         print('Gcn parameters have been loaded.')
         # self.NonLinearNw1 = DecimaGNN(3,3)
-        self.NonLinearNw2 = DecimaGNN(1,1)
-        self.NonLinearNw3 = DecimaGNN(1,1)
-        
+        self.NonLinearNw2 = DecimaGNN(1, 1)
+        self.NonLinearNw3 = DecimaGNN(1, 1)
+
         # self.NonLinearNw1.load_state_dict(torch.load('GCN_initialization/NonLinearNw1.pth', map_location=lambda storage, loc: storage))
-        self.NonLinearNw2.load_state_dict(torch.load('GCN_initialization/NonLinearNw2.pth', map_location=lambda storage, loc: storage))
-        self.NonLinearNw3.load_state_dict(torch.load('GCN_initialization/NonLinearNw3.pth', map_location=lambda storage, loc: storage))
+        self.NonLinearNw2.load_state_dict(
+            torch.load('GCN_initialization/NonLinearNw2.pth', map_location=lambda storage, loc: storage))
+        self.NonLinearNw3.load_state_dict(
+            torch.load('GCN_initialization/NonLinearNw3.pth', map_location=lambda storage, loc: storage))
 
         self.DAGsize = 30
         # self.load_train_dataset(self.DAGsize)
         self.load_test_dataset(self.DAGsize)
-        
-    def load_train_dataset(self,DAGsize):
+
+    def load_train_dataset(self, DAGsize):
         DAGsize = DAGsize
         ##########################################training################################
         print('train datasheet lib.')
-        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
-        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
-        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
-        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
-        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
-        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/' + str(
+            DAGsize) + '/edges' + str(DAGsize) + '_lib.npy'
+        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/' + str(
+            DAGsize) + '/duration' + str(DAGsize) + '_lib.npy'
+        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/' + str(
+            DAGsize) + '/demand' + str(DAGsize) + '_lib.npy'
+        self.edges_lib = np.load(edges_lib_path, allow_pickle=True).tolist()
+        self.duration_lib = np.load(duration_lib_path, allow_pickle=True).tolist()
+        self.demand_lib = np.load(demand_lib_path, allow_pickle=True).tolist()
         print('load completed.')
         return
-    
-    def load_test_dataset(self,DAGsize):
+
+    def load_test_dataset(self, DAGsize):
         #########################################testing################################
         print('test datasheet loaded.')
-        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/edges' + str(DAGsize) +'_lib.npy'
-        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/duration' + str(DAGsize) +'_lib.npy'
-        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/'+str(DAGsize)+'/demand'+str(DAGsize)+'_lib.npy'
-        self.edges_lib = np.load(edges_lib_path,allow_pickle=True).tolist()
-        self.duration_lib = np.load(duration_lib_path,allow_pickle=True).tolist()
-        self.demand_lib = np.load(demand_lib_path,allow_pickle=True).tolist()
+        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/' + str(
+            DAGsize) + '/edges' + str(DAGsize) + '_lib.npy'
+        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/' + str(
+            DAGsize) + '/duration' + str(DAGsize) + '_lib.npy'
+        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/' + str(
+            DAGsize) + '/demand' + str(DAGsize) + '_lib.npy'
+        self.edges_lib = np.load(edges_lib_path, allow_pickle=True).tolist()
+        self.duration_lib = np.load(duration_lib_path, allow_pickle=True).tolist()
+        self.demand_lib = np.load(demand_lib_path, allow_pickle=True).tolist()
         print('load completed.')
         return
 
@@ -148,12 +158,12 @@ class graphEnv(gym.Env):
         pred = map[node]
         return pred
 
-    def search_for_all_successors(self,node, edges):
+    def search_for_all_successors(self, node, edges):
         save = node
         node = [node]
         for ele in node:
-            succ = self.search_for_successors(ele,edges)
-            if(len(succ)==1 and succ[0]=='Exit'):
+            succ = self.search_for_successors(ele, edges)
+            if (len(succ) == 1 and succ[0] == 'Exit'):
                 break
             for item in succ:
                 if item in node:
@@ -198,7 +208,7 @@ class graphEnv(gym.Env):
         else:
             False
 
-    def res_is_available(self,action):
+    def res_is_available(self, action):
         '''
         判断当前选择的动作是否能在计算资源上执行
         :para action {-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29}
@@ -207,39 +217,40 @@ class graphEnv(gym.Env):
         job_id = self.ready_list[action]
         task_cpu_demand = self.cpu_demand_dic[job_id]
         task_memory_demand = self.memory_demand_dic[job_id]
-        if self.graph_embedding1[job_id-1] != -1.0:
-            return True if (task_cpu_demand <= self.cpu_res) & (task_memory_demand <= self.memory_res) else False #判断资源是否满足要求
-        else: 
+        if self.graph_embedding1[job_id - 1] != -1.0:
+            return True if (task_cpu_demand <= self.cpu_res) & (
+                        task_memory_demand <= self.memory_res) else False  # 判断资源是否满足要求
+        else:
             return False
 
-    def check_action(self,action):
+    def check_action(self, action):
         '''
         判断当前选择的动作是否有效
         :para action {-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29}
         :return: True 有效 False 无效
         '''
-        if(action < len(self.ready_list)):
-            if(self.ready_list[action] not in self.done_job):
-                if(self.ready_list[action] not in self.tasks):
+        if (action < len(self.ready_list)):
+            if (self.ready_list[action] not in self.done_job):
+                if (self.ready_list[action] not in self.tasks):
                     return self.res_is_available(action)
                 else:
-                    return False 
+                    return False
             else:
-                return False    
+                return False
         else:
             return False
 
-    def pend_task(self,action):
+    def pend_task(self, action):
         job_id = self.ready_list[action]
-        self.tasks.append(job_id)#self.ready_list[action]表示的是任务ID 
-        self.tasks_remaing_time[job_id] = self.wait_duration_dic[job_id] 
-        self.cpu_res -= self.cpu_demand_dic[job_id]                                                                #当前CPU资源容量-这个任务需求的CPU资源
+        self.tasks.append(job_id)  # self.ready_list[action]表示的是任务ID
+        self.tasks_remaing_time[job_id] = self.wait_duration_dic[job_id]
+        self.cpu_res -= self.cpu_demand_dic[job_id]  # 当前CPU资源容量-这个任务需求的CPU资源
         self.memory_res -= self.memory_demand_dic[job_id]
-        self.graph_embedding1[job_id-1] = -1.0
-        self.graph_embedding2[job_id-1] = -1.0
-        self.graph_embedding3[job_id-1] = -1.0
+        self.graph_embedding1[job_id - 1] = -1.0
+        self.graph_embedding2[job_id - 1] = -1.0
+        self.graph_embedding3[job_id - 1] = -1.0
 
-    def Decima_encoder(self,edges,duration,demand):
+    def Decima_encoder(self, edges, duration, demand):
         '''
         使用Decima编码器编码DAG图信息
         :param duration: 工作流信息
@@ -247,34 +258,34 @@ class graphEnv(gym.Env):
         :param demand: 工作流信息
         :return: embeddings dag图的节点编码信息，以字典形式储存。
         '''
-        raw_embeddings = [] #原始节点feature
-        embeddings =  {}  #编码后的feature字典  job_id : embedding
+        raw_embeddings = []  # 原始节点feature
+        embeddings = {}  # 编码后的feature字典  job_id : embedding
 
         cpu_demands = [demand[i][0] for i in range(len(demand))]
         memory_demands = [demand[i][1] for i in range(len(demand))]
-        for exetime,cpu_demand,memory_demand in zip(duration,cpu_demands,memory_demands):
-            raw_embeddings.append([exetime,cpu_demand,memory_demand])
-        raw_embeddings = np.array(raw_embeddings,dtype=np.float32)
+        for exetime, cpu_demand, memory_demand in zip(duration, cpu_demands, memory_demands):
+            raw_embeddings.append([exetime, cpu_demand, memory_demand])
+        raw_embeddings = np.array(raw_embeddings, dtype=np.float32)
         raw_embeddings = torch.from_numpy(raw_embeddings)
-        features,adj = utils.gcn_embedding(self.edges,self.duration,self.demand)
-        embeddings1 = self.gcn(features,adj)  #第一层初始编码信息
+        features, adj = utils.gcn_embedding(self.edges, self.duration, self.demand)
+        embeddings1 = self.gcn(features, adj)  # 第一层初始编码信息
         # embeddings1 = self.gcn(raw_embeddings) 
 
-        pred0 = self.search_for_predecessor('Exit',edges[:])
+        pred0 = self.search_for_predecessor('Exit', edges[:])
         for ele in pred0:
-            embeddings[ele] = embeddings1[ele-1].data
+            embeddings[ele] = embeddings1[ele - 1].data
 
-        while(len(embeddings.keys())<len(duration)):
+        while (len(embeddings.keys()) < len(duration)):
             box = []
             for ele in pred0:
-                pred = self.search_for_predecessor(ele,edges[:])
+                pred = self.search_for_predecessor(ele, edges[:])
                 for i in pred:
                     if i in embeddings.keys():
                         continue
                     if i == 'Start':
                         continue
-                    succ = self.search_for_all_successors(i,edges[:])
-                    g = torch.tensor([0],dtype=torch.float32)
+                    succ = self.search_for_all_successors(i, edges[:])
+                    g = torch.tensor([0], dtype=torch.float32)
                     # g = torch.tensor([0,0,0],dtype=torch.float32)
                     for j in succ:
                         g += self.NonLinearNw2(embeddings[j])
@@ -293,7 +304,7 @@ class graphEnv(gym.Env):
         :para action {-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29}
         :return: 下一个状态，回报，是否完成，调试信息
                  False ，要求重新采样动作
-        ''' 
+        '''
         '''
         self.ready_list是当前可执行的任务，包括了在机器上挂起的
         '''
@@ -301,41 +312,44 @@ class graphEnv(gym.Env):
         if done:
             return np.array(self.state, dtype=np.float32), 0, done, [True, self.tasks]
 
-        if (action >= 0 & action<=self.M-1): 
+        if (action >= 0 & action <= self.M - 1):
             if (self.check_action(action)):
                 self.pend_task(action)
-                self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 #+ self.graph_embedding2 + self.graph_embedding3                                
-                reward = 0.0                                                                                         #时间步没动，收益为0
+                self.state = [self.time, self.cpu_res,
+                              self.memory_res] + self.graph_embedding1  # + self.graph_embedding2 + self.graph_embedding3
+                reward = 0.0  # 时间步没动，收益为0
                 done = self.check_episode_finish()
-                return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
-            else:
-                return np.array(self.state, dtype=np.float32), 0, 0, [False, self.tasks] 
-        else:
-            if self.tasks:
-                self.tasks_remaing_time_list = sorted(self.tasks_remaing_time.items(),key = lambda x:x[1])  #排序当前挂起任务的执行时间
-                job_id = self.tasks_remaing_time_list[0][0]                                                 
-                time_shift = self.tasks_remaing_time_list[0][1]                                             #记录最小执行时间的长度
-                self.time += time_shift                                                                     #改变时间戳
-                self.done_job.append(job_id)                                                                #更新已完成的任务
-                done = self.check_episode_finish()
-                if done:
-                    return np.array(self.state, dtype=np.float32), 0, done, [True, self.tasks]
-                self.cpu_res += self.cpu_demand_dic[job_id]                                                 #释放CPU资源
-                self.memory_res += self.memory_demand_dic[job_id]                                           #释放Memory资源
-                self.tasks.remove(job_id)                                                                   #删除pending的task
-                del self.tasks_remaing_time[job_id]                                                         #删除任务剩余时间信息
-                for i in self.tasks_remaing_time.keys():
-                    self.tasks_remaing_time[i] -= time_shift
-
-                reward = -time_shift/self.t_unit
-
-                self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:])       #更新ready_list
-
-                self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 #+ self.graph_embedding2 + self.graph_embedding3
                 return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
             else:
                 return np.array(self.state, dtype=np.float32), 0, 0, [False, self.tasks]
-        
+        else:
+            if self.tasks:
+                self.tasks_remaing_time_list = sorted(self.tasks_remaing_time.items(),
+                                                      key=lambda x: x[1])  # 排序当前挂起任务的执行时间
+                job_id = self.tasks_remaing_time_list[0][0]
+                time_shift = self.tasks_remaing_time_list[0][1]  # 记录最小执行时间的长度
+                self.time += time_shift  # 改变时间戳
+                self.done_job.append(job_id)  # 更新已完成的任务
+                done = self.check_episode_finish()
+                if done:
+                    return np.array(self.state, dtype=np.float32), 0, done, [True, self.tasks]
+                self.cpu_res += self.cpu_demand_dic[job_id]  # 释放CPU资源
+                self.memory_res += self.memory_demand_dic[job_id]  # 释放Memory资源
+                self.tasks.remove(job_id)  # 删除pending的task
+                del self.tasks_remaing_time[job_id]  # 删除任务剩余时间信息
+                for i in self.tasks_remaing_time.keys():
+                    self.tasks_remaing_time[i] -= time_shift
+
+                reward = -time_shift / self.t_unit
+
+                self.ready_list = self.update_ready_list(self.ready_list, self.done_job, self.edges[:])  # 更新ready_list
+
+                self.state = [self.time, self.cpu_res,
+                              self.memory_res] + self.graph_embedding1  # + self.graph_embedding2 + self.graph_embedding3
+                return np.array(self.state, dtype=np.float32), reward, done, [True, self.tasks]
+            else:
+                return np.array(self.state, dtype=np.float32), 0, 0, [False, self.tasks]
+
     def reset(self):
         '''
         初始化状态
@@ -345,7 +359,8 @@ class graphEnv(gym.Env):
         ###随机生成一个workflow
         # self.edges,self.duration,self.demand,self.position = utils.workflows_generator('default',n=30)
         # self.seed1 = random.randint(0, len(self.duration_lib)-1) 
-        self.edges,self.duration,self.demand = self.edges_lib[self.seed1],self.duration_lib[self.seed1],self.demand_lib[self.seed1]
+        self.edges, self.duration, self.demand = self.edges_lib[self.seed1], self.duration_lib[self.seed1], \
+                                                 self.demand_lib[self.seed1]
         self.seed1 += 1
         if self.seed1 == 1000:
             self.seed1 = 0
@@ -353,37 +368,38 @@ class graphEnv(gym.Env):
         # print("任务占用时间Ti:",self.duration)                    #生成的原始数据
         # print("任务资源占用(res_cpu,res_memory):",self.demand)    #生成的原始数据
         ###初始化一些状态
-        #使用GCN编码DAG信息  
-        output = self.Decima_encoder(edges=self.edges,duration=self.duration,demand=self.demand)
-        
+        # 使用GCN编码DAG信息
+        output = self.Decima_encoder(edges=self.edges, duration=self.duration, demand=self.demand)
+
         ####初始化变量
-        self.time,self.cpu_res,self.memory_res = 0,100,100
+        self.time, self.cpu_res, self.memory_res = 0, 100, 100
         self.ready_list = []  # 满足依赖关系的DAG,可能被执行，但不满足
         self.done_job = []  # 已完成的任务ID
         self.tasks = []  # 计算资源上挂起的任务
         self.tasks_remaing_time = {}  # 计算资源上挂起的任务剩余执行时间
         self.ready_list = []
-        self.wait_duration_dic = {}                             #随机生成的DAG时间占用信息 job_id : value
-        self.cpu_demand_dic = {}                                #随机生成的DAG CPU资源占用信息 job_id : value
-        self.memory_demand_dic = {}                             #随机生成的DAG Memo资源占用信息 job_id : value
+        self.wait_duration_dic = {}  # 随机生成的DAG时间占用信息 job_id : value
+        self.cpu_demand_dic = {}  # 随机生成的DAG CPU资源占用信息 job_id : value
+        self.memory_demand_dic = {}  # 随机生成的DAG Memo资源占用信息 job_id : value
         for ele in range(len(self.duration)):
-            self.graph_embedding1[ele] = output[ele+1][0].item()
+            self.graph_embedding1[ele] = output[ele + 1][0].item()
             # self.graph_embedding2[ele] = output[ele+1][1].item()
             # self.graph_embedding3[ele] = output[ele+1][2].item()
 
         for i in range(len(self.duration)):
-            self.wait_duration_dic[i+1] = self.duration[i]
-            self.cpu_demand_dic[i+1] = self.demand[i][0]
-            self.memory_demand_dic[i+1] = self.demand[i][1]
-        
-        self.ready_list = self.update_ready_list(self.ready_list,self.done_job,self.edges[:]) #第一次计算等待任务
-        self.state = [self.time, self.cpu_res, self.memory_res] + self.graph_embedding1 #+ self.graph_embedding2 + self.graph_embedding3
+            self.wait_duration_dic[i + 1] = self.duration[i]
+            self.cpu_demand_dic[i + 1] = self.demand[i][0]
+            self.memory_demand_dic[i + 1] = self.demand[i][1]
+
+        self.ready_list = self.update_ready_list(self.ready_list, self.done_job, self.edges[:])  # 第一次计算等待任务
+        self.state = [self.time, self.cpu_res,
+                      self.memory_res] + self.graph_embedding1  # + self.graph_embedding2 + self.graph_embedding3
         self.steps_beyond_done = None
         return np.array(self.state, dtype=np.float32)
 
     def render(self, mode="human"):
         pass
-        return 
+        return
 
     def close(self):
         if self.viewer:

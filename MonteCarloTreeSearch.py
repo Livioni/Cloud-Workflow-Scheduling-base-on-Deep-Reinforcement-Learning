@@ -1,11 +1,11 @@
-import gym,torch,copy,os,xlwt
+import gym, torch, copy, os, xlwt
 import torch.nn as nn
 from datetime import datetime
 import numpy as np
 from torch.distributions import Categorical, MultivariateNormal
 
 env = gym.make("clusterEnv-v0").unwrapped
-state_dim,action_dim = env.return_dim_info()
+state_dim, action_dim = env.return_dim_info()
 ################### checkpointing ###################
 run_num_pretrained = '30MCTS'
 directory = "runs/PPO_preTrained"
@@ -37,6 +37,7 @@ def initial_excel():
     worksheet.row(1).height = 20 * 25
     # 保存excel文件
     workbook.save('data/makespan_MCTS.xls')
+
 
 class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dim):
@@ -87,9 +88,9 @@ class ActorCritic(nn.Module):
         action_logprob = dist.log_prob(action).unsqueeze(0)
         return action.detach(), action_logprob.detach(), state, reward, done, info
 
+
 class PPO:
     def __init__(self, state_dim, action_dim):
-
         self.policy = ActorCritic(state_dim, action_dim)  # AC策略
         self.policy_old = ActorCritic(state_dim, action_dim)  # AC策略old网络
         self.policy_old.load_state_dict(self.policy.state_dict())
@@ -103,13 +104,13 @@ class PPO:
 
         return state, reward, done, info
 
-
     def save(self, checkpoint_path):
         torch.save(self.policy_old.state_dict(), checkpoint_path)
 
     def load(self, checkpoint_path):
         self.policy_old.load_state_dict(torch.load(checkpoint_path, map_location=lambda storage, loc: storage))
         self.policy.load_state_dict(torch.load(checkpoint_path, map_location=lambda storage, loc: storage))
+
 
 def read_current_state():
     '''
@@ -119,7 +120,7 @@ def read_current_state():
     state = copy.deepcopy(env.state)
     ready_list = copy.deepcopy(env.ready_list)
     done_job = copy.deepcopy(env.done_job)
-    tasks =copy.deepcopy( env.tasks)
+    tasks = copy.deepcopy(env.tasks)
     wait_duration = copy.deepcopy(env.wait_duration)
     cpu_demand = copy.deepcopy(env.cpu_demand)
     memory_demand = copy.deepcopy(env.memory_demand)
@@ -127,9 +128,11 @@ def read_current_state():
     time = env.time
     cpu_res = env.cpu_res
     memory_res = env.memory_res
-    return state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time
+    return state, ready_list, done_job, tasks, wait_duration, cpu_demand, memory_demand, tasks_remaing_time, cpu_res, memory_res, time
 
-def load_current_state(state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time):
+
+def load_current_state(state, ready_list, done_job, tasks, wait_duration, cpu_demand, memory_demand, tasks_remaing_time,
+                       cpu_res, memory_res, time):
     env.set_state(state[:])
     env.set_ready_list(ready_list[:])
     env.set_done_job(done_job[:])
@@ -141,10 +144,12 @@ def load_current_state(state,ready_list,done_job,tasks,wait_duration,cpu_demand,
     env.set_cpu_res(cpu_res)
     env.set_memory_res(memory_res)
     env.set_time(time)
-    return 
+    return
+
 
 class TreeNode(object):
-    def __init__(self, parent,state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time):
+    def __init__(self, parent, state, ready_list, done_job, tasks, wait_duration, cpu_demand, memory_demand,
+                 tasks_remaing_time, cpu_res, memory_res, time):
         self._parent = parent
         self._children = {}  # a map from action to TreeNode
         self._n_visits = 0
@@ -165,28 +170,34 @@ class TreeNode(object):
         self._value = 0
         if self._parent != None:
             self.get_value()
-    
+
     def expand(self):
         '''
         扩展树
         '''
-        load_current_state(self._state,self._ready_list,self._done_job,self._tasks,self._wait_duration,self._cpu_demand,self._memory_demand,self._tasks_remaing_time,self._cpu_res,self._memory_res,self._time)
+        load_current_state(self._state, self._ready_list, self._done_job, self._tasks, self._wait_duration,
+                           self._cpu_demand, self._memory_demand, self._tasks_remaing_time, self._cpu_res,
+                           self._memory_res, self._time)
         available_action = env.return_action_list()
         if available_action:
             for action in available_action:
-                load_current_state(self._state,self._ready_list,self._done_job,self._tasks,self._wait_duration,self._cpu_demand,self._memory_demand,self._tasks_remaing_time,self._cpu_res,self._memory_res,self._time)
+                load_current_state(self._state, self._ready_list, self._done_job, self._tasks, self._wait_duration,
+                                   self._cpu_demand, self._memory_demand, self._tasks_remaing_time, self._cpu_res,
+                                   self._memory_res, self._time)
                 if action not in self._children:
                     env.step(action)
-                    state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time = read_current_state()
-                    self._children[action] = TreeNode(self,state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time)
+                    state, ready_list, done_job, tasks, wait_duration, cpu_demand, memory_demand, tasks_remaing_time, cpu_res, memory_res, time = read_current_state()
+                    self._children[action] = TreeNode(self, state, ready_list, done_job, tasks, wait_duration,
+                                                      cpu_demand, memory_demand, tasks_remaing_time, cpu_res,
+                                                      memory_res, time)
         else:
             print("done")
-    
+
     def get_average_makespan(self):
         return self._makespan
 
     def get_value(self):
-        self._value = self._makespan + self._c * np.sqrt(np.log(self._parent._n_visits+1)/(self._n_visits+1))
+        self._value = self._makespan + self._c * np.sqrt(np.log(self._parent._n_visits + 1) / (self._n_visits + 1))
         return self._value
 
     def select(self):
@@ -229,42 +240,50 @@ class TreeNode(object):
     def is_root(self):
         return self._parent is None
 
+
 ppo_agent = PPO(state_dim, action_dim)
 print("============================================================================================")
 ppo_agent.load(checkpoint_path)
 print("Network ID:", run_num_pretrained)
 print('PPO agent has been loaded!')
 
+
 class MCTS(object):
-    def __init__(self,state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time,ppo_agent,depth):
-        self._root = TreeNode(None, state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time)
-        self._root.expand() #初始化扩展
+    def __init__(self, state, ready_list, done_job, tasks, wait_duration, cpu_demand, memory_demand, tasks_remaing_time,
+                 cpu_res, memory_res, time, ppo_agent, depth):
+        self._root = TreeNode(None, state, ready_list, done_job, tasks, wait_duration, cpu_demand, memory_demand,
+                              tasks_remaing_time, cpu_res, memory_res, time)
+        self._root.expand()  # 初始化扩展
         self._ppo_agent = ppo_agent
         self._initial_buget = 100
         self._min_buget = 10
         self._depth = depth
 
     def playout(self):
-        buget = max(self._initial_buget/self._depth,self._min_buget)
+        buget = max(self._initial_buget / self._depth, self._min_buget)
         for j in range(int(buget)):
             node = self._root
             while True:
                 if node.is_leaf():
                     if node._n_visits == 0:
-                        cur_state,cur_ready_list,cur_done_job,cur_tasks,cur_wait_duration,cur_cpu_demand,cur_memory_demand,cur_tasks_remaing_time,cur_cpu_res,cur_memory_res,cur_time = node._state,node._ready_list,node._done_job,node._tasks,node._wait_duration,node._cpu_demand,node._memory_demand,node._tasks_remaing_time,node._cpu_res,node._memory_res,node._time
-                        makespan = self._roll_out(cur_state,cur_ready_list,cur_done_job,cur_tasks,cur_wait_duration,cur_cpu_demand,cur_memory_demand,cur_tasks_remaing_time,cur_cpu_res,cur_memory_res,cur_time)
+                        cur_state, cur_ready_list, cur_done_job, cur_tasks, cur_wait_duration, cur_cpu_demand, cur_memory_demand, cur_tasks_remaing_time, cur_cpu_res, cur_memory_res, cur_time = node._state, node._ready_list, node._done_job, node._tasks, node._wait_duration, node._cpu_demand, node._memory_demand, node._tasks_remaing_time, node._cpu_res, node._memory_res, node._time
+                        makespan = self._roll_out(cur_state, cur_ready_list, cur_done_job, cur_tasks, cur_wait_duration,
+                                                  cur_cpu_demand, cur_memory_demand, cur_tasks_remaing_time,
+                                                  cur_cpu_res, cur_memory_res, cur_time)
                         node.update_recursive(makespan)
                         break
-                    else: 
+                    else:
                         node.expand()
-                        node = node.select() 
-                else: 
-                    node = node.select() 
+                        node = node.select()
+                else:
+                    node = node.select()
         node = self._root
-        return max(node._children.items(), key=lambda act_node: act_node[1].get_average_makespan())[0] 
-            
-    def _roll_out(self,cur_state,cur_ready_list,cur_done_job,cur_tasks,cur_wait_duration,cur_cpu_demand,cur_memory_demand,cur_tasks_remaing_time,cur_cpu_res,cur_memory_res,cur_time):
-        load_current_state(cur_state,cur_ready_list,cur_done_job,cur_tasks,cur_wait_duration,cur_cpu_demand,cur_memory_demand,cur_tasks_remaing_time,cur_cpu_res,cur_memory_res,cur_time)
+        return max(node._children.items(), key=lambda act_node: act_node[1].get_average_makespan())[0]
+
+    def _roll_out(self, cur_state, cur_ready_list, cur_done_job, cur_tasks, cur_wait_duration, cur_cpu_demand,
+                  cur_memory_demand, cur_tasks_remaing_time, cur_cpu_res, cur_memory_res, cur_time):
+        load_current_state(cur_state, cur_ready_list, cur_done_job, cur_tasks, cur_wait_duration, cur_cpu_demand,
+                           cur_memory_demand, cur_tasks_remaing_time, cur_cpu_res, cur_memory_res, cur_time)
         state = cur_state
         ep_reward = 0
         max_ep_len = 1000  # max timesteps in one episode
@@ -276,9 +295,10 @@ class MCTS(object):
             # break; if the episode is over
             state = next_state
             if done:
-                makespan = state[0] 
+                makespan = state[0]
                 break
-        return makespan  
+        return makespan
+
 
 if __name__ == '__main__':
     initial_excel()
@@ -289,18 +309,22 @@ if __name__ == '__main__':
     print("============================================================================================")
     for ep in range(1, total_test_episodes + 1):
         initial_state = env.reset()
-        state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time = read_current_state()
-        for depth in range(1,max_ep_len+1):
-            tree = MCTS(state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time,ppo_agent,depth=depth)
+        state, ready_list, done_job, tasks, wait_duration, cpu_demand, memory_demand, tasks_remaing_time, cpu_res, memory_res, time = read_current_state()
+        for depth in range(1, max_ep_len + 1):
+            tree = MCTS(state, ready_list, done_job, tasks, wait_duration, cpu_demand, memory_demand,
+                        tasks_remaing_time, cpu_res, memory_res, time, ppo_agent, depth=depth)
             best_action = tree.playout()
-            load_current_state(tree._root._state,tree._root._ready_list,tree._root._done_job,tree._root._tasks,tree._root._wait_duration,tree._root._cpu_demand,tree._root._memory_demand,tree._root._tasks_remaing_time,tree._root._cpu_res,tree._root._memory_res,tree._root._time)
+            load_current_state(tree._root._state, tree._root._ready_list, tree._root._done_job, tree._root._tasks,
+                               tree._root._wait_duration, tree._root._cpu_demand, tree._root._memory_demand,
+                               tree._root._tasks_remaing_time, tree._root._cpu_res, tree._root._memory_res,
+                               tree._root._time)
             observation, reward, done, info = env.step(best_action)
-            state,ready_list,done_job,tasks,wait_duration,cpu_demand,memory_demand,tasks_remaing_time,cpu_res,memory_res,time = read_current_state()
+            state, ready_list, done_job, tasks, wait_duration, cpu_demand, memory_demand, tasks_remaing_time, cpu_res, memory_res, time = read_current_state()
             del tree
             if done:
                 makespan = observation[0]
                 makespans.append(makespan)
-                print("Episode:",ep,"Makespan:",makespan)
+                print("Episode:", ep, "Makespan:", makespan)
                 if ep % auto_save == 0:
                     average_makespan = np.mean(makespans)
                     worksheet.write(line, 1, float(average_makespan))

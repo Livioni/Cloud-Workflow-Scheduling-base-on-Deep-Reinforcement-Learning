@@ -49,7 +49,7 @@ print("Testing environment name : " + env_name)
 env = gym.make(env_name).unwrapped
 
 # state space dimension action space dimension
-state_dim,action_dim = env.return_dim_info()
+state_dim, action_dim = env.return_dim_info()
 
 ################### checkpointing ###################
 
