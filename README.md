@@ -43,6 +43,11 @@ It requires the following packages:
 - 完成深度强化学习加速蒙特卡洛树搜索算法（魔改[spear](https://ieeexplore.ieee.org/abstract/document/8885307/)），目前在DAG_size=10大小上效果最佳。
 - 编写了单个DAG任务资源用量检测脚本。
 
+2020.04.19
+
+- 完成蒙特卡洛树n=10-50的所有实验
+- 完成毕业论文初稿
+- 下一步优化GCN编码
 
 
 ## 有向无环图生成设计
