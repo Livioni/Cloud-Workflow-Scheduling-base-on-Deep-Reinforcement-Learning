@@ -7,7 +7,7 @@ from torch.distributions import Categorical, MultivariateNormal
 env = gym.make("clusterEnv-v0").unwrapped
 state_dim, action_dim = env.return_dim_info()
 ################### checkpointing ###################
-run_num_pretrained = '30MCTS'
+run_num_pretrained = '50MCTS'
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
     os.makedirs(directory)
@@ -73,7 +73,7 @@ class ActorCritic(nn.Module):
         action = dist.sample()
         # action = np.argmax(dist.probs)
         state, reward, done, info = env.step(action.item() - 1)
-        while (info[0] == False):  # 重采样
+        while (info[0] == False):  # 重采样 
             probability[action.item()] = 0
             probability_list = [probs for probs in probability.values()]
             probs = torch.FloatTensor(probability_list)
