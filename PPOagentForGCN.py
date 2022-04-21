@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-
 import gym
 import numpy as np
 import torch
@@ -46,7 +45,7 @@ action_dim = env.action_space.n
 
 ################### checkpointing ###################
 
-run_num_pretrained = '30'  #### change this to prevent overwriting weights in same env_name folder
+run_num_pretrained = '30GCN_256'  #### change this to prevent overwriting weights in same env_name folder
 
 directory = "runs/PPO_preTrained"
 if not os.path.exists(directory):
@@ -136,21 +135,21 @@ class ActorCritic(nn.Module):
         super(ActorCritic, self).__init__()
 
         self.actor = nn.Sequential(
-            nn.Linear(state_dim, 64),
+            nn.Linear(state_dim, 256),
             nn.Sigmoid(),
-            nn.Linear(64, 64),
+            nn.Linear(256, 256),
             nn.Sigmoid(),
-            nn.Linear(64, action_dim),
+            nn.Linear(256, action_dim),
             nn.Softmax(dim=-1)
         )
 
         # critic
         self.critic = nn.Sequential(
-            nn.Linear(state_dim, 64),
+            nn.Linear(state_dim, 256),
             nn.Tanh(),
-            nn.Linear(64, 64),
+            nn.Linear(256, 256),
             nn.Tanh(),
-            nn.Linear(64, 1)
+            nn.Linear(256, 1)
         )
 
     def forward(self):
