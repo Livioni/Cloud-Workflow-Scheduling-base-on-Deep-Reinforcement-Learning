@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BackgroundAgentGlobalSettings">
+    <option name="selectedModelId" value="claude-sonnet-5" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ef3532e4-782a-40b1-b321-ebc8ef1a43c0" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/DAGs_Generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/DAGs_Generator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DRLagent.py" beforeDir="false" afterPath="$PROJECT_DIR$/DRLagent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Envs/clusterEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/Envs/clusterEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Envs/graphEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/Envs/graphEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Envs/myEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/Envs/myEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Envs/testEnv.py" beforeDir="false" afterPath="$PROJECT_DIR$/Envs/testEnv.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/MonteCarloTreeSearch.py" beforeDir="false" afterPath="$PROJECT_DIR$/MonteCarloTreeSearch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PPOagent.py" beforeDir="false" afterPath="$PROJECT_DIR$/PPOagent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/PPOtest.py" beforeDir="false" afterPath="$PROJECT_DIR$/PPOtest.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/baselines_tableau.py" beforeDir="false" afterPath="$PROJECT_DIR$/baselines_tableau.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/myahyaoui/Desktop/cloud/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning" value="3MZfXJHnAoRBo6Jvz20bX93za5O" />
+    </persistenceIdMap>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
+  <component name="ProjectId" id="3MZfVfPhnhjJdl69CmiR7bT212P" />
+  <component name="ProjectSessionTemplates">
+    <option name="panelTemplate">
+      <template>
+        <option name="ensembleEnabled" value="false" />
+        <option name="modeId" value="Ask" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_id" />
+            <option name="modelValue" value="claude-sonnet-5" />
+          </model>
+        </option>
+        <option name="targetType" value="BACKGROUND" />
+        <option name="worktreeMode" value="WORKSPACE" />
+      </template>
+    </option>
+    <option name="version" value="1" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;copilot.chat.legacySessionMetadata.migrated&quot;: &quot;true&quot;,
+    &quot;database.data.extractors.current.export.id&quot;: &quot;SQL Inserts&quot;,
+    &quot;database.data.extractors.current.id&quot;: &quot;SQL Inserts&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/myahyaoui/Desktop/cloud/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ef3532e4-782a-40b1-b321-ebc8ef1a43c0" name="Changes" comment="" />
+      <created>1795563036189</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1795563036189</updated>
+    </task>
+    <servers />
+  </component>
+</project>
