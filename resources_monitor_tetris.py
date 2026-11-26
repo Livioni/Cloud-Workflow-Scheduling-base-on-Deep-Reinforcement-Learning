@@ -57,6 +57,9 @@ def alignment_score(state):
 
 
 initial_excel()
+from Envs.registration import register_cluster_env
+
+register_cluster_env()
 env = gym.make("clusterEnv-v0").unwrapped
 print("Tetris")
 line = 2

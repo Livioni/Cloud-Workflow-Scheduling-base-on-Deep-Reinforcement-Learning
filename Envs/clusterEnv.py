@@ -1,9 +1,10 @@
+from pathlib import Path
+
 import gym, random, copy, xlwt
 from gym import spaces
 from gym.utils import seeding
 import numpy as np
 import networkx as nx
-from . import utils
 
 
 class clusterEnv(gym.Env):
@@ -85,33 +86,20 @@ class clusterEnv(gym.Env):
     def load_train_dataset(self, DAGsize):
         ##########################################training################################
         print('train datasheet lib.')
-        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/' + str(
-            DAGsize) + '/edges' + str(DAGsize) + '_lib.npy'
-        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/' + str(
-            DAGsize) + '/duration' + str(DAGsize) + '_lib.npy'
-        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/' + str(
-            DAGsize) + '/demand' + str(DAGsize) + '_lib.npy'
-        # edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+'test'+'/edges' +'test' +'_lib.npy'
-        # duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+'test'+'/duration' + 'test' +'_lib.npy'
-        # demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/train_datasheet/'+'test'+'/demand'+'test'+'_lib.npy'
-        self.edges_lib = np.load(edges_lib_path, allow_pickle=True).tolist()
-        self.duration_lib = np.load(duration_lib_path, allow_pickle=True).tolist()
-        self.demand_lib = np.load(demand_lib_path, allow_pickle=True).tolist()
+        dataset_dir = Path(__file__).resolve().parents[1] / 'npy' / 'train_datasheet' / str(DAGsize)
+        self.edges_lib = np.load(dataset_dir / f'edges{DAGsize}_lib.npy', allow_pickle=True).tolist()
+        self.duration_lib = np.load(dataset_dir / f'duration{DAGsize}_lib.npy', allow_pickle=True).tolist()
+        self.demand_lib = np.load(dataset_dir / f'demand{DAGsize}_lib.npy', allow_pickle=True).tolist()
         print('load completed.')
         return
 
     def load_test_dataset(self, DAGsize):
         #########################################testing################################
         print('test datasheet loaded.')
-        edges_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/' + str(
-            DAGsize) + '/edges' + str(DAGsize) + '_lib.npy'
-        duration_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/' + str(
-            DAGsize) + '/duration' + str(DAGsize) + '_lib.npy'
-        demand_lib_path = '/Users/livion/Documents/GitHub/Cloud-Workflow-Scheduling-base-on-Deep-Reinforcement-Learning/npy/test_datasheet/' + str(
-            DAGsize) + '/demand' + str(DAGsize) + '_lib.npy'
-        self.edges_lib = np.load(edges_lib_path, allow_pickle=True).tolist()
-        self.duration_lib = np.load(duration_lib_path, allow_pickle=True).tolist()
-        self.demand_lib = np.load(demand_lib_path, allow_pickle=True).tolist()
+        dataset_dir = Path(__file__).resolve().parents[1] / 'npy' / 'test_datasheet' / str(DAGsize)
+        self.edges_lib = np.load(dataset_dir / f'edges{DAGsize}_lib.npy', allow_pickle=True).tolist()
+        self.duration_lib = np.load(dataset_dir / f'duration{DAGsize}_lib.npy', allow_pickle=True).tolist()
+        self.demand_lib = np.load(dataset_dir / f'demand{DAGsize}_lib.npy', allow_pickle=True).tolist()
         print('load completed.')
         return
 
@@ -250,7 +238,7 @@ class clusterEnv(gym.Env):
         if len(self.done_job) >= len(self.duration):
             return True
         else:
-            False
+            return False
 
     def _pend_task(self, action):
         job_id = self.ready_list[action]
@@ -309,6 +297,7 @@ class clusterEnv(gym.Env):
                 self.done_job.append(job_id)  # 更新已完成的任务
                 done = self._check_episode_finish()
                 if done:
+                    self.state[0] = self.time
                     # self.state = [self.time, self.cpu_res, self.memory_res] + self.wait_duration + self.cpu_demand + \
                     #     self.memory_demand + [self.b_level, self.children_num, self.backlot_time, self.backlot_cpu_res, self.backlot_memory_res]
                     return np.array(self.state, dtype=np.float32), 0, done, [True, self.tasks]

@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import xlwt
 from torch.distributions import Categorical, MultivariateNormal
+from Envs.registration import register_cluster_env
 
 
 def initial_excel():
@@ -46,6 +47,7 @@ lr_critic = 0.001  # learning rate for critic network
 
 print("Testing environment name : " + env_name)
 
+register_cluster_env()
 env = gym.make(env_name).unwrapped
 
 # state space dimension action space dimension

@@ -4,6 +4,9 @@ from datetime import datetime
 import numpy as np
 from torch.distributions import Categorical, MultivariateNormal
 
+from Envs.registration import register_cluster_env
+
+register_cluster_env()
 env = gym.make("clusterEnv-v0").unwrapped
 state_dim, action_dim = env.return_dim_info()
 ################### checkpointing ###################

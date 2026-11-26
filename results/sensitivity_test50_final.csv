@@ -1,0 +1,129 @@
+data_size_per_edge,observation_delay,link_scale,node_capacity_scale,analysis,policy,comparison_policy,replicates,mean_makespan,sample_stdev_makespan,ci95_low,ci95_high,ci_method
+1.0,0.0,0.5,0.8,policy_makespan,fcfs,,1000,235.12801666666667,46.75213792461761,232.23923333333335,238.13448333333335,percentile bootstrap over replicate makespans
+1.0,0.0,0.5,0.8,policy_makespan,sjf,,1000,256.8455166666667,49.22019468637531,253.7921166666667,260.16273333333334,percentile bootstrap over replicate makespans
+1.0,0.0,0.5,0.8,policy_makespan,min_finish,,1000,255.50873333333334,48.05236537353105,252.36306666666667,258.42988333333335,percentile bootstrap over replicate makespans
+1.0,0.0,0.5,0.8,policy_makespan,stale_min_finish,,1000,255.50873333333334,48.05236537353105,252.61178333333336,258.66493333333335,percentile bootstrap over replicate makespans
+1.0,0.0,0.5,0.8,paired_makespan_difference,sjf,fcfs,1000,21.717500000000005,18.598504324625495,20.559633333333338,22.880416666666672,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,0.5,0.8,paired_makespan_difference,min_finish,fcfs,1000,20.38071666666667,18.63728355839273,19.149550000000005,21.428050000000006,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,0.5,0.8,paired_makespan_difference,stale_min_finish,fcfs,1000,20.38071666666667,18.63728355839273,19.22841666666667,21.47861666666667,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,0.5,0.8,paired_makespan_difference,stale_min_finish,min_finish,1000,0.0,0.0,0.0,0.0,paired percentile bootstrap; stale observation vs fresh observation
+1.0,0.0,0.5,1.2,policy_makespan,fcfs,,1000,174.00973333333334,49.6009655981889,171.11006666666668,177.1555666666667,percentile bootstrap over replicate makespans
+1.0,0.0,0.5,1.2,policy_makespan,sjf,,1000,189.6595,54.76723877438729,186.21626666666668,192.99431666666666,percentile bootstrap over replicate makespans
+1.0,0.0,0.5,1.2,policy_makespan,min_finish,,1000,188.3719,53.40312159943783,184.90463333333335,191.74983333333336,percentile bootstrap over replicate makespans
+1.0,0.0,0.5,1.2,policy_makespan,stale_min_finish,,1000,188.3719,53.40312159943783,185.0993,191.85408333333334,percentile bootstrap over replicate makespans
+1.0,0.0,0.5,1.2,paired_makespan_difference,sjf,fcfs,1000,15.649766666666668,17.176128975247952,14.502183333333333,16.789983333333335,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,0.5,1.2,paired_makespan_difference,min_finish,fcfs,1000,14.362166666666669,16.711253216542463,13.253933333333334,15.469333333333337,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,0.5,1.2,paired_makespan_difference,stale_min_finish,fcfs,1000,14.362166666666669,16.711253216542463,13.406416666666669,15.315950000000004,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,0.5,1.2,paired_makespan_difference,stale_min_finish,min_finish,1000,0.0,0.0,0.0,0.0,paired percentile bootstrap; stale observation vs fresh observation
+1.0,0.0,2.0,0.8,policy_makespan,fcfs,,1000,259.09675,64.64050537984792,254.87239999999997,263.40233333333333,percentile bootstrap over replicate makespans
+1.0,0.0,2.0,0.8,policy_makespan,sjf,,1000,282.8234833333333,64.98431499220283,278.84605,286.99769999999995,percentile bootstrap over replicate makespans
+1.0,0.0,2.0,0.8,policy_makespan,min_finish,,1000,278.14829999999995,62.85198204583863,274.16276666666664,282.17158333333333,percentile bootstrap over replicate makespans
+1.0,0.0,2.0,0.8,policy_makespan,stale_min_finish,,1000,278.14829999999995,62.85198204583863,274.41226666666665,282.38211666666666,percentile bootstrap over replicate makespans
+1.0,0.0,2.0,0.8,paired_makespan_difference,sjf,fcfs,1000,23.72673333333333,23.368694814587677,22.190983333333328,25.145266666666664,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,2.0,0.8,paired_makespan_difference,min_finish,fcfs,1000,19.05155,23.803530710440704,17.714216666666665,20.5185,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,2.0,0.8,paired_makespan_difference,stale_min_finish,fcfs,1000,19.05155,23.803530710440704,17.659216666666666,20.53785,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,2.0,0.8,paired_makespan_difference,stale_min_finish,min_finish,1000,0.0,0.0,0.0,0.0,paired percentile bootstrap; stale observation vs fresh observation
+1.0,0.0,2.0,1.2,policy_makespan,fcfs,,1000,198.10119999999998,66.37730162787625,194.06846666666667,202.40313333333333,percentile bootstrap over replicate makespans
+1.0,0.0,2.0,1.2,policy_makespan,sjf,,1000,215.3567833333333,69.92468639685508,211.12446666666665,220.1111,percentile bootstrap over replicate makespans
+1.0,0.0,2.0,1.2,policy_makespan,min_finish,,1000,211.14766666666665,67.54720260448096,206.92193333333333,215.4348,percentile bootstrap over replicate makespans
+1.0,0.0,2.0,1.2,policy_makespan,stale_min_finish,,1000,211.14766666666665,67.54720260448096,206.81333333333333,215.26395,percentile bootstrap over replicate makespans
+1.0,0.0,2.0,1.2,paired_makespan_difference,sjf,fcfs,1000,17.25558333333333,19.866138662238605,16.02923333333333,18.348999999999997,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,2.0,1.2,paired_makespan_difference,min_finish,fcfs,1000,13.046466666666666,20.493102451727157,11.818166666666666,14.368233333333333,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,2.0,1.2,paired_makespan_difference,stale_min_finish,fcfs,1000,13.046466666666666,20.493102451727157,11.80415,14.26098333333333,paired percentile bootstrap; difference vs FCFS
+1.0,0.0,2.0,1.2,paired_makespan_difference,stale_min_finish,min_finish,1000,0.0,0.0,0.0,0.0,paired percentile bootstrap; stale observation vs fresh observation
+1.0,5.0,0.5,0.8,policy_makespan,fcfs,,1000,235.12801666666667,46.75213792461761,232.23923333333335,238.13448333333335,percentile bootstrap over replicate makespans
+1.0,5.0,0.5,0.8,policy_makespan,sjf,,1000,256.8455166666667,49.22019468637531,253.7921166666667,260.16273333333334,percentile bootstrap over replicate makespans
+1.0,5.0,0.5,0.8,policy_makespan,min_finish,,1000,255.50873333333334,48.05236537353105,252.36306666666667,258.42988333333335,percentile bootstrap over replicate makespans
+1.0,5.0,0.5,0.8,policy_makespan,stale_min_finish,,1000,293.07416666666666,46.96226540543908,290.19620000000003,296.1499166666667,percentile bootstrap over replicate makespans
+1.0,5.0,0.5,0.8,paired_makespan_difference,sjf,fcfs,1000,21.717500000000005,18.598504324625495,20.559633333333338,22.880416666666672,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,0.5,0.8,paired_makespan_difference,min_finish,fcfs,1000,20.38071666666667,18.63728355839273,19.149550000000005,21.428050000000006,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,0.5,0.8,paired_makespan_difference,stale_min_finish,fcfs,1000,57.946149999999996,23.891292297325567,56.4831,59.2962,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,0.5,0.8,paired_makespan_difference,stale_min_finish,min_finish,1000,37.56543333333333,22.93941643582977,36.090799999999994,38.95885,paired percentile bootstrap; stale observation vs fresh observation
+1.0,5.0,0.5,1.2,policy_makespan,fcfs,,1000,174.00973333333334,49.6009655981889,171.11006666666668,177.1555666666667,percentile bootstrap over replicate makespans
+1.0,5.0,0.5,1.2,policy_makespan,sjf,,1000,189.6595,54.76723877438729,186.21626666666668,192.99431666666666,percentile bootstrap over replicate makespans
+1.0,5.0,0.5,1.2,policy_makespan,min_finish,,1000,188.3719,53.40312159943783,184.90463333333335,191.74983333333336,percentile bootstrap over replicate makespans
+1.0,5.0,0.5,1.2,policy_makespan,stale_min_finish,,1000,211.93078333333335,55.2387912164319,208.25565000000003,215.42838333333336,percentile bootstrap over replicate makespans
+1.0,5.0,0.5,1.2,paired_makespan_difference,sjf,fcfs,1000,15.649766666666668,17.176128975247952,14.502183333333333,16.789983333333335,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,0.5,1.2,paired_makespan_difference,min_finish,fcfs,1000,14.362166666666669,16.711253216542463,13.253933333333334,15.469333333333337,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,0.5,1.2,paired_makespan_difference,stale_min_finish,fcfs,1000,37.921050000000015,19.7119626900219,36.70406666666668,39.092116666666676,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,0.5,1.2,paired_makespan_difference,stale_min_finish,min_finish,1000,23.558883333333345,18.10907481099553,22.40565000000001,24.71291666666668,paired percentile bootstrap; stale observation vs fresh observation
+1.0,5.0,2.0,0.8,policy_makespan,fcfs,,1000,259.09675,64.64050537984792,254.87239999999997,263.40233333333333,percentile bootstrap over replicate makespans
+1.0,5.0,2.0,0.8,policy_makespan,sjf,,1000,282.8234833333333,64.98431499220283,278.84605,286.99769999999995,percentile bootstrap over replicate makespans
+1.0,5.0,2.0,0.8,policy_makespan,min_finish,,1000,278.14829999999995,62.85198204583863,274.16276666666664,282.17158333333333,percentile bootstrap over replicate makespans
+1.0,5.0,2.0,0.8,policy_makespan,stale_min_finish,,1000,318.98023333333333,63.41830065019457,314.93885,322.7085833333333,percentile bootstrap over replicate makespans
+1.0,5.0,2.0,0.8,paired_makespan_difference,sjf,fcfs,1000,23.72673333333333,23.368694814587677,22.190983333333328,25.145266666666664,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,2.0,0.8,paired_makespan_difference,min_finish,fcfs,1000,19.05155,23.803530710440704,17.714216666666665,20.5185,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,2.0,0.8,paired_makespan_difference,stale_min_finish,fcfs,1000,59.88348333333334,32.35499942682511,57.99200000000001,61.82323333333334,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,2.0,0.8,paired_makespan_difference,stale_min_finish,min_finish,1000,40.83193333333334,29.249871162160733,38.940116666666675,42.69223333333334,paired percentile bootstrap; stale observation vs fresh observation
+1.0,5.0,2.0,1.2,policy_makespan,fcfs,,1000,198.10119999999998,66.37730162787625,194.06846666666667,202.40313333333333,percentile bootstrap over replicate makespans
+1.0,5.0,2.0,1.2,policy_makespan,sjf,,1000,215.3567833333333,69.92468639685508,211.12446666666665,220.1111,percentile bootstrap over replicate makespans
+1.0,5.0,2.0,1.2,policy_makespan,min_finish,,1000,211.14766666666665,67.54720260448096,206.92193333333333,215.4348,percentile bootstrap over replicate makespans
+1.0,5.0,2.0,1.2,policy_makespan,stale_min_finish,,1000,240.4248333333333,76.57469161639597,235.51434999999998,245.06414999999998,percentile bootstrap over replicate makespans
+1.0,5.0,2.0,1.2,paired_makespan_difference,sjf,fcfs,1000,17.25558333333333,19.866138662238605,16.02923333333333,18.348999999999997,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,2.0,1.2,paired_makespan_difference,min_finish,fcfs,1000,13.046466666666666,20.493102451727157,11.818166666666666,14.368233333333333,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,2.0,1.2,paired_makespan_difference,stale_min_finish,fcfs,1000,42.32363333333332,28.911789843356125,40.643133333333324,44.12298333333332,paired percentile bootstrap; difference vs FCFS
+1.0,5.0,2.0,1.2,paired_makespan_difference,stale_min_finish,min_finish,1000,29.277166666666655,26.9939286742149,27.50619999999999,30.914383333333323,paired percentile bootstrap; stale observation vs fresh observation
+10.0,0.0,0.5,0.8,policy_makespan,fcfs,,1000,236.13308333333333,47.84418286298641,233.059,239.16891666666666,percentile bootstrap over replicate makespans
+10.0,0.0,0.5,0.8,policy_makespan,sjf,,1000,258.2783333333333,49.957349204269185,255.1125,261.6956666666667,percentile bootstrap over replicate makespans
+10.0,0.0,0.5,0.8,policy_makespan,min_finish,,1000,256.811,48.74543932706445,253.69291666666666,259.82616666666667,percentile bootstrap over replicate makespans
+10.0,0.0,0.5,0.8,policy_makespan,stale_min_finish,,1000,256.811,48.74543932706445,254.02308333333335,260.061,percentile bootstrap over replicate makespans
+10.0,0.0,0.5,0.8,paired_makespan_difference,sjf,fcfs,1000,22.14525,18.812794037312045,20.94625,23.301166666666667,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,0.5,0.8,paired_makespan_difference,min_finish,fcfs,1000,20.67791666666667,18.87153356380671,19.455000000000002,21.74566666666667,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,0.5,0.8,paired_makespan_difference,stale_min_finish,fcfs,1000,20.67791666666667,18.87153356380671,19.481083333333334,21.7485,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,0.5,0.8,paired_makespan_difference,stale_min_finish,min_finish,1000,0.0,0.0,0.0,0.0,paired percentile bootstrap; stale observation vs fresh observation
+10.0,0.0,0.5,1.2,policy_makespan,fcfs,,1000,175.115,50.46453016640527,172.10841666666667,178.27775,percentile bootstrap over replicate makespans
+10.0,0.0,0.5,1.2,policy_makespan,sjf,,1000,191.00425,55.823289576095355,187.61766666666668,194.41375,percentile bootstrap over replicate makespans
+10.0,0.0,0.5,1.2,policy_makespan,min_finish,,1000,189.16341666666668,54.27401118096594,185.86708333333334,192.66941666666668,percentile bootstrap over replicate makespans
+10.0,0.0,0.5,1.2,policy_makespan,stale_min_finish,,1000,189.16341666666668,54.27401118096594,185.9315,192.6625,percentile bootstrap over replicate makespans
+10.0,0.0,0.5,1.2,paired_makespan_difference,sjf,fcfs,1000,15.88925,17.457768122745524,14.733166666666667,17.045583333333333,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,0.5,1.2,paired_makespan_difference,min_finish,fcfs,1000,14.048416666666666,17.029765465024415,12.917416666666666,15.10475,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,0.5,1.2,paired_makespan_difference,stale_min_finish,fcfs,1000,14.048416666666666,17.029765465024415,12.9925,15.022250000000001,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,0.5,1.2,paired_makespan_difference,stale_min_finish,min_finish,1000,0.0,0.0,0.0,0.0,paired percentile bootstrap; stale observation vs fresh observation
+10.0,0.0,2.0,0.8,policy_makespan,fcfs,,1000,265.224,68.69635826329252,260.7705,269.6476666666667,percentile bootstrap over replicate makespans
+10.0,0.0,2.0,0.8,policy_makespan,sjf,,1000,290.3240833333333,68.44523381891234,286.1311666666667,294.5395833333333,percentile bootstrap over replicate makespans
+10.0,0.0,2.0,0.8,policy_makespan,min_finish,,1000,283.51525,67.32055849342532,279.132,287.87558333333334,percentile bootstrap over replicate makespans
+10.0,0.0,2.0,0.8,policy_makespan,stale_min_finish,,1000,283.51525,67.32055849342532,279.56716666666665,287.94141666666667,percentile bootstrap over replicate makespans
+10.0,0.0,2.0,0.8,paired_makespan_difference,sjf,fcfs,1000,25.100083333333334,24.50054030178204,23.53458333333333,26.520083333333332,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,2.0,0.8,paired_makespan_difference,min_finish,fcfs,1000,18.29125,24.77134870703201,16.74025,19.892916666666668,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,2.0,0.8,paired_makespan_difference,stale_min_finish,fcfs,1000,18.29125,24.77134870703201,16.713916666666666,19.86825,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,2.0,0.8,paired_makespan_difference,stale_min_finish,min_finish,1000,0.0,0.0,0.0,0.0,paired percentile bootstrap; stale observation vs fresh observation
+10.0,0.0,2.0,1.2,policy_makespan,fcfs,,1000,204.95991666666666,70.76709643445994,200.66,209.42483333333334,percentile bootstrap over replicate makespans
+10.0,0.0,2.0,1.2,policy_makespan,sjf,,1000,222.33675,73.98807463904545,217.58975,227.21175,percentile bootstrap over replicate makespans
+10.0,0.0,2.0,1.2,policy_makespan,min_finish,,1000,217.12383333333332,71.42478151678363,212.81558333333334,221.6455,percentile bootstrap over replicate makespans
+10.0,0.0,2.0,1.2,policy_makespan,stale_min_finish,,1000,217.12383333333332,71.42478151678363,212.692,221.42716666666666,percentile bootstrap over replicate makespans
+10.0,0.0,2.0,1.2,paired_makespan_difference,sjf,fcfs,1000,17.376833333333334,20.8929646279116,15.961583333333335,18.624166666666667,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,2.0,1.2,paired_makespan_difference,min_finish,fcfs,1000,12.163916666666667,22.304708009326767,10.853166666666667,13.733666666666666,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,2.0,1.2,paired_makespan_difference,stale_min_finish,fcfs,1000,12.163916666666667,22.304708009326767,10.785416666666666,13.506499999999999,paired percentile bootstrap; difference vs FCFS
+10.0,0.0,2.0,1.2,paired_makespan_difference,stale_min_finish,min_finish,1000,0.0,0.0,0.0,0.0,paired percentile bootstrap; stale observation vs fresh observation
+10.0,5.0,0.5,0.8,policy_makespan,fcfs,,1000,236.13308333333333,47.84418286298641,233.059,239.16891666666666,percentile bootstrap over replicate makespans
+10.0,5.0,0.5,0.8,policy_makespan,sjf,,1000,258.2783333333333,49.957349204269185,255.1125,261.6956666666667,percentile bootstrap over replicate makespans
+10.0,5.0,0.5,0.8,policy_makespan,min_finish,,1000,256.811,48.74543932706445,253.69291666666666,259.82616666666667,percentile bootstrap over replicate makespans
+10.0,5.0,0.5,0.8,policy_makespan,stale_min_finish,,1000,293.79075,47.33440069434977,290.91541666666666,296.6605,percentile bootstrap over replicate makespans
+10.0,5.0,0.5,0.8,paired_makespan_difference,sjf,fcfs,1000,22.14525,18.812794037312045,20.94625,23.301166666666667,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,0.5,0.8,paired_makespan_difference,min_finish,fcfs,1000,20.67791666666667,18.87153356380671,19.455000000000002,21.74566666666667,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,0.5,0.8,paired_makespan_difference,stale_min_finish,fcfs,1000,57.65766666666667,24.213424031883477,56.16525,59.022083333333335,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,0.5,0.8,paired_makespan_difference,stale_min_finish,min_finish,1000,36.97975,23.42327539105757,35.60825,38.41133333333333,paired percentile bootstrap; stale observation vs fresh observation
+10.0,5.0,0.5,1.2,policy_makespan,fcfs,,1000,175.115,50.46453016640527,172.10841666666667,178.27775,percentile bootstrap over replicate makespans
+10.0,5.0,0.5,1.2,policy_makespan,sjf,,1000,191.00425,55.823289576095355,187.61766666666668,194.41375,percentile bootstrap over replicate makespans
+10.0,5.0,0.5,1.2,policy_makespan,min_finish,,1000,189.16341666666668,54.27401118096594,185.86708333333334,192.66941666666668,percentile bootstrap over replicate makespans
+10.0,5.0,0.5,1.2,policy_makespan,stale_min_finish,,1000,213.29,55.98769750822293,209.64966666666666,216.88108333333332,percentile bootstrap over replicate makespans
+10.0,5.0,0.5,1.2,paired_makespan_difference,sjf,fcfs,1000,15.88925,17.457768122745524,14.733166666666667,17.045583333333333,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,0.5,1.2,paired_makespan_difference,min_finish,fcfs,1000,14.048416666666666,17.029765465024415,12.917416666666666,15.10475,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,0.5,1.2,paired_makespan_difference,stale_min_finish,fcfs,1000,38.175,19.958457021356637,36.9305,39.3555,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,0.5,1.2,paired_makespan_difference,stale_min_finish,min_finish,1000,24.126583333333333,18.752767496607998,22.812833333333334,25.233833333333333,paired percentile bootstrap; stale observation vs fresh observation
+10.0,5.0,2.0,0.8,policy_makespan,fcfs,,1000,265.224,68.69635826329252,260.7705,269.6476666666667,percentile bootstrap over replicate makespans
+10.0,5.0,2.0,0.8,policy_makespan,sjf,,1000,290.3240833333333,68.44523381891234,286.1311666666667,294.5395833333333,percentile bootstrap over replicate makespans
+10.0,5.0,2.0,0.8,policy_makespan,min_finish,,1000,283.51525,67.32055849342532,279.132,287.87558333333334,percentile bootstrap over replicate makespans
+10.0,5.0,2.0,0.8,policy_makespan,stale_min_finish,,1000,325.42325,67.4950604539231,321.04316666666665,329.47091666666665,percentile bootstrap over replicate makespans
+10.0,5.0,2.0,0.8,paired_makespan_difference,sjf,fcfs,1000,25.100083333333334,24.50054030178204,23.53458333333333,26.520083333333332,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,2.0,0.8,paired_makespan_difference,min_finish,fcfs,1000,18.29125,24.77134870703201,16.74025,19.892916666666668,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,2.0,0.8,paired_makespan_difference,stale_min_finish,fcfs,1000,60.19925,34.43717714906936,57.797333333333334,62.60583333333333,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,2.0,0.8,paired_makespan_difference,stale_min_finish,min_finish,1000,41.908,32.1377263163734,39.96858333333333,44.06491666666667,paired percentile bootstrap; stale observation vs fresh observation
+10.0,5.0,2.0,1.2,policy_makespan,fcfs,,1000,204.95991666666666,70.76709643445994,200.66,209.42483333333334,percentile bootstrap over replicate makespans
+10.0,5.0,2.0,1.2,policy_makespan,sjf,,1000,222.33675,73.98807463904545,217.58975,227.21175,percentile bootstrap over replicate makespans
+10.0,5.0,2.0,1.2,policy_makespan,min_finish,,1000,217.12383333333332,71.42478151678363,212.81558333333334,221.6455,percentile bootstrap over replicate makespans
+10.0,5.0,2.0,1.2,policy_makespan,stale_min_finish,,1000,247.86966666666666,82.06683924903254,242.63616666666667,253.01683333333332,percentile bootstrap over replicate makespans
+10.0,5.0,2.0,1.2,paired_makespan_difference,sjf,fcfs,1000,17.376833333333334,20.8929646279116,15.961583333333335,18.624166666666667,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,2.0,1.2,paired_makespan_difference,min_finish,fcfs,1000,12.163916666666667,22.304708009326767,10.853166666666667,13.733666666666666,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,2.0,1.2,paired_makespan_difference,stale_min_finish,fcfs,1000,42.90975,31.24743901317966,40.83883333333333,44.833,paired percentile bootstrap; difference vs FCFS
+10.0,5.0,2.0,1.2,paired_makespan_difference,stale_min_finish,min_finish,1000,30.745833333333334,29.98337941653142,28.802416666666666,32.540083333333335,paired percentile bootstrap; stale observation vs fresh observation

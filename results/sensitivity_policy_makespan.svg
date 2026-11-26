@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560">
+<rect width="100%" height="100%" fill="white"/>
+<text x="500" y="28" text-anchor="middle" font-family="sans-serif" font-size="18">Mean makespan by sensitivity scenario</text>
+<path d="M 75 55.0 H 970" stroke="#ddd"/>
+<text x="65" y="59.0" text-anchor="end" font-family="sans-serif" font-size="11">325.4</text>
+<path d="M 75 141.0 H 970" stroke="#ddd"/>
+<text x="65" y="145.0" text-anchor="end" font-family="sans-serif" font-size="11">295.1</text>
+<path d="M 75 227.0 H 970" stroke="#ddd"/>
+<text x="65" y="231.0" text-anchor="end" font-family="sans-serif" font-size="11">264.9</text>
+<path d="M 75 313.0 H 970" stroke="#ddd"/>
+<text x="65" y="317.0" text-anchor="end" font-family="sans-serif" font-size="11">234.6</text>
+<path d="M 75 399.0 H 970" stroke="#ddd"/>
+<text x="65" y="403.0" text-anchor="end" font-family="sans-serif" font-size="11">204.3</text>
+<path d="M 75 485.0 H 970" stroke="#ddd"/>
+<text x="65" y="489.0" text-anchor="end" font-family="sans-serif" font-size="11">174.0</text>
+<polyline points="75.0,311.4 134.7,485.0 194.3,243.4 254.0,416.6 313.7,311.4 373.3,485.0 433.0,243.4 492.7,416.6 552.3,308.6 612.0,481.9 671.7,226.0 731.3,397.1 791.0,308.6 850.7,481.9 910.3,226.0 970.0,397.1" fill="none" stroke="#2563eb" stroke-width="2"/>
+<polyline points="75.0,249.8 134.7,440.6 194.3,176.0 254.0,367.6 313.7,249.8 373.3,440.6 433.0,176.0 492.7,367.6 552.3,245.7 612.0,436.7 671.7,154.7 731.3,347.8 791.0,245.7 850.7,436.7 910.3,154.7 970.0,347.8" fill="none" stroke="#16a34a" stroke-width="2"/>
+<polyline points="75.0,253.6 134.7,444.2 194.3,189.3 254.0,379.5 313.7,253.6 373.3,444.2 433.0,189.3 492.7,379.5 552.3,249.9 612.0,442.0 671.7,174.0 731.3,362.6 791.0,249.9 850.7,442.0 910.3,174.0 970.0,362.6" fill="none" stroke="#ea580c" stroke-width="2"/>
+<polyline points="75.0,253.6 134.7,444.2 194.3,189.3 254.0,379.5 313.7,146.9 373.3,377.3 433.0,73.3 492.7,296.4 552.3,249.9 612.0,442.0 671.7,174.0 731.3,362.6 791.0,144.8 850.7,373.4 910.3,55.0 970.0,275.2" fill="none" stroke="#9333ea" stroke-width="2"/>
+<text x="75.0" y="505" text-anchor="middle" font-family="sans-serif" font-size="10">1</text>
+<text x="194.3" y="505" text-anchor="middle" font-family="sans-serif" font-size="10">3</text>
+<text x="313.7" y="505" text-anchor="middle" font-family="sans-serif" font-size="10">5</text>
+<text x="433.0" y="505" text-anchor="middle" font-family="sans-serif" font-size="10">7</text>
+<text x="552.3" y="505" text-anchor="middle" font-family="sans-serif" font-size="10">9</text>
+<text x="671.7" y="505" text-anchor="middle" font-family="sans-serif" font-size="10">11</text>
+<text x="791.0" y="505" text-anchor="middle" font-family="sans-serif" font-size="10">13</text>
+<text x="910.3" y="505" text-anchor="middle" font-family="sans-serif" font-size="10">15</text>
+<path d="M 75 535 h 22" stroke="#2563eb" stroke-width="3"/>
+<text x="103" y="539" font-family="sans-serif" font-size="12">fcfs</text>
+<path d="M 280 535 h 22" stroke="#16a34a" stroke-width="3"/>
+<text x="308" y="539" font-family="sans-serif" font-size="12">sjf</text>
+<path d="M 485 535 h 22" stroke="#ea580c" stroke-width="3"/>
+<text x="513" y="539" font-family="sans-serif" font-size="12">min_finish</text>
+<path d="M 690 535 h 22" stroke="#9333ea" stroke-width="3"/>
+<text x="718" y="539" font-family="sans-serif" font-size="12">stale_min_finish</text>
+</svg>

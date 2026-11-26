@@ -1,0 +1,26 @@
+{
+  "nodes": [
+    {"node_id": "edge-a", "tier": "edge", "cpu_capacity": 4, "memory_capacity": 8, "speed": 1.0},
+    {"node_id": "edge-b", "tier": "edge", "cpu_capacity": 4, "memory_capacity": 8, "speed": 1.2},
+    {"node_id": "cloud-a", "tier": "cloud", "cpu_capacity": 4, "memory_capacity": 5, "speed": 2.0}
+  ],
+  "tasks": [
+    {"task_id": "ingest", "duration": 8, "cpu": 2, "memory": 3},
+    {"task_id": "filter", "duration": 6, "cpu": 3, "memory": 4},
+    {"task_id": "transform", "duration": 10, "cpu": 4, "memory": 6},
+    {"task_id": "aggregate", "duration": 5, "cpu": 2, "memory": 4},
+    {"task_id": "publish", "duration": 3, "cpu": 1, "memory": 2}
+  ],
+  "dependencies": [
+    {"parent": "ingest", "child": "filter", "data_size": 4},
+    {"parent": "ingest", "child": "transform", "data_size": 8},
+    {"parent": "filter", "child": "aggregate", "data_size": 2},
+    {"parent": "transform", "child": "aggregate", "data_size": 6},
+    {"parent": "aggregate", "child": "publish", "data_size": 1}
+  ],
+  "links": [
+    {"nodes": ["edge-a", "edge-b"], "latency": 1, "bandwidth": 4},
+    {"nodes": ["edge-a", "cloud-a"], "latency": 5, "bandwidth": 2},
+    {"nodes": ["edge-b", "cloud-a"], "latency": 4, "bandwidth": 3}
+  ]
+}
