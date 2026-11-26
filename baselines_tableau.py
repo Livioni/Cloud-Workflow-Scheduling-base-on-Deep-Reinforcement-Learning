@@ -7,6 +7,7 @@ import torch
 from torch.distributions import Categorical
 import torch.nn.functional as F
 import numpy as np
+from Envs.registration import register_cluster_env
 
 
 class Actor(nn.Module):  # 策略网络
@@ -295,6 +296,7 @@ if __name__ == '__main__':
     for i in range(100 * n):
         worksheet.write(i + 1, 3, 'n=50')
 
+    register_cluster_env()
     env = gym.make("clusterEnv-v0").unwrapped
     state_size, action_size = env.return_dim_info()
     auto_save = 10

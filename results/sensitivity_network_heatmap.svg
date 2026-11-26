@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="330" viewBox="0 0 540 330">
+<rect width="100%" height="100%" fill="white"/>
+<text x="270" y="28" text-anchor="middle" font-family="sans-serif" font-size="16">Fresh min-finish makespan (averaged over delay/capacity levels)</text>
+<text x="210" y="68" text-anchor="middle" font-family="sans-serif" font-size="12">Link x0.5</text>
+<text x="355" y="68" text-anchor="middle" font-family="sans-serif" font-size="12">Link x2</text>
+<text x="135" y="120" text-anchor="end" font-family="sans-serif" font-size="12">Data 1</text>
+<rect x="155" y="82" width="110" height="62" fill="rgb(235,248,255)" stroke="white"/>
+<text x="210" y="118" text-anchor="middle" font-family="sans-serif" font-size="13">221.9</text>
+<rect x="300" y="82" width="110" height="62" fill="rgb(142,167,222)" stroke="white"/>
+<text x="355" y="118" text-anchor="middle" font-family="sans-serif" font-size="13">244.6</text>
+<text x="135" y="210" text-anchor="end" font-family="sans-serif" font-size="12">Data 10</text>
+<rect x="155" y="172" width="110" height="62" fill="rgb(230,244,253)" stroke="white"/>
+<text x="210" y="208" text-anchor="middle" font-family="sans-serif" font-size="13">223.0</text>
+<rect x="300" y="172" width="110" height="62" fill="rgb(120,148,215)" stroke="white"/>
+<text x="355" y="208" text-anchor="middle" font-family="sans-serif" font-size="13">250.3</text>
+<text x="20" y="316" font-family="sans-serif" font-size="10">Observation delays: 0.0, 5.0; node capacity scales: 0.8, 1.2. Cell values average across those factors.</text>
+</svg>

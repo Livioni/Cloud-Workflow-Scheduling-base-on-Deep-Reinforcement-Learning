@@ -1,0 +1,13 @@
+{
+  "nodes": [
+    {"node_id": "edge-a", "tier": "edge", "cpu_capacity": 100, "memory_capacity": 100, "speed": 0.8},
+    {"node_id": "cloud-a", "tier": "cloud", "cpu_capacity": 100, "memory_capacity": 100, "speed": 1.5}
+  ],
+  "links": [
+    {"nodes": ["edge-a", "cloud-a"], "latency": 5, "bandwidth": 10}
+  ],
+  "tasks": [
+    {"task_id": "placeholder", "duration": 1, "cpu": 1, "memory": 1}
+  ],
+  "dependencies": []
+}

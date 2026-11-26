@@ -33,6 +33,9 @@ def initial_excel():
     workbook.save('data/MCTSres_monitor.xls')
 
 
+from Envs.registration import register_cluster_env
+
+register_cluster_env()
 env = gym.make("clusterEnv-v0").unwrapped
 state_dim, action_dim = env.return_dim_info()
 ################### checkpointing ###################
